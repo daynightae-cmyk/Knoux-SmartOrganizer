@@ -39,3 +39,4 @@ This is an **unsigned development build**. It does not claim final release readi
 |---|---|---|
 | NSIS setup | `release/KNOuX-SmartOrganizer-Setup-x64.exe` | `CF403FBB025FFC10A1F93DE82E2BA282D965D8FF691399094D67AD39F9FB9902` |
 | Unpacked executable | `release/win-unpacked/KNOuX SmartOrganizer.exe` | `78964A15EFE11345D1381AF8D66F235B2FE0D784EE3E7A55C9868401E3C96726` |
+| File organizer | Downloads preview, explicit-confirm move, local undo journal | check/lint/test/build | package rebuilt; operation-level smoke pending | PARTIAL | `organizePreview`, `organizeApply`, `organizeUndo` |
