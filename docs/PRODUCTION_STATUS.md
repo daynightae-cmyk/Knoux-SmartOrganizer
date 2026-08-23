@@ -41,3 +41,10 @@ This is an **unsigned development build**. It does not claim final release readi
 | Unpacked executable | `release/win-unpacked/KNOuX SmartOrganizer.exe` | `78964A15EFE11345D1381AF8D66F235B2FE0D784EE3E7A55C9868401E3C96726` |
 | File organizer | Downloads preview, explicit-confirm move, local undo journal | check/lint/test/build | package rebuilt; operation-level smoke pending | PARTIAL | `organizePreview`, `organizeApply`, `organizeUndo` |
 | Settings import / export / reset | Local JSON dialogs through named IPC only | check/lint/test/build | packaged operation smoke pending | PARTIAL | `knoux:settings-export`, `knoux:settings-import`, `knoux:settings-reset` |
+
+## Latest artifact rebuild
+
+| Artifact | SHA-256 |
+|---|---|
+| NSIS setup after settings update | `D762E732187F49AAF9C3085CF7FAF1BE8771B03051BFD3422B16652462ABBF01` |
+| Unpacked executable after settings update | `6454CEC9B4991CC320EE84727805B07ECE64A1167B3F68842C1AF7418E98584C` |
