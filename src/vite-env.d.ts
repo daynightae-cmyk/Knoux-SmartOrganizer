@@ -8,6 +8,9 @@ declare global {
       listTools: () => Promise<ToolDefinition[]>;
       getSettings: () => Promise<AppSettings>;
       updateSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>;
+      exportSettings: () => Promise<string | null>;
+      importSettings: () => Promise<AppSettings | null>;
+      resetSettings: () => Promise<AppSettings>;
       listHistory: () => Promise<OperationRecord[]>;
       chooseFolder: () => Promise<string | null>;
       chooseFile: () => Promise<string | null>;
