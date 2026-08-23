@@ -1,0 +1,169 @@
+{
+  "name": "Knoux SmartOrganizer PRO",
+  "short_name": "KnouxAI",
+  "description": "أداة تنظيم الصور المدعومة بالذكاء الاصطناعي - منظم الصور الذكي",
+  "version": "2.0.0",
+  "manifest_version": 3,
+  "icons": [
+    {
+      "src": "/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#6366f1",
+  "background_color": "#f8fafc",
+  "scope": "/",
+  "categories": ["productivity", "photo", "utilities", "ai"],
+  "lang": "ar",
+  "dir": "rtl",
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "واجهة التطبيق الرئيسية"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "التطبيق على الهاتف المحمول"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "تحلي�� سريع",
+      "short_name": "تحليل",
+      "description": "تحليل سريع للصور",
+      "url": "/quick-analysis",
+      "icons": [
+        {
+          "src": "/shortcut-analysis.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "المجموعات الذكية",
+      "short_name": "مجموعات",
+      "description": "عرض المجموعات المنظمة",
+      "url": "/smart-groups",
+      "icons": [
+        {
+          "src": "/shortcut-groups.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "الإعدادات",
+      "short_name": "إعدادات",
+      "description": "إعدادات التطبيق",
+      "url": "/settings",
+      "icons": [
+        {
+          "src": "/shortcut-settings.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.knoux.smartorganizer",
+      "id": "com.knoux.smartorganizer"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/knoux-smartorganizer/id123456789"
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+knoux",
+      "url": "/?action=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/handle-image",
+      "accept": {
+        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/share-images",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "images",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "display_override": ["window-controls-overlay", "standalone"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}

@@ -1,0 +1,783 @@
+{
+  "appInfo": {
+    "name": "Knoux SmartOrganizer",
+    "version": "2.0.0",
+    "description": "تطبيق Windows متكامل لتنظيم الملفات وتحسين النظام",
+    "author": "Prof. Sadek Elgazar",
+    "windowsSupport": ["Windows 10", "Windows 11"],
+    "specialDevice": "knoux7-core"
+  },
+  "sections": [
+    {
+      "id": "remove-duplicate-pro",
+      "name": "RemoveDuplicate PRO",
+      "nameAr": "حذف التكرارات المتطور",
+      "icon": "duplicate-scanner",
+      "color": "#FF6B6B",
+      "gradient": "from-red-500 to-pink-500",
+      "toolCount": 20,
+      "description": "حذف التكرارات بالذكاء الصناعي",
+      "tools": [
+        {
+          "id": "smart-image-duplicates",
+          "name": "كشف الصور المكررة الذكي",
+          "script": "tools/duplicates/smart_image_scanner.py",
+          "icon": "image-scanner",
+          "aiModel": "CLIP"
+        },
+        {
+          "id": "video-duplicate-finder",
+          "name": "مكتشف الفيديوهات المكررة",
+          "script": "tools/duplicates/video_duplicate_finder.py",
+          "icon": "video-scanner",
+          "aiModel": "VideoHash"
+        },
+        {
+          "id": "audio-duplicate-detector",
+          "name": "كاشف الملفات الصوتية المكررة",
+          "script": "tools/duplicates/audio_duplicate_detector.py",
+          "icon": "audio-scanner",
+          "aiModel": "AudioFingerprint"
+        },
+        {
+          "id": "document-similarity-finder",
+          "name": "مكتشف المستندات المتشابهة",
+          "script": "tools/duplicates/document_similarity.py",
+          "icon": "doc-scanner",
+          "aiModel": "SentenceTransformers"
+        },
+        {
+          "id": "binary-file-duplicates",
+          "name": "كشف الملفات الثنائية المكررة",
+          "script": "tools/duplicates/binary_duplicates.ps1",
+          "icon": "binary-scanner",
+          "type": "powershell"
+        },
+        {
+          "id": "smart-folder-cleanup",
+          "name": "تنظيف المجلدات الذكي",
+          "script": "tools/duplicates/smart_folder_cleanup.py",
+          "icon": "folder-clean",
+          "aiModel": "PathAnalyzer"
+        },
+        {
+          "id": "archive-duplicate-scanner",
+          "name": "فحص الأرشيف للمكررات",
+          "script": "tools/duplicates/archive_scanner.py",
+          "icon": "archive-scanner",
+          "supportedFormats": ["zip", "rar", "7z", "tar"]
+        },
+        {
+          "id": "size-based-grouping",
+          "name": "تجميع حسب الحجم",
+          "script": "tools/duplicates/size_grouping.ps1",
+          "icon": "size-group",
+          "type": "powershell"
+        },
+        {
+          "id": "hash-verification",
+          "name": "التحقق بالـ Hash",
+          "script": "tools/duplicates/hash_verification.py",
+          "icon": "hash-verify",
+          "algorithms": ["MD5", "SHA1", "SHA256"]
+        },
+        {
+          "id": "metadata-comparison",
+          "name": "مقارنة البيانات الوصفية",
+          "script": "tools/duplicates/metadata_compare.py",
+          "icon": "metadata-compare",
+          "aiModel": "MetadataAnalyzer"
+        },
+        {
+          "id": "content-based-detection",
+          "name": "الكشف بناءً على المحتوى",
+          "script": "tools/duplicates/content_detection.py",
+          "icon": "content-detect",
+          "aiModel": "ContentAnalyzer"
+        },
+        {
+          "id": "fuzzy-matching",
+          "name": "المطابقة الضبابية",
+          "script": "tools/duplicates/fuzzy_matching.py",
+          "icon": "fuzzy-match",
+          "tolerance": "adjustable"
+        },
+        {
+          "id": "batch-processing",
+          "name": "المعالجة المجمعة",
+          "script": "tools/duplicates/batch_processor.py",
+          "icon": "batch-process",
+          "maxFiles": 100000
+        },
+        {
+          "id": "network-drive-scan",
+          "name": "فحص أقراص الشبكة",
+          "script": "tools/duplicates/network_scanner.py",
+          "icon": "network-scan",
+          "protocols": ["SMB", "FTP", "SSH"]
+        },
+        {
+          "id": "cloud-duplicate-finder",
+          "name": "مكتشف مكررات السحابة",
+          "script": "tools/duplicates/cloud_scanner.py",
+          "icon": "cloud-scan",
+          "services": ["OneDrive", "GoogleDrive", "Dropbox"]
+        },
+        {
+          "id": "registry-cleanup",
+          "name": "تنظيف السجل من المكررات",
+          "script": "tools/duplicates/registry_cleanup.ps1",
+          "icon": "registry-clean",
+          "type": "powershell",
+          "backupRequired": true
+        },
+        {
+          "id": "temp-file-cleaner",
+          "name": "منظف الملفات المؤقتة",
+          "script": "tools/duplicates/temp_cleaner.py",
+          "icon": "temp-clean",
+          "locations": ["temp", "prefetch", "recent"]
+        },
+        {
+          "id": "duplicate-report-generator",
+          "name": "مولد تقارير المكررات",
+          "script": "tools/duplicates/report_generator.py",
+          "icon": "report-gen",
+          "formats": ["PDF", "HTML", "CSV", "JSON"]
+        },
+        {
+          "id": "smart-backup-before-delete",
+          "name": "النسخ الاحتياطي الذكي",
+          "script": "tools/duplicates/smart_backup.py",
+          "icon": "smart-backup",
+          "compression": true
+        },
+        {
+          "id": "ai-recommendation-engine",
+          "name": "محرك التوصيات الذكي",
+          "script": "tools/duplicates/ai_recommendations.py",
+          "icon": "ai-recommend",
+          "aiModel": "GPT4All",
+          "learningEnabled": true
+        }
+      ]
+    },
+    {
+      "id": "system-cleaner",
+      "name": "System Cleaner",
+      "nameAr": "منظف النظام",
+      "icon": "system-clean",
+      "color": "#4ECDC4",
+      "gradient": "from-teal-500 to-cyan-500",
+      "toolCount": 20,
+      "description": "تنظيف النظام وتحسين الأداء",
+      "tools": [
+        {
+          "id": "registry-optimizer",
+          "name": "محسن السجل",
+          "script": "tools/system/registry_optimizer.ps1",
+          "icon": "registry-opt",
+          "type": "powershell"
+        },
+        {
+          "id": "startup-manager",
+          "name": "مدير بدء التشغيل",
+          "script": "tools/system/startup_manager.py",
+          "icon": "startup-mgr"
+        },
+        {
+          "id": "service-optimizer",
+          "name": "محسن الخدمات",
+          "script": "tools/system/service_optimizer.ps1",
+          "icon": "service-opt",
+          "type": "powershell"
+        },
+        {
+          "id": "memory-cleaner",
+          "name": "منظف الذاكرة",
+          "script": "tools/system/memory_cleaner.py",
+          "icon": "memory-clean"
+        },
+        {
+          "id": "disk-analyzer",
+          "name": "محلل القرص",
+          "script": "tools/system/disk_analyzer.py",
+          "icon": "disk-analyze"
+        },
+        {
+          "id": "cache-cleaner",
+          "name": "منظف الذاكرة المؤقتة",
+          "script": "tools/system/cache_cleaner.py",
+          "icon": "cache-clean"
+        },
+        {
+          "id": "log-file-manager",
+          "name": "مدير ملفات السجل",
+          "script": "tools/system/log_manager.py",
+          "icon": "log-mgr"
+        },
+        {
+          "id": "network-optimizer",
+          "name": "محسن الشبكة",
+          "script": "tools/system/network_optimizer.ps1",
+          "icon": "network-opt",
+          "type": "powershell"
+        },
+        {
+          "id": "browser-cleaner",
+          "name": "منظف المتصفحات",
+          "script": "tools/system/browser_cleaner.py",
+          "icon": "browser-clean"
+        },
+        {
+          "id": "system-info-analyzer",
+          "name": "محلل معلومات النظام",
+          "script": "tools/system/system_analyzer.py",
+          "icon": "system-info"
+        },
+        {
+          "id": "driver-updater",
+          "name": "محدث التعريفات",
+          "script": "tools/system/driver_updater.py",
+          "icon": "driver-update"
+        },
+        {
+          "id": "security-scanner",
+          "name": "فاحص الأمان",
+          "script": "tools/system/security_scanner.py",
+          "icon": "security-scan"
+        },
+        {
+          "id": "performance-monitor",
+          "name": "مراقب الأداء",
+          "script": "tools/system/performance_monitor.py",
+          "icon": "perf-monitor"
+        },
+        {
+          "id": "font-manager",
+          "name": "مدير الخطوط",
+          "script": "tools/system/font_manager.py",
+          "icon": "font-mgr"
+        },
+        {
+          "id": "context-menu-cleaner",
+          "name": "منظف قائمة السياق",
+          "script": "tools/system/context_menu_cleaner.ps1",
+          "icon": "context-clean",
+          "type": "powershell"
+        },
+        {
+          "id": "uninstaller-pro",
+          "name": "مزيل البرامج المتقدم",
+          "script": "tools/system/uninstaller_pro.py",
+          "icon": "uninstall-pro"
+        },
+        {
+          "id": "system-restore-manager",
+          "name": "مدير استعادة النظام",
+          "script": "tools/system/restore_manager.ps1",
+          "icon": "restore-mgr",
+          "type": "powershell"
+        },
+        {
+          "id": "task-scheduler-optimizer",
+          "name": "محسن جدولة المهام",
+          "script": "tools/system/task_scheduler.py",
+          "icon": "task-schedule"
+        },
+        {
+          "id": "event-log-analyzer",
+          "name": "محلل سجل الأحداث",
+          "script": "tools/system/event_analyzer.py",
+          "icon": "event-analyze"
+        },
+        {
+          "id": "system-health-checker",
+          "name": "فاحص صحة النظام",
+          "script": "tools/system/health_checker.py",
+          "icon": "health-check",
+          "aiModel": "SystemAnalyzer"
+        }
+      ]
+    },
+    {
+      "id": "privacy-guard",
+      "name": "Privacy Guard",
+      "nameAr": "حارس الخصوصية",
+      "icon": "privacy-shield",
+      "color": "#9B59B6",
+      "gradient": "from-purple-500 to-indigo-500",
+      "toolCount": 7,
+      "description": "حماية الخصوصية",
+      "tools": [
+        {
+          "id": "browser-history-cleaner",
+          "name": "منظف تاريخ المتصفح",
+          "script": "tools/privacy/browser_history_cleaner.py",
+          "icon": "history-clean"
+        },
+        {
+          "id": "tracking-blocker",
+          "name": "حاجب التتبع",
+          "script": "tools/privacy/tracking_blocker.py",
+          "icon": "tracking-block"
+        },
+        {
+          "id": "cookie-manager",
+          "name": "مدير الكوكيز",
+          "script": "tools/privacy/cookie_manager.py",
+          "icon": "cookie-mgr"
+        },
+        {
+          "id": "file-shredder",
+          "name": "مدمر الملفات",
+          "script": "tools/privacy/file_shredder.py",
+          "icon": "file-shred"
+        },
+        {
+          "id": "metadata-cleaner",
+          "name": "منظف البيانات الوصفية",
+          "script": "tools/privacy/metadata_cleaner.py",
+          "icon": "metadata-clean"
+        },
+        {
+          "id": "dns-security",
+          "name": "أمان DNS",
+          "script": "tools/privacy/dns_security.py",
+          "icon": "dns-secure"
+        },
+        {
+          "id": "vpn-manager",
+          "name": "مدير VPN",
+          "script": "tools/privacy/vpn_manager.py",
+          "icon": "vpn-mgr"
+        }
+      ]
+    },
+    {
+      "id": "folder-master",
+      "name": "Folder Master",
+      "nameAr": "سيد المجلدات",
+      "icon": "folder-master",
+      "color": "#F39C12",
+      "gradient": "from-orange-500 to-yellow-500",
+      "toolCount": 7,
+      "description": "تنظيم المجلدات",
+      "tools": [
+        {
+          "id": "smart-folder-organizer",
+          "name": "المنظم الذكي للمجلدات",
+          "script": "tools/folders/smart_organizer.py",
+          "icon": "smart-organize",
+          "aiModel": "FolderClassifier"
+        },
+        {
+          "id": "auto-sorter",
+          "name": "الفارز التلقائي",
+          "script": "tools/folders/auto_sorter.py",
+          "icon": "auto-sort"
+        },
+        {
+          "id": "folder-synchronizer",
+          "name": "مزامن المجلدات",
+          "script": "tools/folders/folder_sync.py",
+          "icon": "folder-sync"
+        },
+        {
+          "id": "empty-folder-finder",
+          "name": "مكتشف المجلدات الفارغة",
+          "script": "tools/folders/empty_finder.py",
+          "icon": "empty-find"
+        },
+        {
+          "id": "large-file-detector",
+          "name": "كاشف الملفات الكبيرة",
+          "script": "tools/folders/large_files.py",
+          "icon": "large-file"
+        },
+        {
+          "id": "permission-manager",
+          "name": "مدير الصلاحيات",
+          "script": "tools/folders/permission_mgr.ps1",
+          "icon": "permission-mgr",
+          "type": "powershell"
+        },
+        {
+          "id": "folder-archiver",
+          "name": "أرشيف المجلدات",
+          "script": "tools/folders/folder_archiver.py",
+          "icon": "folder-archive"
+        }
+      ]
+    },
+    {
+      "id": "text-analyzer",
+      "name": "Text Analyzer",
+      "nameAr": "محلل النصوص",
+      "icon": "text-analyze",
+      "color": "#2ECC71",
+      "gradient": "from-green-500 to-emerald-500",
+      "toolCount": 7,
+      "description": "تحليل النصوص",
+      "tools": [
+        {
+          "id": "document-classifier",
+          "name": "مصنف المستندات",
+          "script": "tools/text/document_classifier.py",
+          "icon": "doc-classify",
+          "aiModel": "SentenceTransformers"
+        },
+        {
+          "id": "text-summarizer",
+          "name": "ملخص النصوص",
+          "script": "tools/text/text_summarizer.py",
+          "icon": "text-summary",
+          "aiModel": "GPT4All"
+        },
+        {
+          "id": "keyword-extractor",
+          "name": "مستخرج الكلمات المفتاحية",
+          "script": "tools/text/keyword_extractor.py",
+          "icon": "keyword-extract"
+        },
+        {
+          "id": "language-detector",
+          "name": "كاشف اللغة",
+          "script": "tools/text/language_detector.py",
+          "icon": "lang-detect"
+        },
+        {
+          "id": "sentiment-analyzer",
+          "name": "محلل المشاعر",
+          "script": "tools/text/sentiment_analyzer.py",
+          "icon": "sentiment-analyze"
+        },
+        {
+          "id": "plagiarism-checker",
+          "name": "كاشف الانتحال",
+          "script": "tools/text/plagiarism_checker.py",
+          "icon": "plagiarism-check"
+        },
+        {
+          "id": "text-translator",
+          "name": "مترجم النصوص",
+          "script": "tools/text/text_translator.py",
+          "icon": "text-translate"
+        }
+      ]
+    },
+    {
+      "id": "media-organizer",
+      "name": "Media Organizer",
+      "nameAr": "منظم الوسائط",
+      "icon": "media-organize",
+      "color": "#E74C3C",
+      "gradient": "from-red-500 to-rose-500",
+      "toolCount": 7,
+      "description": "تنظيم الوسائط",
+      "tools": [
+        {
+          "id": "photo-organizer",
+          "name": "منظم الصور",
+          "script": "tools/media/photo_organizer.py",
+          "icon": "photo-organize",
+          "aiModel": "CLIP"
+        },
+        {
+          "id": "video-organizer",
+          "name": "منظم الفيديوهات",
+          "script": "tools/media/video_organizer.py",
+          "icon": "video-organize"
+        },
+        {
+          "id": "audio-organizer",
+          "name": "منظم الملفات الصوتية",
+          "script": "tools/media/audio_organizer.py",
+          "icon": "audio-organize"
+        },
+        {
+          "id": "face-recognition",
+          "name": "التعرف على الوجوه",
+          "script": "tools/media/face_recognition.py",
+          "icon": "face-recognize",
+          "aiModel": "FaceAPI"
+        },
+        {
+          "id": "object-detection",
+          "name": "كشف الكائنات",
+          "script": "tools/media/object_detection.py",
+          "icon": "object-detect",
+          "aiModel": "YOLO"
+        },
+        {
+          "id": "media-converter",
+          "name": "محول الوسائط",
+          "script": "tools/media/media_converter.py",
+          "icon": "media-convert"
+        },
+        {
+          "id": "thumbnail-generator",
+          "name": "مولد المعاينات",
+          "script": "tools/media/thumbnail_generator.py",
+          "icon": "thumb-gen"
+        }
+      ]
+    },
+    {
+      "id": "productivity-hub",
+      "name": "Productivity Hub",
+      "nameAr": "مركز الإنتاجية",
+      "icon": "productivity",
+      "color": "#3498DB",
+      "gradient": "from-blue-500 to-cyan-500",
+      "toolCount": 7,
+      "description": "إنتاجية الملفات والتنبيهات",
+      "tools": [
+        {
+          "id": "file-reminder",
+          "name": "منبه الملفات",
+          "script": "tools/productivity/file_reminder.py",
+          "icon": "file-remind"
+        },
+        {
+          "id": "task-automation",
+          "name": "أتمتة المهام",
+          "script": "tools/productivity/task_automation.py",
+          "icon": "task-auto"
+        },
+        {
+          "id": "file-templates",
+          "name": "قوالب الملفات",
+          "script": "tools/productivity/file_templates.py",
+          "icon": "file-template"
+        },
+        {
+          "id": "quick-notes",
+          "name": "الملاحظات السريعة",
+          "script": "tools/productivity/quick_notes.py",
+          "icon": "quick-note"
+        },
+        {
+          "id": "calendar-integration",
+          "name": "تكامل التقويم",
+          "script": "tools/productivity/calendar_integration.py",
+          "icon": "calendar-int"
+        },
+        {
+          "id": "project-manager",
+          "name": "مدير المشاريع",
+          "script": "tools/productivity/project_manager.py",
+          "icon": "project-mgr"
+        },
+        {
+          "id": "time-tracker",
+          "name": "متتبع الوقت",
+          "script": "tools/productivity/time_tracker.py",
+          "icon": "time-track"
+        }
+      ]
+    },
+    {
+      "id": "smart-organizer",
+      "name": "Smart Organizer",
+      "nameAr": "المنظم الذكي",
+      "icon": "smart-organize",
+      "color": "#8E44AD",
+      "gradient": "from-purple-500 to-violet-500",
+      "toolCount": 10,
+      "description": "تنظيم ذكي تلقائي للملفات",
+      "tools": [
+        {
+          "id": "ai-file-classifier",
+          "name": "مصنف الملفات الذكي",
+          "script": "tools/smart/ai_classifier.py",
+          "icon": "ai-classify",
+          "aiModel": "MultiModal"
+        },
+        {
+          "id": "smart-renamer",
+          "name": "معيد التسمية الذكي",
+          "script": "tools/smart/smart_renamer.py",
+          "icon": "smart-rename",
+          "aiModel": "GPT4All"
+        },
+        {
+          "id": "content-analyzer",
+          "name": "محلل المحتوى",
+          "script": "tools/smart/content_analyzer.py",
+          "icon": "content-analyze",
+          "aiModel": "ContentVision"
+        },
+        {
+          "id": "auto-tagger",
+          "name": "الموسم التلقائي",
+          "script": "tools/smart/auto_tagger.py",
+          "icon": "auto-tag",
+          "aiModel": "TagGenerator"
+        },
+        {
+          "id": "similarity-grouper",
+          "name": "مجمع التشابه",
+          "script": "tools/smart/similarity_grouper.py",
+          "icon": "similarity-group"
+        },
+        {
+          "id": "smart-backup",
+          "name": "النسخ الاحتياطي الذكي",
+          "script": "tools/smart/smart_backup.py",
+          "icon": "smart-backup"
+        },
+        {
+          "id": "pattern-detector",
+          "name": "كاشف الأنماط",
+          "script": "tools/smart/pattern_detector.py",
+          "icon": "pattern-detect",
+          "aiModel": "PatternAnalyzer"
+        },
+        {
+          "id": "auto-archiver",
+          "name": "الأرشيف التلقائي",
+          "script": "tools/smart/auto_archiver.py",
+          "icon": "auto-archive"
+        },
+        {
+          "id": "smart-search",
+          "name": "البحث الذكي",
+          "script": "tools/smart/smart_search.py",
+          "icon": "smart-search",
+          "aiModel": "SemanticSearch"
+        },
+        {
+          "id": "learning-optimizer",
+          "name": "محسن التعلم",
+          "script": "tools/smart/learning_optimizer.py",
+          "icon": "learning-opt",
+          "aiModel": "ReinforcementLearning"
+        }
+      ]
+    },
+    {
+      "id": "boost-mode",
+      "name": "Boost Mode",
+      "nameAr": "وضع التسريع",
+      "icon": "boost-rocket",
+      "color": "#FF9500",
+      "gradient": "from-orange-500 to-amber-500",
+      "toolCount": 5,
+      "description": "تسريع الجهاز فوريًا",
+      "tools": [
+        {
+          "id": "ram-optimizer",
+          "name": "محسن الذاكرة العشوائية",
+          "script": "tools/boost/ram_optimizer.py",
+          "icon": "ram-boost"
+        },
+        {
+          "id": "cpu-governor",
+          "name": "منظم المعالج",
+          "script": "tools/boost/cpu_governor.ps1",
+          "icon": "cpu-boost",
+          "type": "powershell"
+        },
+        {
+          "id": "disk-defragmenter",
+          "name": "مجمع القرص",
+          "script": "tools/boost/disk_defrag.py",
+          "icon": "disk-defrag"
+        },
+        {
+          "id": "network-accelerator",
+          "name": "مسرع الشبكة",
+          "script": "tools/boost/network_accelerator.py",
+          "icon": "network-boost"
+        },
+        {
+          "id": "gaming-optimizer",
+          "name": "محسن الألعاب",
+          "script": "tools/boost/gaming_optimizer.py",
+          "icon": "gaming-boost"
+        }
+      ]
+    },
+    {
+      "id": "smart-advisor",
+      "name": "Smart Advisor",
+      "nameAr": "المستشار الذكي",
+      "icon": "smart-advisor",
+      "color": "#1ABC9C",
+      "gradient": "from-teal-500 to-green-500",
+      "toolCount": 5,
+      "description": "اقتراحات AI وتشخيص النظام",
+      "tools": [
+        {
+          "id": "system-diagnostics",
+          "name": "تشخيص النظام",
+          "script": "tools/advisor/system_diagnostics.py",
+          "icon": "system-diag",
+          "aiModel": "SystemAdvisor"
+        },
+        {
+          "id": "performance-recommendations",
+          "name": "توصيات الأداء",
+          "script": "tools/advisor/performance_recommendations.py",
+          "icon": "perf-recommend",
+          "aiModel": "PerformanceAI"
+        },
+        {
+          "id": "security-advisor",
+          "name": "مستشار الأمان",
+          "script": "tools/advisor/security_advisor.py",
+          "icon": "security-advise",
+          "aiModel": "SecurityAI"
+        },
+        {
+          "id": "maintenance-scheduler",
+          "name": "جدولة الصيانة",
+          "script": "tools/advisor/maintenance_scheduler.py",
+          "icon": "maintenance-schedule",
+          "aiModel": "MaintenanceAI"
+        },
+        {
+          "id": "health-monitor",
+          "name": "مراقب الصحة",
+          "script": "tools/advisor/health_monitor.py",
+          "icon": "health-monitor",
+          "aiModel": "HealthAI"
+        }
+      ]
+    }
+  ],
+  "aiModels": {
+    "GPT4All": {
+      "path": "models/gpt4all-falcon-q4_0.bin",
+      "size": "3.8GB",
+      "capabilities": ["text_generation", "summarization", "translation"]
+    },
+    "CLIP": {
+      "path": "models/clip-vit-base-patch32",
+      "size": "588MB",
+      "capabilities": ["image_classification", "object_detection"]
+    },
+    "Whisper": {
+      "path": "models/whisper-large-v3.pt",
+      "size": "1.5GB",
+      "capabilities": ["speech_to_text", "audio_analysis"]
+    },
+    "SentenceTransformers": {
+      "path": "models/all-MiniLM-L6-v2",
+      "size": "90MB",
+      "capabilities": ["text_similarity", "document_classification"]
+    }
+  },
+  "performance": {
+    "knoux7-core": {
+      "enabled": true,
+      "boostFactors": {
+        "cpu": 1.5,
+        "memory": 1.3,
+        "disk": 1.4,
+        "ai": 2.0
+      }
+    }
+  }
+}

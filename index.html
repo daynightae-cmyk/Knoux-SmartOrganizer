@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- PWA والتطبيق المحمول -->
+    <link rel="icon" type="image/png" href="/icon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/icon-16x16.png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Meta tags للتطبيق المحمول -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="background-color" content="#f8fafc" />
+
+    <!-- Apple Mobile Web App -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Knoux SmartOrganizer" />
+
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#6366f1" />
+    <meta name="msapplication-TileImage" content="/icon-144x144.png" />
+
+    <!-- SEO والوصف -->
+    <title>Knoux SmartOrganizer PRO - منظم الصور الذكي بالذكاء الاصطناعي</title>
+    <meta
+      name="description"
+      content="أداة متطورة لتنظيم وتصنيف الصور باستخدام الذكاء الاصطناعي. كشف الوجوه، استخراج النصوص، تحليل المحتوى، وتنظيم ذكي للألبومات."
+    />
+    <meta
+      name="keywords"
+      content="تنظيم الصور, ذكاء اصطناعي, كشف الوجوه, استخراج النصوص, تصنيف الصور, منظم الصور"
+    />
+    <meta name="author" content="Knoux Technologies" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Knoux SmartOrganizer PRO" />
+    <meta
+      property="og:description"
+      content="منظم الصور الذكي بالذكاء الاصطناعي"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="ar_AR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Knoux SmartOrganizer PRO" />
+    <meta
+      name="twitter:description"
+      content="منظم الصور الذكي بالذكاء الاصطناعي"
+    />
+    <meta name="twitter:image" content="/twitter-image.png" />
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/index.css" as="style" />
+    <link rel="preload" href="/src/main.tsx" as="script" />
+
+    <!-- DNS Prefetch للموارد الخارجية -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Knoux SmartOrganizer PRO",
+        "applicationCategory": "ProductivityApplication",
+        "description": "أداة متطورة لتنظيم وتصنيف الصور باستخدام الذكاء الاصطناعي",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "Knoux Technologies"
+        },
+        "screenshot": "/screenshot-wide.png"
+      }
+    </script>
+
+    <!-- Critical CSS inline -->
+    <style>
+      /* Loading screen styles */
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          #6366f1 0%,
+          #8b5cf6 50%,
+          #06b6d4 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+      }
+
+      .loader-content {
+        text-align: center;
+        color: white;
+      }
+
+      .loader-logo {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+      }
+
+      .loader-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Hide loader when app loads */
+      .app-loaded #initial-loader {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* RTL Support */
+      html[dir="rtl"] {
+        text-align: right;
+      }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: 240 10% 3.9%;
+          --foreground: 0 0% 98%;
+        }
+      }
+    </style>
+
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <!-- Initial Loading Screen -->
+    <div id="initial-loader">
+      <div class="loader-content">
+        <div class="loader-logo">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 2L2 7L12 12L22 7L12 2Z"
+              stroke="white"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M2 17L12 22L22 17"
+              stroke="white"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M2 12L12 17L22 12"
+              stroke="white"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h1 style="margin: 0 0 10px; font-size: 24px; font-weight: bold">
+          Knoux SmartOrganizer
+        </h1>
+        <p style="margin: 0 0 20px; opacity: 0.9">منظم الصور الذكي</p>
+        <div class="loader-spinner"></div>
+        <p style="margin: 0; font-size: 14px; opacity: 0.8">جاري التحميل...</p>
+      </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="root"></div>
+
+    <!-- Service Worker Registration -->
+    <script>
+      // Register Service Worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("SW registered: ", registration);
+            })
+            .catch((registrationError) => {
+              console.log("SW registration failed: ", registrationError);
+            });
+        });
+      }
+
+      // Hide loader when app loads
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.body.classList.add("app-loaded");
+          setTimeout(() => {
+            const loader = document.getElementById("initial-loader");
+            if (loader) loader.remove();
+          }, 500);
+        }, 1000);
+      });
+
+      // Handle app install prompt
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show install banner
+        console.log("Install prompt available");
+      });
+
+      // Handle successful installation
+      window.addEventListener("appinstalled", () => {
+        console.log("App installed successfully");
+        deferredPrompt = null;
+      });
+
+      // Prevent zoom on iOS
+      document.addEventListener("gesturestart", function (e) {
+        e.preventDefault();
+      });
+
+      // Handle viewport changes for mobile
+      const setViewportHeight = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty("--vh", `${vh}px`);
+      };
+
+      window.addEventListener("resize", setViewportHeight);
+      setViewportHeight();
+    </script>
+
+    <!-- Main Application -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Analytics (when ready) -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
+  </body>
+</html>
