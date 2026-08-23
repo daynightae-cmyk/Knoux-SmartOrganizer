@@ -31,3 +31,10 @@ dist/
 build/
 out/
 Thumbs.db
+
+# Desktop distribution artifacts
+release/
+
+# Source icon required by Electron Builder
+!build/
+!build/icon.ico
