@@ -7,57 +7,48 @@ const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { z } = require('zod');
+const { createSettingsStore } = require('./settings.cjs');
+const { createToolRegistry, serializeRegistry } = require('./tool-registry.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
 let mainWindow = null;
 let tray = null;
 let settingsCache = null;
+let settingsStore = null;
 const startedAt = new Date().toISOString();
-const STATE_VERSION = 1;
-
-const toolDefinitions = [
-  ['system-health', 'systemHealth', 'system', 'Activity', 'read-only', false, false, true],
-  ['smart-scan', 'smartScan', 'scan', 'ScanSearch', 'read-only', false, true, true],
-  ['disk-overview', 'diskOverview', 'storage', 'HardDrive', 'read-only', false, false, true],
-  ['large-files', 'largeFiles', 'storage', 'FileStack', 'read-only', false, true, true],
-  ['duplicate-files', 'duplicates', 'storage', 'Copy', 'read-only', false, true, true],
-  ['empty-folders', 'emptyFolders', 'files', 'FolderSearch2', 'read-only', false, true, true],
-  ['downloads-inventory', 'downloadsInventory', 'files', 'Download', 'read-only', false, true, true],
-  ['organize-downloads-preview', 'organizePreview', 'files', 'FolderCog', 'read-only', false, true, true],
-  ['organize-downloads-apply', 'organizeApply', 'files', 'FolderInput', 'safe-write', false, true, true],
-  ['organize-downloads-undo', 'organizeUndo', 'files', 'Undo2', 'safe-write', false, true, true],
-  ['temp-cleanup-preview', 'tempPreview', 'cleanup', 'Trash2', 'read-only', false, true, true],
-  ['startup-items', 'startupItems', 'startup', 'Rocket', 'read-only', false, false, true],
-  ['installed-apps', 'installedApps', 'applications', 'AppWindow', 'read-only', false, false, true],
-  ['network-diagnostics', 'networkDiagnostics', 'network', 'Network', 'read-only', false, false, true],
-  ['hardware-inventory', 'hardwareInventory', 'hardware', 'Cpu', 'read-only', false, false, true],
-  ['event-warnings', 'eventWarnings', 'system', 'TriangleAlert', 'read-only', false, false, true],
-  ['file-hash', 'fileHash', 'files', 'Fingerprint', 'read-only', false, false, true]
-].map(([id, engine, category, icon, riskLevel, requiresAdmin, supportsCancel, supportsExport]) => ({
-  id, engine, category, icon, riskLevel, requiresAdmin, supportsDryRun: engine === 'organizePreview', supportsCancel, supportsUndo: ['organizeApply', 'organizeUndo'].includes(engine), supportsExport,
-  nameKey: `tools.${id}.name`, descriptionKey: `tools.${id}.description`, available: true, estimatedCost: engine === 'duplicates' ? 'high' : 'low'
-}));
+const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs));
 
 const runRequestSchema = z.object({
   toolId: z.string().min(1).max(64),
   inputs: z.record(z.unknown()).default({}),
   dryRun: z.boolean().optional().default(false)
 }).strict();
-const folderInputSchema = z.object({ folder: z.string().min(1).max(32767).optional(), limit: z.number().int().min(1).max(200000).optional() }).strict();
 
 function appDataPath(name) { return path.join(app.getPath('userData'), name); }
 async function ensureAppStorage() { await fsp.mkdir(app.getPath('userData'), { recursive: true }); await fsp.mkdir(appDataPath('logs'), { recursive: true }); }
 async function readJson(name, fallback) { try { return JSON.parse(await fsp.readFile(appDataPath(name), 'utf8')); } catch { return fallback; } }
 async function writeJson(name, data) { const target = appDataPath(name); const temp = `${target}.${process.pid}.${Date.now()}.tmp`; await fsp.writeFile(temp, JSON.stringify(data, null, 2), 'utf8'); await fsp.rename(temp, target); }
 async function log(level, event, details = {}) { const line = JSON.stringify({ timestamp: new Date().toISOString(), level, event, ...details }) + '\n'; await fsp.appendFile(path.join(appDataPath('logs'), 'operations.ndjson'), line).catch(() => {}); }
-function defaultSettings() { return { settingsVersion: STATE_VERSION, general: { startMinimized: false, closeToTray: true, rememberLastSection: true }, appearance: { theme: 'dark', density: 'comfortable', reducedMotion: false, fontScale: 1 }, localization: { locale: 'ar', byteUnits: 'binary' }, scan: { includeHidden: false, followReparsePoints: false, minimumDuplicateBytes: 1048576, largeFileBytes: 524288000 }, cleanup: { recycleBinByDefault: true, minimumFileAgeDays: 7, confirmDestructive: true }, performance: { mode: 'balanced' }, privacy: { telemetry: false, crashReports: false }, notifications: { taskCompleted: true, taskFailed: true, lowDiskSpace: true } }; }
-async function getSettings() { const stored = await readJson('settings.json', defaultSettings()); const value = stored && stored.settingsVersion === STATE_VERSION ? { ...defaultSettings(), ...stored } : defaultSettings(); settingsCache = value; return value; }
-async function updateSettings(patch) { const current = await getSettings(); const next = { ...current, ...patch, settingsVersion: STATE_VERSION }; settingsCache = next; await writeJson('settings.json', next); return next; }
+async function getSettings() { const value = await settingsStore.get(); settingsCache = value; return value; }
+async function updateSettings(patch) { const value = await settingsStore.update(patch); settingsCache = value; applyRuntimeSettings(value); return value; }
 async function history() { return await readJson('history.json', []); }
 async function addHistory(entry) { const records = await history(); records.unshift(entry); await writeJson('history.json', records.slice(0, 200)); }
 function emit(event) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:operation-event', event); }
-function phase(operationId, toolId, phaseName, message, more = {}) { emit({ operationId, toolId, phase: phaseName, message, at: new Date().toISOString(), ...more }); }
+function phase(operationId, toolId, phaseName, message, more = {}) {
+  const context = operations.get(operationId); const updatedAt = new Date().toISOString();
+  if (context) { context.phase = phaseName; context.updatedAt = updatedAt; if (typeof more.percent === 'number') context.progressValue = more.percent; }
+  emit({
+    operationId, toolId, startedAt: context?.startedAt || updatedAt, updatedAt,
+    progress: context?.progressValue ?? null, phase: phaseName, summary: more.result?.summary || {},
+    warnings: more.result?.warnings || context?.warnings || [], errors: more.result?.errors || [],
+    cancelRequested: Boolean(context?.cancelRequested), undoMetadata: more.result?.undoMetadata || null,
+    message, at: updatedAt, ...more
+  });
+}
+function applyRuntimeSettings(settings) {
+  app.setLoginItemSettings({ openAtLogin: settings.general.startWithWindows, args: settings.general.startMinimized ? ['--start-minimized'] : [] });
+}
 function normalisePath(input) { const resolved = path.resolve(input); if (resolved.length > 32767) throw new Error('Path is too long.'); return resolved; }
 function allowedDirectory(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) throw new Error('Selected folder is unavailable.'); return resolved; }
 function allowedFile(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) throw new Error('Selected file is unavailable.'); return resolved; }
@@ -91,11 +82,11 @@ async function scanDuplicates(root, context, minimumSize, limit) { const data = 
   return { items: groups, summary: { folder: root, filesScanned: data.files.length, candidateFiles: candidates.length, duplicateGroups: groups.length, reclaimableBytes: groups.reduce((sum, group) => sum + group.reclaimableBytes, 0) }, partial: data.partial };
 }
 async function runTool(context, tool, inputs) {
-  const home = app.getPath('home'); const parsed = folderInputSchema.safeParse(inputs); const folder = allowedDirectory(parsed.success && parsed.data.folder ? parsed.data.folder : home); const limit = parsed.success ? parsed.data.limit || 50000 : 50000;
+  const home = app.getPath('home'); const folder = allowedDirectory(inputs.folder || home); const limit = inputs.limit || 50000;
   if (tool.engine === 'systemHealth') return { summary: await systemHealth(), items: [] };
   if (tool.engine === 'diskOverview') { const items = await diskOverview(); return { items, summary: { drives: items.length } }; }
-  if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scan.largeFileBytes, limit);
-  if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scan.minimumDuplicateBytes, limit);
+  if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
+  if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scanning.minimumDuplicateBytes, limit);
   if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { limit }); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, 1000), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length }, partial: data.partial }; }
   if (tool.engine === 'downloadsInventory') { const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { limit }); const groups = {}; for (const file of data.files) { const extension = path.extname(file.path).toLowerCase() || 'none'; groups[extension] = (groups[extension] || 0) + file.size; } return { items: data.files.sort((a,b) => b.size-a.size).slice(0, 200), summary: { folder: downloads, files: data.files.length, totalBytes: data.files.reduce((sum, item) => sum + item.size, 0), extensionGroups: Object.keys(groups).length }, partial: data.partial }; }
   if (tool.engine === 'organizePreview') { const plan = await downloadOrganizationPlan(context, limit); return { items: plan.plans.slice(0, 1000), summary: { sourceFolder: plan.downloads, plannedMoves: plan.plans.length, previewOnly: true }, partial: plan.partial }; }
@@ -112,10 +103,39 @@ async function runTool(context, tool, inputs) {
   throw new Error('Registered tool handler is unavailable.');
 }
 async function execute(request) {
-  const parsed = runRequestSchema.parse(request); const tool = toolDefinitions.find(item => item.id === parsed.toolId); if (!tool) throw new Error('Unknown tool ID.'); const operationId = crypto.randomUUID(); const context = { cancelled: false, warnings: [], progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) }; operations.set(operationId, context); const startedAt = new Date().toISOString(); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request and local availability'); try { phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = await runTool(context, tool, parsed.inputs); const result = { operationId, toolId: tool.id, success: true, startedAt, finishedAt: new Date().toISOString(), summary: output.summary || {}, items: output.items || [], warnings: [...context.warnings, ...(output.warnings || [])], errors: [], partial: Boolean(output.partial) }; phase(operationId, tool.id, 'result', 'Structured result available', { result }); phase(operationId, tool.id, 'completed', 'Operation completed', { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: tool.supportsUndo }); await log('info', 'operation.completed', { operationId, toolId: tool.id }); return result; } catch (error) { const cancelled = error.code === 'CANCELLED'; const result = { operationId, toolId: tool.id, success: false, startedAt, finishedAt: new Date().toISOString(), summary: {}, items: [], warnings: context.warnings, errors: [error.message], partial: cancelled }; phase(operationId, tool.id, cancelled ? 'cancelled' : 'failed', error.message, { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: tool.supportsUndo }); await log('error', 'operation.failed', { operationId, toolId: tool.id, error: error.message }); return result; } finally { operations.delete(operationId); }
+  const parsed = runRequestSchema.parse(request); const tool = toolDefinitions.find(item => item.id === parsed.toolId); if (!tool) throw new Error('Unknown tool ID.');
+  const availability = await tool.availabilityProbe(); if (!availability.available) throw new Error(availability.reason || 'Tool is unavailable.');
+  const inputs = tool.inputSchema.parse(parsed.inputs); const operationId = crypto.randomUUID(); const startedAt = new Date().toISOString();
+  const context = { cancelled: false, cancelRequested: false, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
+  operations.set(operationId, context); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request, schema, handler, and local availability');
+  try {
+    phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = tool.outputSchema.parse(await tool.handler(context, inputs));
+    const result = { operationId, toolId: tool.id, success: true, startedAt, finishedAt: new Date().toISOString(), summary: output.summary, items: output.items, warnings: [...context.warnings, ...(output.warnings || [])], errors: [], partial: Boolean(output.partial), restartRequired: Boolean(output.restartRequired), undoMetadata: output.undoMetadata || null };
+    phase(operationId, tool.id, 'result', 'Structured result available', { result }); phase(operationId, tool.id, 'completed', 'Operation completed', { result });
+    await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: tool.supportsUndo }); await log('info', 'operation.completed', { operationId, toolId: tool.id }); return result;
+  } catch (error) {
+    const cancelled = error.code === 'CANCELLED'; const result = { operationId, toolId: tool.id, success: false, startedAt, finishedAt: new Date().toISOString(), summary: {}, items: [], warnings: context.warnings, errors: [error.message], partial: cancelled, restartRequired: false, undoMetadata: null };
+    phase(operationId, tool.id, cancelled ? 'cancelled' : 'failed', error.message, { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: false }); await log('error', 'operation.failed', { operationId, toolId: tool.id, error: error.message }); return result;
+  } finally { operations.delete(operationId); }
 }
-function createWindow() { mainWindow = new BrowserWindow({ width: 1480, height: 940, minWidth: 1080, minHeight: 700, show: false, backgroundColor: '#111118', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, enableRemoteModule: false } }); mainWindow.once('ready-to-show', () => mainWindow.show()); mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html')); mainWindow.on('close', event => { if (!app.isQuiting && (settingsCache?.general.closeToTray ?? true)) { event.preventDefault(); mainWindow.hide(); } }); }
+function createWindow() { const bounds = settingsCache?.general.rememberWindowBounds ? settingsCache.window.bounds : null; mainWindow = new BrowserWindow({ width: bounds?.width || 1480, height: bounds?.height || 940, x: bounds?.x, y: bounds?.y, minWidth: 960, minHeight: 640, show: false, backgroundColor: '#111118', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, enableRemoteModule: false } }); mainWindow.once('ready-to-show', () => { if (!settingsCache.general.startMinimized && !process.argv.includes('--start-minimized')) mainWindow.show(); }); mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html')); mainWindow.on('close', event => { if (!app.isQuiting && settingsCache?.general.closeBehavior === 'tray') { event.preventDefault(); mainWindow.hide(); } }); mainWindow.on('closed', () => { mainWindow = null; }); const saveBounds = () => { if (settingsCache?.general.rememberWindowBounds && mainWindow && !mainWindow.isMinimized() && !mainWindow.isMaximized()) updateSettings({ window: { ...settingsCache.window, bounds: mainWindow.getBounds() } }).catch(() => {}); }; mainWindow.on('resize', saveBounds); mainWindow.on('move', saveBounds); }
 function createTray() { const icon = nativeImage.createEmpty(); tray = new Tray(icon); tray.setToolTip('KNOuX SmartOrganizer'); tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open', click: () => { mainWindow.show(); } }, { label: 'Smart Scan', click: () => execute({ toolId: 'smart-scan', inputs: {} }) }, { type: 'separator' }, { label: 'Exit', click: () => { app.isQuiting = true; app.quit(); } }])); tray.on('click', () => mainWindow.show()); }
-app.whenReady().then(async () => { await ensureAppStorage(); await getSettings(); createWindow(); createTray(); ipcMain.handle('knoux:app-info', () => ({ version: app.getVersion(), startedAt, platform: process.platform, isPackaged: app.isPackaged })); ipcMain.handle('knoux:tools-list', () => toolDefinitions); ipcMain.handle('knoux:settings-get', getSettings); ipcMain.handle('knoux:settings-update', (_event, patch) => updateSettings(z.record(z.unknown()).parse(patch))); ipcMain.handle('knoux:settings-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-settings.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; await fsp.writeFile(result.filePath, JSON.stringify(await getSettings(), null, 2), 'utf8'); return result.filePath; }); ipcMain.handle('knoux:settings-import', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePaths[0]) return null; const imported = z.record(z.unknown()).parse(JSON.parse(await fsp.readFile(result.filePaths[0], 'utf8'))); return updateSettings(imported); }); ipcMain.handle('knoux:settings-reset', async () => { const value = defaultSettings(); settingsCache = value; await writeJson('settings.json', value); return value; }); ipcMain.handle('knoux:history-list', history); ipcMain.handle('knoux:folder-choose', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] }); return result.canceled ? null : result.filePaths[0]; }); ipcMain.handle('knoux:file-choose', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'] }); return result.canceled ? null : result.filePaths[0]; }); ipcMain.handle('knoux:tool-run', (_event, request) => execute(request)); ipcMain.handle('knoux:operation-cancel', (_event, operationId) => { const operation = operations.get(z.string().uuid().parse(operationId)); if (operation) operation.cancelled = true; return Boolean(operation); }); ipcMain.handle('knoux:open-path', async (_event, target) => shell.openPath(allowedDirectory(z.string().min(1).max(32767).parse(target)))); });
+app.whenReady().then(async () => {
+  await ensureAppStorage(); settingsStore = createSettingsStore({ userDataPath: app.getPath('userData') }); settingsCache = await settingsStore.load(); applyRuntimeSettings(settingsCache); createWindow(); createTray();
+  ipcMain.handle('knoux:app-info', () => ({ version: app.getVersion(), startedAt, platform: process.platform, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome }));
+  ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
+  ipcMain.handle('knoux:settings-get', getSettings);
+  ipcMain.handle('knoux:settings-update', (_event, patch) => updateSettings(z.record(z.unknown()).parse(patch)));
+  ipcMain.handle('knoux:settings-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-settings.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; await fsp.writeFile(result.filePath, JSON.stringify(await getSettings(), null, 2), 'utf8'); return result.filePath; });
+  ipcMain.handle('knoux:settings-import', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePaths[0]) return null; const value = await settingsStore.importText(await fsp.readFile(result.filePaths[0], 'utf8')); settingsCache = value; applyRuntimeSettings(value); return value; });
+  ipcMain.handle('knoux:settings-reset-section', async (_event, section) => { const value = await settingsStore.resetSection(z.string().min(1).max(32).parse(section)); settingsCache = value; applyRuntimeSettings(value); return value; });
+  ipcMain.handle('knoux:settings-reset', async () => { const value = await settingsStore.resetAll(); settingsCache = value; applyRuntimeSettings(value); return value; });
+  ipcMain.handle('knoux:history-list', history);
+  ipcMain.handle('knoux:folder-choose', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] }); return result.canceled ? null : result.filePaths[0]; });
+  ipcMain.handle('knoux:file-choose', async () => { const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'] }); return result.canceled ? null : result.filePaths[0]; });
+  ipcMain.handle('knoux:tool-run', (_event, request) => execute(request));
+  ipcMain.handle('knoux:operation-cancel', (_event, operationId) => { const operation = operations.get(z.string().uuid().parse(operationId)); if (operation) { operation.cancelRequested = true; operation.cancelled = true; } return Boolean(operation); });
+  ipcMain.handle('knoux:open-path', async (_event, target) => shell.openPath(allowedDirectory(z.string().min(1).max(32767).parse(target))));
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); else mainWindow.show(); });

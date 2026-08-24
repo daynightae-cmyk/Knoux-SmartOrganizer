@@ -4,10 +4,10 @@ import { dictionaries } from '../src/locales';
 
 describe('settings contract', () => {
   it('starts with a versioned, privacy-preserving local configuration', () => {
-    expect(defaultSettings.settingsVersion).toBe(1);
+    expect(defaultSettings.settingsVersion).toBe(2);
     expect(defaultSettings.privacy.telemetry).toBe(false);
-    expect(defaultSettings.privacy.crashReports).toBe(false);
-    expect(defaultSettings.scan.followReparsePoints).toBe(false);
+    expect(defaultSettings.privacy.crashReporting).toBe(false);
+    expect(defaultSettings.scanning.reparsePointPolicy).toBe('skip');
   });
 });
 

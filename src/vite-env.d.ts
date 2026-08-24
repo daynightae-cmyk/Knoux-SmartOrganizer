@@ -4,12 +4,13 @@ import type { AppSettings, OperationEvent, OperationRecord, ToolDefinition, Tool
 declare global {
   interface Window {
     knoux: {
-      appInfo: () => Promise<{ version: string; startedAt: string; platform: string; isPackaged: boolean }>;
+      appInfo: () => Promise<{ version: string; startedAt: string; platform: string; isPackaged: boolean; electron: string; chromium: string }>;
       listTools: () => Promise<ToolDefinition[]>;
       getSettings: () => Promise<AppSettings>;
       updateSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>;
       exportSettings: () => Promise<string | null>;
       importSettings: () => Promise<AppSettings | null>;
+      resetSettingsSection: (section: keyof Omit<AppSettings, 'settingsVersion'>) => Promise<AppSettings>;
       resetSettings: () => Promise<AppSettings>;
       listHistory: () => Promise<OperationRecord[]>;
       chooseFolder: () => Promise<string | null>;

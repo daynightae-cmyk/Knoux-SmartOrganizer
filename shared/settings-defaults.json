@@ -1,0 +1,102 @@
+{
+  "settingsVersion": 2,
+  "general": {
+    "startWithWindows": false,
+    "startMinimized": false,
+    "minimizeToTray": true,
+    "closeBehavior": "tray",
+    "rememberWindowBounds": true,
+    "restorePreviousPage": true,
+    "confirmExitActiveOperations": true
+  },
+  "appearance": {
+    "theme": "system",
+    "accent": "violet",
+    "density": "comfortable",
+    "fontScale": 1,
+    "reduceMotion": false,
+    "transparency": true,
+    "animations": true
+  },
+  "localization": {
+    "locale": "ar",
+    "region": "AE",
+    "numberFormat": "locale",
+    "dateFormat": "medium",
+    "timeFormat": "short",
+    "byteUnits": "binary"
+  },
+  "scanning": {
+    "includeHidden": false,
+    "includeSystem": false,
+    "includeRemovable": false,
+    "includeNetworkLocations": false,
+    "exclusions": [],
+    "minimumDuplicateBytes": 1048576,
+    "largeFileBytes": 524288000,
+    "scanWorkers": 2,
+    "hashWorkers": 2,
+    "reparsePointPolicy": "skip"
+  },
+  "cleanup": {
+    "recycleBinByDefault": true,
+    "confirmDestructive": true,
+    "minimumFileAgeDays": 7,
+    "exclusions": [],
+    "rememberSelection": false,
+    "safetyBackup": true
+  },
+  "performance": {
+    "mode": "balanced",
+    "workerCount": 2,
+    "ioThrottle": "balanced",
+    "batteryBehavior": "reduce",
+    "backgroundBehavior": "pause-intensive"
+  },
+  "privacy": {
+    "telemetry": false,
+    "crashReporting": false,
+    "diagnostics": false,
+    "usageAnalytics": false,
+    "aiPrivacy": "local-only"
+  },
+  "notifications": {
+    "operationSuccess": true,
+    "operationFailure": true,
+    "diskWarning": true,
+    "scheduledScan": true,
+    "update": true,
+    "restartRequired": true
+  },
+  "automation": {
+    "enabled": false,
+    "quietHoursStart": "22:00",
+    "quietHoursEnd": "07:00",
+    "onBatteryPolicy": "skip-intensive",
+    "missedSchedulePolicy": "run-next-start"
+  },
+  "history": {
+    "retentionDays": 90,
+    "automaticCleanup": true,
+    "exportFormat": "json"
+  },
+  "security": {
+    "elevationPolicy": "ask-each-time",
+    "confirmDestructive": true,
+    "confirmExternalLinks": true,
+    "secureCredentials": true
+  },
+  "updates": {
+    "automaticChecks": true,
+    "channel": "stable"
+  },
+  "advanced": {
+    "diagnosticLogging": false,
+    "logLevel": "info",
+    "developerTools": false
+  },
+  "window": {
+    "bounds": null,
+    "lastPage": "home"
+  }
+}

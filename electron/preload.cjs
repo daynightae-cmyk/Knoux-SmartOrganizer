@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
   updateSettings: (patch) => ipcRenderer.invoke('knoux:settings-update', patch),
   exportSettings: () => ipcRenderer.invoke('knoux:settings-export'),
   importSettings: () => ipcRenderer.invoke('knoux:settings-import'),
+  resetSettingsSection: (section) => ipcRenderer.invoke('knoux:settings-reset-section', section),
   resetSettings: () => ipcRenderer.invoke('knoux:settings-reset'),
   listHistory: () => ipcRenderer.invoke('knoux:history-list'),
   chooseFolder: () => ipcRenderer.invoke('knoux:folder-choose'),
