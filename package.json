@@ -18,7 +18,11 @@
     "desktop:dist": "npm run build && electron-builder",
     "smoke:packaged-operations": "node scripts/packaged-operations-smoke.cjs",
     "smoke:installer": "node scripts/installer-smoke.cjs",
+    "smoke:reinstall": "node scripts/reinstall-smoke.cjs",
+    "smoke:visual": "node scripts/visual-acceptance-smoke.cjs",
     "smoke:offline": "node scripts/offline-smoke.cjs",
+    "signing:verify": "node scripts/verify-code-signing.cjs",
+    "artifact:manifest": "node scripts/generate-artifact-manifest.cjs",
     "verify:release": "npm run check && npm run lint && npm run test && npm run build && npm run desktop:pack && node scripts/verify-release.cjs"
   },
   "dependencies": {

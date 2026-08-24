@@ -20,7 +20,9 @@ interface AutomationSchedule {
 declare global {
   interface Window {
     knoux: {
-      appInfo: () => Promise<{ version: string; startedAt: string; platform: string; isPackaged: boolean; electron: string; chromium: string }>;
+            appInfo: () => Promise<{ version: string; startedAt: string; platform: string; arch: string; isPackaged: boolean; electron: string; chromium: string; node: string; releaseChannel: string; firstRun: boolean; codeSigning: { state: 'SIGNED_PRODUCTION' | 'UNSIGNED_PRODUCTION_CANDIDATE' | 'NOT_AVAILABLE'; status: string; publisher: string | null; timestampPublisher: string | null; signatureAlgorithm: string | null } }>;
+      completeFirstRun: () => Promise<boolean>;
+      exportDiagnostics: () => Promise<string | null>;
       listTools: () => Promise<ToolDefinition[]>;
       getSettings: () => Promise<AppSettings>;
       updateSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>;

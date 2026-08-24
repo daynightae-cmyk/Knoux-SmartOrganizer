@@ -87,7 +87,7 @@
     "secureCredentials": true
   },
   "updates": {
-    "automaticChecks": true,
+    "automaticChecks": false,
     "channel": "stable"
   },
   "advanced": {

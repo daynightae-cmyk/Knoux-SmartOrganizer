@@ -1,0 +1,84 @@
+{
+  "capturedAt": "2026-08-24T15:47:05.755Z",
+  "packaged": true,
+  "scenarios": [
+    {
+      "id": "ar-1280x720",
+      "locale": "ar",
+      "size": [
+        1280,
+        720
+      ],
+      "zoom": 1,
+      "lang": "ar",
+      "dir": "rtl",
+      "clientWidth": 1257,
+      "scrollWidth": 1257,
+      "clientHeight": 668,
+      "scrollHeight": 832,
+      "shellWidth": 1257,
+      "focusable": 19,
+      "horizontalOverflow": false,
+      "screenshot": "ar-1280x720.png"
+    },
+    {
+      "id": "en-1366x768",
+      "locale": "en",
+      "size": [
+        1366,
+        768
+      ],
+      "zoom": 1,
+      "lang": "en",
+      "dir": "ltr",
+      "clientWidth": 1343,
+      "scrollWidth": 1343,
+      "clientHeight": 716,
+      "scrollHeight": 832,
+      "shellWidth": 1343,
+      "focusable": 19,
+      "horizontalOverflow": false,
+      "screenshot": "en-1366x768.png"
+    },
+    {
+      "id": "ar-1440x900-150",
+      "locale": "ar",
+      "size": [
+        1440,
+        900
+      ],
+      "zoom": 1.5,
+      "lang": "ar",
+      "dir": "rtl",
+      "clientWidth": 945,
+      "scrollWidth": 945,
+      "clientHeight": 565,
+      "scrollHeight": 1454,
+      "shellWidth": 944.6666870117188,
+      "focusable": 19,
+      "horizontalOverflow": false,
+      "screenshot": "ar-1440x900-150.png"
+    },
+    {
+      "id": "en-1920x1080-200",
+      "locale": "en",
+      "size": [
+        1920,
+        1080
+      ],
+      "zoom": 2,
+      "lang": "en",
+      "dir": "ltr",
+      "clientWidth": 948,
+      "scrollWidth": 948,
+      "clientHeight": 514,
+      "scrollHeight": 1498,
+      "shellWidth": 948.5,
+      "focusable": 19,
+      "horizontalOverflow": false,
+      "screenshot": "en-1920x1080-200.png"
+    }
+  ],
+  "note": "Zoom-factor layouts are an in-app surrogate only; they are not a claim of verified Windows display scaling.",
+  "scope": "Packaged visual acceptance at fixed window sizes and in-app zoom factors. This is not a claim of native Windows DPI or clean-machine verification."
+}

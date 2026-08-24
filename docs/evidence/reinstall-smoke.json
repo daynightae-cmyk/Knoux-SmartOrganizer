@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-08-24T15:31:13.545Z",
+  "scope": "same-version uninstall and reinstall preservation acceptance",
+  "previousVersionUpgrade": "NOT_AVAILABLE: no prior published release artifact exists in this repository.",
+  "installExit": 0,
+  "firstSmokeExit": 0,
+  "uninstallExit": 0,
+  "installDirectoryRemoved": true,
+  "preservationAfterUninstall": {
+    "settings.json": {
+      "exists": true,
+      "hashMatches": true
+    },
+    "history.json": {
+      "exists": true,
+      "hashMatches": true
+    },
+    "automations.json": {
+      "exists": true,
+      "hashMatches": true
+    }
+  },
+  "reinstallExit": 0,
+  "secondSmokeExit": 0,
+  "finalUninstallExit": 0,
+  "finalInstallDirectoryRemoved": true,
+  "persisted": {
+    "settingsVersion": 2,
+    "historyRecordCount": 72,
+    "automationRecordCount": 0
+  }
+}

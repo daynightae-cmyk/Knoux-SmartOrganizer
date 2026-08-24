@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-08-24T15:49:13.860Z",
+  "gitSha": "f6335c6a5e37b8abe09ace6a8c7eeec52630a702",
+  "version": "0.4.0",
+  "node": "v24.19.0",
+  "npm": "npm/12.0.2 node/v24.19.0 win32 x64 workspaces/false",
+  "electron": "^43.4.1",
+  "electronBuilder": "^26.15.3",
+  "signingState": "UNSIGNED_PRODUCTION_CANDIDATE",
+  "artifacts": {
+    "installer": {
+      "path": "release/KNOuX-SmartOrganizer-Setup-x64.exe",
+      "bytes": 114093959,
+      "sha256": "ee4a803a9d855e542ccc12ad8ac7bfd77843d580d731ed4b8b09e9dae3cd4a4b",
+      "signature": {
+        "artifact": "release\\KNOuX-SmartOrganizer-Setup-x64.exe",
+        "status": "NotSigned",
+        "statusMessage": "The file [artifact] is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https://go.microsoft.com/fwlink/?LinkID=135170",
+        "subject": null,
+        "timestampSubject": null,
+        "signatureAlgorithm": null,
+        "verifier": "pwsh.exe",
+        "verifierError": null
+      }
+    },
+    "mainExecutable": {
+      "path": "release/win-unpacked/KNOuX SmartOrganizer.exe",
+      "bytes": 235566592,
+      "sha256": "35d4faa2e56b0a43a2f4dae9540987448ac25ee21aeaeab0dda173df1ff79558",
+      "signature": {
+        "artifact": "release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+        "status": "NotSigned",
+        "statusMessage": "The file [artifact] is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https://go.microsoft.com/fwlink/?LinkID=135170",
+        "subject": null,
+        "timestampSubject": null,
+        "signatureAlgorithm": null,
+        "verifier": "pwsh.exe",
+        "verifierError": null
+      }
+    }
+  }
+}

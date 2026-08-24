@@ -2,6 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('knoux', Object.freeze({
   appInfo: () => ipcRenderer.invoke('knoux:app-info'),
+  completeFirstRun: () => ipcRenderer.invoke('knoux:first-run-complete'),
+  exportDiagnostics: () => ipcRenderer.invoke('knoux:diagnostics-export'),
   listTools: () => ipcRenderer.invoke('knoux:tools-list'),
   getSettings: () => ipcRenderer.invoke('knoux:settings-get'),
   updateSettings: (patch) => ipcRenderer.invoke('knoux:settings-update', patch),

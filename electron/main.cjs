@@ -16,15 +16,23 @@ const { createStartupManager } = require('./startup-manager.cjs');
 const execFileAsync = promisify(execFile);
 const operations = new Map();
 let historyMutationQueue = Promise.resolve();
+let logMutationQueue = Promise.resolve();
+const MAX_AUDIT_LOG_BYTES = 1024 * 1024;
+const MAX_AUDIT_LOG_ARCHIVES = 3;
 let mainWindow = null;
 let tray = null;
 let settingsCache = null;
 let settingsStore = null;
 let automationStore = null;
 let startupManager = null;
+let firstRun = false;
 const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
+const isAutomationProcess = process.argv.some(argument => argument.startsWith('--automation-run='));
+const hasSingleInstanceLock = isAutomationProcess || app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) app.quit();
+if (!isAutomationProcess) app.on('second-instance', () => { if (!mainWindow) return; if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); });
 
 const runRequestSchema = z.object({
   toolId: z.string().min(1).max(64),
@@ -35,10 +43,16 @@ function appDataPath(name) { return path.join(app.getPath('userData'), name); }
 async function ensureAppStorage() { await fsp.mkdir(app.getPath('userData'), { recursive: true }); await fsp.mkdir(appDataPath('logs'), { recursive: true }); }
 async function readJson(name, fallback) { try { return JSON.parse(await fsp.readFile(appDataPath(name), 'utf8')); } catch { return fallback; } }
 async function writeJson(name, data) { const target = appDataPath(name); const temp = `${target}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`; await fsp.writeFile(temp, JSON.stringify(data, null, 2), 'utf8'); try { for (let attempt = 0; attempt < 6; attempt += 1) { try { await fsp.rename(temp, target); return; } catch (error) { if (!['EPERM', 'EACCES', 'EBUSY'].includes(error?.code) || attempt === 5) throw error; await new Promise(resolve => setTimeout(resolve, 25 * (attempt + 1))); } } } finally { await fsp.rm(temp, { force: true }).catch(() => {}); } }
-async function log(level, event, details = {}) { const line = JSON.stringify({ timestamp: new Date().toISOString(), level, event, ...details }) + '\n'; await fsp.appendFile(path.join(appDataPath('logs'), 'operations.ndjson'), line).catch(() => {}); }
+function redactLogValue(value, key = '') { if (/password|token|secret|authorization|cookie/i.test(key)) return '[redacted]'; if (Array.isArray(value)) return value.map(item => redactLogValue(item)); if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([childKey, childValue]) => [childKey, redactLogValue(childValue, childKey)])); return value; }
+async function rotateAuditLog(target) { const stat = await fsp.stat(target).catch(() => null); if (!stat || stat.size < MAX_AUDIT_LOG_BYTES) return; for (let index = MAX_AUDIT_LOG_ARCHIVES; index >= 1; index -= 1) { const from = `${target}.${index}`; const to = `${target}.${index + 1}`; if (index === MAX_AUDIT_LOG_ARCHIVES) await fsp.rm(from, { force: true }).catch(() => {}); else await fsp.rename(from, to).catch(() => {}); } await fsp.rename(target, `${target}.1`).catch(() => {}); }
+function log(level, event, details = {}) { const task = logMutationQueue.catch(() => {}).then(async () => { const target = path.join(appDataPath('logs'), 'operations.ndjson'); await rotateAuditLog(target); const line = JSON.stringify({ timestamp: new Date().toISOString(), level, event, ...redactLogValue(details) }) + '\n'; await fsp.appendFile(target, line, 'utf8'); }); logMutationQueue = task; return task.catch(() => {}); }
 async function getSettings() { const value = await settingsStore.get(); settingsCache = value; return value; }
 function publishSettings(value) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:settings-changed', value); }
 async function updateSettings(patch) { const value = await settingsStore.update(patch); settingsCache = value; applyRuntimeSettings(value); publishSettings(value); return value; }
+function sanitizeDiagnosticText(value) { return String(value || '').replace(/[A-Za-z]:\\[^\r\n"']+/g, '[local-path]').slice(0, 500); }
+async function codeSigningInfo() { if (process.platform !== 'win32') return { state: 'NOT_AVAILABLE', status: 'NotAvailable', publisher: null, timestampPublisher: null, signatureAlgorithm: null }; const executable = process.execPath.replace(/'/g, "''"); const script = `$s=Get-AuthenticodeSignature -FilePath '${executable}'; [pscustomobject]@{status=[string]$s.Status;publisher=if($s.SignerCertificate){$s.SignerCertificate.Subject}else{$null};timestampPublisher=if($s.TimeStamperCertificate){$s.TimeStamperCertificate.Subject}else{$null};signatureAlgorithm=if($s.SignerCertificate){$s.SignerCertificate.SignatureAlgorithm.FriendlyName}else{$null}} | ConvertTo-Json -Compress`; const raw = await powershellJson(script).catch(() => ({})); const signed = raw?.status === 'Valid'; return { state: signed ? 'SIGNED_PRODUCTION' : 'UNSIGNED_PRODUCTION_CANDIDATE', status: raw?.status || 'Unknown', publisher: raw?.publisher || null, timestampPublisher: raw?.timestampPublisher || null, signatureAlgorithm: raw?.signatureAlgorithm || null }; }
+async function appInfo() { return { version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', firstRun, codeSigning: await codeSigningInfo() }; }
+async function buildDiagnostics() { const settings = await getSettings(); const records = await history(); const tools = (await serializeRegistry(toolDefinitions)).map(tool => ({ id: tool.id, category: tool.category, risk: tool.riskLevel, available: tool.availability.available, capability: tool.availability.capability || null })); const recentErrors = records.filter(record => !record.success).slice(0, 20).map(record => ({ toolId: record.toolId, at: record.finishedAt, errors: (record.errors || []).map(sanitizeDiagnosticText) })); return { generatedAt: new Date().toISOString(), app: await appInfo(), os: { type: os.type(), release: os.release(), arch: process.arch }, settingsSchemaVersion: settings.settingsVersion, toolCapabilities: tools, recentErrors, privacy: { telemetry: false, usageAnalytics: false, crashReporting: false, pathsRedacted: true } }; }
 async function history() { return await readJson('history.json', []); }
 function addHistory(entry) { const task = historyMutationQueue.catch(() => {}).then(async () => { const records = await history(); records.unshift(entry); await writeJson('history.json', records.slice(0, 200)); }); historyMutationQueue = task; return task; }
 function emit(event) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:operation-event', event); }
@@ -61,10 +75,13 @@ function smokeArgument(name) { const value = argumentValue(name); return value ?
 function automationArgument() { const prefix = '--automation-run='; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 async function taskScheduler(args) { const { stdout, stderr } = await execFileAsync('schtasks.exe', args, { windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 }); return { stdout, stderr }; }
 function requireTemporaryPath(target, label) { const tempRoot = path.resolve(os.tmpdir()) + path.sep; if (!target || !target.startsWith(tempRoot)) throw new Error(`${label} must be inside the system temporary directory.`); return target; }
+async function runVisualAcceptance(target) { const before = await getSettings(); const beforeBounds = mainWindow.getBounds(); const screenshotsDirectory = `${target}.screenshots`; const scenarios = [ { id: 'ar-1280x720', locale: 'ar', size: [1280, 720], zoom: 1 }, { id: 'en-1366x768', locale: 'en', size: [1366, 768], zoom: 1 }, { id: 'ar-1440x900-150', locale: 'ar', size: [1440, 900], zoom: 1.5 }, { id: 'en-1920x1080-200', locale: 'en', size: [1920, 1080], zoom: 2 } ]; const results = []; try { await fsp.mkdir(screenshotsDirectory, { recursive: true }); await mainWindow.webContents.executeJavaScript(`(async () => { for (let attempt = 0; attempt < 100; attempt += 1) { const phase = document.querySelector('.operation-meta span')?.textContent || ''; if (!['queued', 'preflight', 'awaiting-confirmation', 'awaiting-admin', 'running', 'progress'].includes(phase)) break; await new Promise(resolve => setTimeout(resolve, 50)); } document.querySelector('.operation-drawer .icon-button')?.click(); })()`); await new Promise(resolve => setTimeout(resolve, 100)); for (const scenario of scenarios) { mainWindow.setSize(...scenario.size); mainWindow.webContents.setZoomFactor(scenario.zoom); await updateSettings({ localization: { ...before.localization, locale: scenario.locale }, appearance: { ...before.appearance, theme: 'high-contrast', fontScale: scenario.zoom >= 1.5 ? 1.5 : 1, reduceMotion: true, animations: false } }); const layout = await mainWindow.webContents.executeJavaScript(`(async () => { for (let attempt = 0; attempt < 40; attempt += 1) { await new Promise(resolve => setTimeout(resolve, 50)); if (document.documentElement.lang === ${JSON.stringify(scenario.locale)} && document.documentElement.dir === (${JSON.stringify(scenario.locale)} === 'ar' ? 'rtl' : 'ltr')) break; } const root = document.documentElement; const shell = document.querySelector('.app-shell'); const focusable = Array.from(document.querySelectorAll('button, input, select')).filter(element => !element.disabled).length; return { lang: root.lang, dir: root.dir, clientWidth: root.clientWidth, scrollWidth: root.scrollWidth, clientHeight: root.clientHeight, scrollHeight: root.scrollHeight, shellWidth: shell?.getBoundingClientRect().width || 0, focusable, horizontalOverflow: root.scrollWidth > root.clientWidth + 1 }; })()`); mainWindow.show(); await new Promise(resolve => setTimeout(resolve, 150)); let image = null; let captureError = null; for (let attempt = 0; attempt < 3 && !image; attempt += 1) { try { image = await mainWindow.capturePage(); } catch (error) { captureError = error; await new Promise(resolve => setTimeout(resolve, 250)); } } if (!image) throw captureError || new Error('Unable to capture visual acceptance screenshot.'); const screenshot = path.join(screenshotsDirectory, `${scenario.id}.png`); await fsp.writeFile(screenshot, image.toPNG()); results.push({ ...scenario, ...layout, screenshot: path.basename(screenshot) }); } return { capturedAt: new Date().toISOString(), packaged: app.isPackaged, scenarios: results, note: 'Zoom-factor layouts are an in-app surrogate only; they are not a claim of verified Windows display scaling.' }; } finally { mainWindow.webContents.setZoomFactor(1); mainWindow.setBounds(beforeBounds); await updateSettings({ localization: before.localization, appearance: before.appearance }); } }
 async function runPackagedSmoke() {
   const settingsTarget = smokeArgument('knoux-settings-smoke-output');
   const operationTarget = smokeArgument('knoux-operation-smoke-output');
-  if (!settingsTarget && !operationTarget) return;
+  const diagnosticsTarget = smokeArgument('knoux-diagnostics-smoke-output');
+  const visualTarget = smokeArgument('knoux-visual-smoke-output');
+  if (!settingsTarget && !operationTarget && !diagnosticsTarget && !visualTarget) return;
   if (settingsTarget) {
     requireTemporaryPath(settingsTarget, 'Packaged settings smoke output');
     const evidence = await mainWindow.webContents.executeJavaScript(`(async () => {
@@ -75,6 +92,8 @@ async function runPackagedSmoke() {
     })()`);
     await fsp.mkdir(path.dirname(settingsTarget), { recursive: true }); await fsp.writeFile(settingsTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, evidence }, null, 2), 'utf8');
   }
+  if (diagnosticsTarget) { requireTemporaryPath(diagnosticsTarget, 'Packaged diagnostics smoke output'); await fsp.mkdir(path.dirname(diagnosticsTarget), { recursive: true }); await fsp.writeFile(diagnosticsTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, diagnostics: await buildDiagnostics() }, null, 2), 'utf8'); }
+  if (visualTarget) { requireTemporaryPath(visualTarget, 'Packaged visual smoke output'); const visual = await runVisualAcceptance(visualTarget); await fsp.writeFile(visualTarget, JSON.stringify(visual, null, 2), 'utf8'); }
   if (operationTarget) {
     requireTemporaryPath(operationTarget, 'Packaged operation smoke output'); const fixture = requireTemporaryPath(smokeArgument('knoux-operation-smoke-fixture'), 'Packaged operation fixture'); const cleanupFixture = requireTemporaryPath(smokeArgument('knoux-temp-cleanup-smoke-fixture'), 'Packaged cleanup fixture'); const cancelFixture = requireTemporaryPath(smokeArgument('knoux-cancel-smoke-fixture'), 'Packaged cancellation fixture'); const startupSmokeValue = argumentValue('knoux-startup-smoke-value'); allowedDirectory(fixture); allowedDirectory(cleanupFixture); allowedDirectory(cancelFixture);
     const source = JSON.stringify(fixture); const cleanupSource = JSON.stringify(cleanupFixture); const cancelSource = JSON.stringify(cancelFixture); const startupSource = JSON.stringify(startupSmokeValue);
@@ -213,7 +232,7 @@ function createWindow() {
   });
   mainWindow.once('ready-to-show', () => { if (!settingsCache.general.startMinimized && !process.argv.includes('--start-minimized')) mainWindow.show(); });
   mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
-  mainWindow.webContents.once('did-finish-load', () => runPackagedSmoke().catch(async error => { const targets = [smokeArgument('knoux-settings-smoke-output'), smokeArgument('knoux-operation-smoke-output')].filter(Boolean); for (const target of targets) await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, error: error.message }, null, 2), 'utf8').catch(() => {}); app.isQuiting = true; app.exit(1); }));
+  mainWindow.webContents.once('did-finish-load', () => runPackagedSmoke().catch(async error => { const targets = [smokeArgument('knoux-settings-smoke-output'), smokeArgument('knoux-operation-smoke-output'), smokeArgument('knoux-diagnostics-smoke-output'), smokeArgument('knoux-visual-smoke-output')].filter(Boolean); for (const target of targets) await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, error: error.message }, null, 2), 'utf8').catch(() => {}); app.isQuiting = true; app.exit(1); }));
   mainWindow.on('minimize', event => { if (settingsCache?.general.minimizeToTray) { event.preventDefault(); mainWindow.hide(); } });
   mainWindow.on('close', async event => {
     if (app.isQuiting) return;
@@ -233,11 +252,13 @@ function createWindow() {
 }
 function createTray() { const icon = nativeImage.createEmpty(); tray = new Tray(icon); tray.setToolTip('KNOuX SmartOrganizer'); tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open', click: () => { mainWindow.show(); } }, { label: 'Smart Scan', click: () => execute({ toolId: 'smart-scan', inputs: {} }) }, { type: 'separator' }, { label: 'Exit', click: () => { app.isQuiting = true; app.quit(); } }])); tray.on('click', () => mainWindow.show()); }
 app.whenReady().then(async () => {
-  await ensureAppStorage(); settingsStore = createSettingsStore({ userDataPath: app.getPath('userData') }); settingsCache = await settingsStore.load(); applyRuntimeSettings(settingsCache); startupManager = createStartupManager({ readJournal: name => readJson(name, null), writeJournal: writeJson }); automationStore = createAutomationStore({ userDataPath: app.getPath('userData'), executablePath: process.execPath, runTask: taskScheduler });
+  await ensureAppStorage(); settingsStore = createSettingsStore({ userDataPath: app.getPath('userData') }); firstRun = !fs.existsSync(settingsStore.target) && !fs.existsSync(appDataPath('first-run-complete.json')); settingsCache = await settingsStore.load(); applyRuntimeSettings(settingsCache); startupManager = createStartupManager({ readJournal: name => readJson(name, null), writeJournal: writeJson }); automationStore = createAutomationStore({ userDataPath: app.getPath('userData'), executablePath: process.execPath, runTask: taskScheduler });
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
-  ipcMain.handle('knoux:app-info', () => ({ version: app.getVersion(), startedAt, platform: process.platform, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome }));
+  ipcMain.handle('knoux:app-info', appInfo);
+  ipcMain.handle('knoux:first-run-complete', async () => { await writeJson('first-run-complete.json', { completedAt: new Date().toISOString() }); firstRun = false; return true; });
+  ipcMain.handle('knoux:diagnostics-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-diagnostics.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; await fsp.writeFile(result.filePath, JSON.stringify(await buildDiagnostics(), null, 2), 'utf8'); return result.filePath; });
   ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
   ipcMain.handle('knoux:settings-get', getSettings);
   ipcMain.handle('knoux:settings-update', (_event, patch) => updateSettings(z.record(z.unknown()).parse(patch)));

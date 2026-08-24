@@ -1,0 +1,5 @@
+{
+  "capturedAt": "2026-08-24T14:36:48.569Z",
+  "packaged": true,
+  "error": "serializeRegistry(...).map is not a function"
+}

@@ -34,7 +34,8 @@ async function main() {
   const cleanupFixture = path.join(root, 'cleanup-fixture');
   const cancelFixture = path.join(root, 'cancellation-fixture');
   const output = path.join(root, 'operations-evidence.json');
-  const settingsOutput = path.join(root, 'settings-evidence.json');
+    const settingsOutput = path.join(root, 'settings-evidence.json');
+    const diagnosticsOutput = path.join(root, 'diagnostics-evidence.json');
   let completed = false;
   try {
     await fs.mkdir(fixture, { recursive: true });
@@ -53,20 +54,25 @@ async function main() {
 
     const appArgs = [
       `--knoux-settings-smoke-output=${settingsOutput}`,
+      `--knoux-diagnostics-smoke-output=${diagnosticsOutput}`,
       `--knoux-operation-smoke-output=${output}`,
       `--knoux-operation-smoke-fixture=${fixture}`,
       `--knoux-temp-cleanup-smoke-fixture=${cleanupFixture}`,
       `--knoux-cancel-smoke-fixture=${cancelFixture}`,
       `--knoux-startup-smoke-value=${startupValue}`
     ];
+    if (process.env.KNOUX_SMOKE_USER_DATA_DIR) appArgs.push(`--user-data-dir=${path.resolve(process.env.KNOUX_SMOKE_USER_DATA_DIR)}`);
     if (process.env.KNOUX_SMOKE_OFFLINE === '1') appArgs.push('--host-rules=MAP * 0.0.0.0');
     const code = await launch(executable, appArgs);
     assert(code === 0, `Packaged operations smoke exited with code ${code}.`);
     const report = JSON.parse(await fs.readFile(output, 'utf8'));
     const settingsReport = JSON.parse(await fs.readFile(settingsOutput, 'utf8'));
-    const evidence = report.evidence || {}; const accessibility = settingsReport.evidence?.accessibility || {};
+    const diagnosticsReport = JSON.parse(await fs.readFile(diagnosticsOutput, 'utf8'));
+    const diagnostics = diagnosticsReport.diagnostics || {}; const evidence = report.evidence || {}; const accessibility = settingsReport.evidence?.accessibility || {};
     const required = ['health', 'smartScan', 'servicesInventory', 'serviceDryRun', 'disks', 'processes', 'battery', 'startupItems', 'installedApps', 'networkDiagnostics', 'hardwareInventory', 'eventWarnings', 'emptyFolders', 'downloadsInventory', 'hash', 'large', 'duplicates', 'preview', 'apply', 'undo', 'cleanupPreview', 'cleanupApply', 'cleanupUndo', 'startupDisable', 'startupRestore', 'automationRun', 'adminDryRun'];
-    assert(report.packaged === true && settingsReport.packaged === true, 'Smoke did not run in a packaged application.');
+    assert(report.packaged === true && settingsReport.packaged === true && diagnosticsReport.packaged === true, 'Smoke did not run in a packaged application.');
+    assert(diagnostics.app?.codeSigning?.state === 'UNSIGNED_PRODUCTION_CANDIDATE' || diagnostics.app?.codeSigning?.state === 'SIGNED_PRODUCTION', 'Diagnostics did not report a truthful signing state.');
+    assert(diagnostics.privacy?.pathsRedacted === true && Array.isArray(diagnostics.toolCapabilities), 'Diagnostics did not provide the expected sanitized local support data.');
     assert(accessibility.applied === true, 'React did not apply the requested accessibility setting transition.');
     assert(accessibility.lang === 'ar' && accessibility.dir === 'rtl', 'Arabic locale did not apply RTL document metadata.');
     assert(accessibility.theme === 'high-contrast' && accessibility.motion === 'reduced' && accessibility.fontScale === '1.5', 'High contrast, reduced motion, or font scale did not apply.');
@@ -87,7 +93,7 @@ async function main() {
     assert(restoredStartup.stdout.includes(startupValue), 'Startup value is absent after restore.');
     await fs.access(agedFile);
     await fs.mkdir(path.dirname(evidencePath), { recursive: true });
-    await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true } }, null, 2), 'utf8');
+    await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, diagnosticsVerified: true, codeSigningState: diagnostics.app?.codeSigning?.state, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true } }, null, 2), 'utf8');
     console.log('Packaged operations smoke PASS: cleanup preview, quarantine, and undo were verified in a disposable temporary fixture.');
     completed = true;
   } finally {

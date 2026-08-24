@@ -142,7 +142,7 @@ function Settings({ t, settings, appInfo, onUpdate }: { t: (k: string) => string
       <Toggle label={t('settings.secureCredentials')} checked={settings.security.secureCredentials} onChange={value => change('security', { ...settings.security, secureCredentials: value })}/>
     </SettingsSection>
     <SettingsSection title={t('settings.section.updates')} resetLabel={t('settings.resetSection')} onReset={() => resetSection('updates')}>
-      <Toggle label={t('settings.automaticChecks')} checked={settings.updates.automaticChecks} onChange={value => change('updates', { ...settings.updates, automaticChecks: value })}/>
+      <Setting label={t('settings.automaticChecks')}><output>{t('settings.updateUnavailable')}</output></Setting>
       <Setting label={t('settings.updateChannel')}><output>{t('settings.value.stable')}</output></Setting>
       <Setting label={t('settings.currentVersion')}><output>{appInfo?.version || '—'}</output></Setting>
     </SettingsSection>

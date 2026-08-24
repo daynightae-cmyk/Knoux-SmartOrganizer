@@ -1,64 +1,65 @@
 # KNOuX SmartOrganizer
 
-KNOuX SmartOrganizer is a **local-first Windows desktop utility**. It uses a single Electron main process, a narrowly scoped preload bridge, and a React/Vite renderer. The renderer cannot run commands or access Node.js directly.
+**KNOuX SmartOrganizer** هو تطبيق Windows محلي أولاً لتنظيم الملفات، مراجعة التخزين، وتشغيل أدوات نظام مقيدة وآمنة. يستخدم التطبيق عملية Electron رئيسية واحدة، وجسر preload مسمى ومحدود، وواجهة React/Vite معزولة. لا يملك الـ renderer صلاحية Node.js أو الوصول إلى الأوامر أو PowerShell أو مسارات النظام العامة.
 
-## Implemented in this build
+> **حالة التوزيع الحالية:** `UNSIGNED_PRODUCTION_CANDIDATE`، الإصدار `0.4.0`. القطع المبنية صحيحة ومختبرة محلياً، لكن لا يوجد توقيع Authenticode موثوق مهيأ حالياً. لا يدّعي المشروع ضمان سمعة SmartScreen.
 
-| Capability | Status | Notes |
-|---|---:|---|
-| Secure Electron shell | Implemented | `contextIsolation`, `sandbox`, `webSecurity`, `nodeIntegration: false` |
-| Tool execution lifecycle | Implemented | queued, preflight, running, progress, result, completed, cancelled, failed |
-| System health | Implemented | CPU, RAM, system drive, uptime, battery when Windows exposes it |
-| Smart Scan | Implemented | read-only disk, Downloads large-file, and temp-file review findings |
-| Storage & file tools | Implemented | disks, large files, SHA-256 duplicates, empty folders, Downloads inventory, file hashes |
-| Cleanup | Implemented | read-only temporary-file preview only; no automatic cleanup |
-| Startup & applications | Implemented | safe registry inventory only |
-| Network, hardware, events | Implemented | local diagnostics only |
-| History and structured local logs | Implemented | stored under Electron user-data path |
-| Settings | Implemented | versioned local settings for language, appearance, scan, cleanup, privacy, and performance defaults |
-| Arabic / English | Implemented | Arabic is the default and switches full document direction to RTL |
-| NSIS configuration | Implemented | requires `npm run desktop:dist` on Windows |
+## ما يقدمه التطبيق فعلياً
 
-## Intentionally unavailable
+| السطح | السلوك الفعلي |
+|---|---|
+| القراءة المحلية | صحة النظام، الأقراص، الملفات الكبيرة، التكرارات المتحققة بـ SHA-256، الملفات الفارغة، التنزيلات، التطبيقات، الشبكة، العتاد، الأحداث، العمليات، والبطارية. |
+| عمليات كتابة آمنة | تنظيم التنزيلات بعد معاينة وتأكيد، وتنظيف مؤقت بالحجر القابل للاستعادة؛ لا يوجد حذف دائم ضمن مسار التنظيف. |
+| بدء التشغيل | قراءة عناصر البداية وتعطيل قيمة محددة للمستخدم الحالي فقط، مع سجل استعادة محلي. |
+| الأتمتة | مهام Windows Task Scheduler باسم KNOuX لأدوات قراءة allowlisted فقط؛ لا توجد أوامر مجدولة عامة أو إصلاحات أو خدمات أو تنظيف تطبيقي مجدول. |
+| الخدمات والإصلاح | جرد مقيد، إجراءات خدمة ثابتة مع تأكيد/UAC عند التنفيذ، وثماني عمليات إصلاح ثابتة فقط. تثبت الحزمة الـ dry-run ولا تشغّل تغيير خدمة أو إصلاح حي تلقائياً. |
+| السجل والتشخيص | دورة حياة العمليات، سجل محلي محدود، تدوير NDJSON، تصدير JSON/CSV للسجل، وتصدير تشخيصات محلية منقحة. |
+| الوصولية | العربية والإنجليزية، RTL، تباين عالٍ، تقليل الحركة، حجم خط، وتركيز لوحة المفاتيح. |
 
-This build does **not** claim file deletion, registry changes, startup toggling, service manipulation, repair actions, scheduled automations, update downloads, application usage statistics, or AI assistance. Those capabilities remain unavailable until they have their own safe handler, confirmation flow, rollback model, tests, and packaged verification.
+## نموذج الأمان والخصوصية
 
-## Privacy model
+تتحقق كل أداة من إدخالها بمخطط صارم، وتنتج نتيجة منظمة، وتعرض للواجهة بيانات التوفر الآمنة فقط. لا توجد قناة IPC عامة لتشغيل shell أو PowerShell أو executable أو خدمة أو سجل Windows. تبقى عمليات الامتياز مقيدة بمعرّفات ثابتة ومواصفات مجمدة وتحتاج التأكيد لكل عملية.
 
-Core functions operate locally. Telemetry and crash reports are disabled by default. No remote AI model, CDN script, remote font, or backend service is required for the implemented tools.
+لا يتطلب التطبيق خادماً خلفياً أو CDN أو نموذج AI أو تحليلات استخدام. القياس عن بعد وتقارير الأعطال وتحليلات الاستخدام معطلة. راجع [الأمان](docs/SECURITY.md) و[الخصوصية](docs/PRIVACY.md) لتفاصيل الحدود وسياسة التنقيح.
 
-## Development
+## التثبيت والاستخدام
+
+يبنى المثبت الرسمي لـ x64 باسم `KNOuX-SmartOrganizer-Setup-x64.exe`. يتضمن NSIS مسار تثبيت قابل للتغيير، اختصار قائمة Start، اختصار سطح المكتب، ومزيل تثبيت. إزالة التطبيق لا تحذف بيانات المستخدم محلياً افتراضياً؛ راجع [سياسة بيانات الإزالة](docs/UNINSTALL_DATA_POLICY.md).
 
 ```powershell
-npm install
+npm ci
 npm run check
 npm run lint
 npm test
 npm run build
-npm run desktop:dev
-```
-
-## Windows artifacts
-
-```powershell
-npm run desktop:pack  # creates release/win-unpacked
-npm run desktop:dist  # creates release/KNOuX-SmartOrganizer-Setup-x64.exe
+npm run desktop:dist
+npm run smoke:installer
+npm run smoke:reinstall
+npm run smoke:offline
 npm run verify:release
 ```
 
-The application is currently an unsigned development build unless a signing certificate is configured in the build environment.
+## حالة التوقيع والإصدار
 
-## Architecture
+يستخدم electron-builder آلية توقيع Windows القياسية عندما تتوافر بيانات اعتماد التوقيع في بيئة البناء. لا تُحفظ شهادة أو كلمة مرور أو مفتاح خاص في المستودع. ينشئ الأمر التالي دليلاً عن حالة توقيع القطع المبنية:
 
-```text
-Electron main process
-  ├─ Windows data collectors and filesystem engines
-  ├─ input validation, operation lifecycle, history, settings and logs
-  └─ named IPC handlers only
-       ↓
-preload bridge
-       ↓
-React + TypeScript renderer
+```powershell
+npm run signing:verify
 ```
 
-Detailed baseline findings are recorded in [`docs/FORENSIC_BASELINE_AUDIT.md`](docs/FORENSIC_BASELINE_AUDIT.md).
+يمكن تعيين `KNOUX_REQUIRE_SIGNING=1` في بيئة الإصدار لرفض القطع غير الموقعة. لا تفعل ذلك في بيئة لا تملك شهادة موثوقة؛ عند غيابها تكون النتيجة الصحيحة **مرشح توزيع غير موقع**، وليست توقيعاً زائفاً. راجع [دليل توقيع الشفرة](docs/CODE_SIGNING.md).
+
+## التوثيق
+
+| الوثيقة | الغرض |
+|---|---|
+| [تثبيت التطبيق](docs/INSTALLATION.md) | التثبيت والإزالة وإعادة التثبيت. |
+| [دليل المستخدم](docs/USER_GUIDE.md) | تشغيل الأدوات والقيود الآمنة. |
+| [الأمان](docs/SECURITY.md) | نموذج IPC والامتيازات والحدود. |
+| [الخصوصية](docs/PRIVACY.md) | البيانات المحلية والسجلات والتشخيصات. |
+| [الأتمتة](docs/AUTOMATION.md) | حدود مهام Windows Task Scheduler. |
+| [مركز الإصلاح](docs/REPAIR_CENTER.md) | عمليات الإصلاح المسموح بها وUAC وdry-run. |
+| [التحقق من الإصدار](docs/RELEASE_VERIFICATION.md) | البوابات والأدلة والقيود الخارجية. |
+| [استكشاف الأخطاء](docs/TROUBLESHOOTING.md) | الإقلاع والصلاحيات والإعدادات وعدم الاتصال. |
+
+تظهر حالة الأدلة الحية في [حالة الإنتاج](docs/PRODUCTION_STATUS.md) و[مصفوفة الأدوات](docs/TOOL_MATRIX.md).

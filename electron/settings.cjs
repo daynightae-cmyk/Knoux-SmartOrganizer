@@ -135,13 +135,15 @@ function createSettingsStore({ userDataPath, now = () => new Date(), rename = fs
       return clone(cache);
     }
     const migrated = migrate(raw);
-    const parsed = settingsSchema.parse(migrated);
+const parsed = settingsSchema.parse(migrated);
+    const disabledUnsupportedUpdateChecks = parsed.updates.automaticChecks;
+    parsed.updates.automaticChecks = false;
     cache = parsed;
-    if (raw.settingsVersion !== 2) await atomicWrite(parsed);
+    if (raw.settingsVersion !== 2 || disabledUnsupportedUpdateChecks) await atomicWrite(parsed);
     return clone(cache);
   }
   async function get() { return clone(cache || await load()); }
-  async function replace(value) { const parsed = settingsSchema.parse(value); await atomicWrite(parsed); cache = parsed; return clone(parsed); }
+  async function replace(value) { const parsed = settingsSchema.parse(value); parsed.updates.automaticChecks = false; await atomicWrite(parsed); cache = parsed; return clone(parsed); }
   async function update(patch) { const next = merge(await get(), patch); return replace(next); }
   async function resetSection(section) {
     if (!Object.prototype.hasOwnProperty.call(defaults, section) || ['settingsVersion'].includes(section)) throw new Error('Unknown settings section.');

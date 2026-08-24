@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-08-24T14:02:05.968Z",
+  "capturedAt": "2026-08-24T15:29:33.809Z",
   "setupExit": 0,
   "installedAppSmokeExit": 0,
   "uninstallExit": 0,
@@ -29,6 +29,8 @@
       "fontScale": "1.5",
       "keyboardFocusable": true
     },
+    "diagnosticsVerified": true,
+    "codeSigningState": "UNSIGNED_PRODUCTION_CANDIDATE",
     "automationVerified": true,
     "servicesDryRunVerified": true,
     "repairsDryRunVerified": true

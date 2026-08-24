@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-08-24T15:49:20.684Z",
+  "signingState": "UNSIGNED_PRODUCTION_CANDIDATE",
+  "signingRequired": false,
+  "artifacts": [
+    {
+      "artifact": "release\\KNOuX-SmartOrganizer-Setup-x64.exe",
+      "status": "NotSigned",
+      "statusMessage": "The file [artifact] is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https://go.microsoft.com/fwlink/?LinkID=135170",
+      "subject": null,
+      "timestampSubject": null,
+      "signatureAlgorithm": null,
+      "verifier": "pwsh.exe",
+      "verifierError": null
+    },
+    {
+      "artifact": "release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+      "status": "NotSigned",
+      "statusMessage": "The file [artifact] is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https://go.microsoft.com/fwlink/?LinkID=135170",
+      "subject": null,
+      "timestampSubject": null,
+      "signatureAlgorithm": null,
+      "verifier": "pwsh.exe",
+      "verifierError": null
+    }
+  ]
+}

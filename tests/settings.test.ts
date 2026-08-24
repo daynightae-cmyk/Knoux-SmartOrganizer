@@ -58,6 +58,15 @@ describe('versioned settings storage', () => {
     await expect(store.importText(JSON.stringify({ ...defaults, unexpected: true }))).rejects.toThrow();
   });
 
+  it('keeps automatic update checks disabled until a real update mechanism exists', async () => {
+    const store = createSettingsStore({ userDataPath: directory });
+    await store.load();
+    const updated = await store.update({ updates: { ...defaults.updates, automaticChecks: true } });
+    expect(updated.updates.automaticChecks).toBe(false);
+    const imported = await store.importText(JSON.stringify({ ...defaults, updates: { ...defaults.updates, automaticChecks: true } }));
+    expect(imported.updates.automaticChecks).toBe(false);
+  });
+
   it('resets one section without changing the others', async () => {
     const store = createSettingsStore({ userDataPath: directory });
     await store.load();
