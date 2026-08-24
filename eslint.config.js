@@ -7,5 +7,5 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { files: ['src/**/*.{ts,tsx}', 'shared/**/*.ts', 'tests/**/*.ts'], languageOptions: { globals: { ...globals.browser, ...globals.node } }, rules: { '@typescript-eslint/no-explicit-any': 'off' } },
-  { files: ['electron/**/*.cjs'], languageOptions: { globals: { ...globals.node } }, rules: { '@typescript-eslint/no-require-imports': 'off', 'no-empty': ['error', { 'allowEmptyCatch': true }] } }
+  { files: ['electron/**/*.cjs', 'scripts/**/*.cjs'], languageOptions: { globals: { ...globals.node } }, rules: { '@typescript-eslint/no-require-imports': 'off', 'no-empty': ['error', { 'allowEmptyCatch': true }] } }
 ];

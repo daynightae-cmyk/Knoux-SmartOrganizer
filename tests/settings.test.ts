@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { createSettingsStore, defaults } = require('../electron/settings.cjs') as {
-  createSettingsStore: (options: { userDataPath: string; now?: () => Date }) => any;
+  createSettingsStore: (options: { userDataPath: string; now?: () => Date; rename?: (from: string, to: string) => Promise<void> }) => any;
   defaults: any;
 };
 
@@ -18,6 +18,15 @@ describe('versioned settings storage', () => {
   it('loads defaults and persists them atomically', async () => {
     const store = createSettingsStore({ userDataPath: directory });
     expect(await store.load()).toEqual(defaults);
+    expect(JSON.parse(await readFile(join(directory, 'settings.json'), 'utf8'))).toEqual(defaults);
+  });
+
+  it('retries a transient Windows rename lock and preserves atomic persistence', async () => {
+    let calls = 0;
+    const rename = async (from: string, to: string) => { calls++; if (calls < 3) { const error = Object.assign(new Error('locked'), { code: 'EPERM' }); throw error; } await (await import('node:fs/promises')).rename(from, to); };
+    const store = createSettingsStore({ userDataPath: directory, rename });
+    await store.load();
+    expect(calls).toBe(3);
     expect(JSON.parse(await readFile(join(directory, 'settings.json'), 'utf8'))).toEqual(defaults);
   });
 
@@ -34,6 +43,19 @@ describe('versioned settings storage', () => {
     const store = createSettingsStore({ userDataPath: directory });
     const imported = { ...defaults, localization: { ...defaults.localization, locale: 'en', region: 'US' } };
     expect((await store.importText(JSON.stringify(imported))).localization).toMatchObject({ locale: 'en', region: 'US' });
+  });
+
+  it('persists an imported document through a restarted store', async () => {
+    const store = createSettingsStore({ userDataPath: directory });
+    const imported = { ...defaults, appearance: { ...defaults.appearance, accent: 'green' } };
+    await store.importText(JSON.stringify(imported));
+    expect((await createSettingsStore({ userDataPath: directory }).load()).appearance.accent).toBe('green');
+  });
+
+  it('rejects incomplete or unknown-key imported documents', async () => {
+    const store = createSettingsStore({ userDataPath: directory });
+    await expect(store.importText(JSON.stringify({ settingsVersion: 2 }))).rejects.toThrow();
+    await expect(store.importText(JSON.stringify({ ...defaults, unexpected: true }))).rejects.toThrow();
   });
 
   it('resets one section without changing the others', async () => {
