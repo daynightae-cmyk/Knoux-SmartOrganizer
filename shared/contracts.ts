@@ -45,6 +45,12 @@ export interface ToolDefinition {
   outputSchema: SchemaDescriptor;
   estimatedCost: 'low' | 'medium' | 'high';
   availability: ToolAvailability;
+  advisory?: {
+    effectKey: string;
+    doesNotKey: string;
+    durationKey: string;
+    restartMayBeRequired: boolean;
+  };
 }
 
 export interface OperationEvent {

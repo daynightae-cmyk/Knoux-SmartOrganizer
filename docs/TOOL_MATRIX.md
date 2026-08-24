@@ -19,7 +19,15 @@
 
 Every row is sourced from the runtime registry. Each enabled entry now has a strict input schema, structured output schema, concrete handler, availability probe, error path and renderer-safe serialized metadata. No arbitrary shell or command capability is exposed.
 
-No administrator, destructive, service-control, repair, or cleanup-apply action is registered yet. The UI derives availability from the registry and disables unavailable handlers.
+Administrator repair actions are fixed allowlist entries with capability probes, explicit confirmation and dry-run inspection; no arbitrary executable, argument, command or script reaches the renderer. Destructive and service-control actions are not registered yet. The UI derives availability from the registry and disables unavailable handlers.
 | organize-downloads-preview | files | `organizePreview` | Read | No | Yes | Yes | N/A | Contract | Packaged fixture PASS |
 | organize-downloads-apply | files | `organizeApply` | Write | No | No | Yes | Yes | Contract | Packaged fixture PASS |
 | organize-downloads-undo | files | `organizeUndo` | Write | No | No | Yes | Yes | Contract | Packaged fixture PASS |
+| repair-dism-check-health | repair | allowlisted `dism.exe /Online /Cleanup-Image /CheckHealth` | System | Yes | Yes | No | No | Allowlist + capability | Packaged dry-run PASS |
+| repair-dism-scan-health | repair | allowlisted DISM ScanHealth | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-dism-restore-health | repair | allowlisted DISM RestoreHealth | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-sfc-verify-only | repair | allowlisted `sfc.exe /VerifyOnly` | Read | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-sfc-scan-now | repair | allowlisted `sfc.exe /ScanNow` | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-dns-flush | repair | allowlisted `ipconfig.exe /flushdns` | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-winsock-reset | repair | allowlisted `netsh.exe winsock reset` | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |
+| repair-tcpip-reset | repair | allowlisted `netsh.exe int ip reset` | System | Yes | Yes | No | No | Allowlist + capability | Capability pending final gate |

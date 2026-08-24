@@ -13,7 +13,8 @@
 | Arabic / English / RTL | AR/EN dictionaries, full settings copy, document direction switch | parity test | visual RTL review pending | PARTIAL | `src/locales.ts` |
 | Accessibility and DPI | semantic controls, visible controls and responsive layout | manual | pending | PARTIAL | `src/App.tsx`, `src/index.css` |
 | Cleanup/write actions/undo | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no unsafe success claim |
-| Repair/service/admin actions | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no elevation implementation |
+| Repair Center / admin actions | 8 allowlisted DISM, SFC and network-repair handlers with per-operation UAC | 5 allowlist/capability/executor tests | packaged capability and dry-run PASS | PARTIAL | one controlled live elevated operation and remaining repair families still required |
+| Services manager | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no service write is exposed |
 | Automation/update/AI | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no fake state |
 | NSIS setup | Electron Builder NSIS configuration | installer build | install/launch/uninstall smoke recorded | PASS | `release/KNOuX-SmartOrganizer-Setup-x64.exe` |
 | CI | Node install, check, lint, test and build | workflow file | GitHub run pending push | PARTIAL | `.github/workflows/ci.yml` |
@@ -28,7 +29,7 @@ This is an **unsigned development build**. It does not claim final release readi
 |---|---|---|
 | TypeScript | PASS | `npm run check` completed successfully |
 | Lint | PASS | `npm run lint` completed successfully |
-| Unit / contract tests | PASS | Vitest: 15 tests passed across contracts, settings storage and registry security |
+| Unit / contract tests | PASS | Vitest: 21 tests passed across contracts, settings storage, registry security and privileged allowlisting |
 | Production build | PASS | `npm run build` completed successfully |
 | Packaged app smoke | PASS | Isolated packaged preload IPC proved tool enumeration and settings v2 write/read/reset; `docs/evidence/packaged-settings-smoke.json` |
 | Installer smoke | PASS | silent install exit 0; installed app started; uninstaller exit 0; temporary install directory removed |

@@ -11,7 +11,7 @@ const handler = async () => ({ summary: {}, items: [] });
 describe('tool registry', () => {
   it('has a real handler, schemas, and availability probe for every enabled tool', async () => {
     const registry = createToolRegistry(() => handler, { platform: 'win32' });
-    expect(registry).toHaveLength(17);
+    expect(registry).toHaveLength(25);
     for (const tool of registry) {
       expect(typeof tool.handler).toBe('function');
       expect(tool.inputSchema.safeParse).toBeTypeOf('function');

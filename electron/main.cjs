@@ -9,6 +9,7 @@ const { promisify } = require('node:util');
 const { z } = require('zod');
 const { createSettingsStore } = require('./settings.cjs');
 const { createToolRegistry, serializeRegistry } = require('./tool-registry.cjs');
+const { OPERATION_SPECS, createPrivilegedRunner } = require('./privileged-runner.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
@@ -17,7 +18,8 @@ let tray = null;
 let settingsCache = null;
 let settingsStore = null;
 const startedAt = new Date().toISOString();
-const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs));
+const privilegedRunner = createPrivilegedRunner();
+const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => privilegedRunner.probe(engine) });
 
 const runRequestSchema = z.object({
   toolId: z.string().min(1).max(64),
@@ -73,7 +75,8 @@ async function runPackagedSmoke() {
       const large = await run('large-files', { folder: fixture, thresholdBytes: 1, limit: 500 }); const duplicates = await run('duplicate-files', { folder: fixture, minimumBytes: 1, limit: 500 });
       const preview = await run('organize-downloads-preview', { folder: fixture, limit: 500 }); const apply = await run('organize-downloads-apply', { folder: fixture, confirm: true, limit: 500 });
       const undo = apply.success && apply.summary.journalId ? await run('organize-downloads-undo', { journalId: apply.summary.journalId }) : null;
-      return { health, disks, hash, large, duplicates, preview, apply, undo };
+      const adminDryRun = await run('repair-dism-check-health', { confirm: true, dryRun: true });
+      return { health, disks, hash, large, duplicates, preview, apply, undo, adminDryRun };
     })()`);
     await fsp.mkdir(path.dirname(operationTarget), { recursive: true }); await fsp.writeFile(operationTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, fixture, evidence }, null, 2), 'utf8');
   }
@@ -113,6 +116,7 @@ async function scanDuplicates(root, context, minimumSize, limit) { const data = 
 }
 async function runTool(context, tool, inputs) {
   const home = app.getPath('home'); const folder = allowedDirectory(inputs.folder || home); const limit = inputs.limit || 50000;
+  if (OPERATION_SPECS[tool.engine]) { const output = await privilegedRunner.run(tool.engine, { dryRun: inputs.dryRun }); if (!inputs.dryRun && output.summary.exitCode !== 0) throw new Error(`Privileged operation exited with code ${output.summary.exitCode}.`); return output; }
   if (tool.engine === 'systemHealth') return { summary: await systemHealth(), items: [] };
   if (tool.engine === 'diskOverview') { const items = await diskOverview(); return { items, summary: { drives: items.length } }; }
   if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
@@ -140,6 +144,7 @@ async function execute(request) {
   operations.set(operationId, context); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request, schema, handler, and local availability');
   if (tool.riskLevel !== 'read-only') phase(operationId, tool.id, 'awaiting-confirmation', 'Validated the explicit confirmation supplied for this write operation');
   try {
+    if (tool.requiresAdmin && !inputs.dryRun) { if ((await getSettings()).security.elevationPolicy === 'deny') throw new Error('Elevation is disabled in Security settings.'); phase(operationId, tool.id, 'awaiting-admin', 'Waiting for Windows administrator approval'); }
     phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = tool.outputSchema.parse(await tool.handler(context, inputs));
     const result = { operationId, toolId: tool.id, success: true, startedAt, finishedAt: new Date().toISOString(), summary: output.summary, items: output.items, warnings: [...context.warnings, ...(output.warnings || [])], errors: [], partial: Boolean(output.partial), restartRequired: Boolean(output.restartRequired), undoMetadata: output.undoMetadata || null };
     phase(operationId, tool.id, 'result', 'Structured result available', { result }); phase(operationId, tool.id, 'completed', 'Operation completed', { result });

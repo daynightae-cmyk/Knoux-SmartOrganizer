@@ -11,6 +11,7 @@ const organizePreviewInput = z.object({ folder: z.string().min(1).max(32767).opt
 const organizeApplyInput = z.object({ folder: z.string().min(1).max(32767).optional(), confirm: z.literal(true), limit: z.number().int().min(1).max(200000).optional() }).strict();
 const organizeUndoInput = z.object({ journalId: z.string().uuid() }).strict();
 const fileHashInput = z.object({ filePath: z.string().min(1).max(32767), algorithm: z.enum(['sha256', 'sha512']).optional() }).strict();
+const administratorInput = z.object({ confirm: z.literal(true), dryRun: z.boolean().optional().default(false) }).strict();
 const outputSchema = z.object({
   summary: z.record(z.unknown()),
   items: z.array(z.record(z.unknown())),
@@ -37,10 +38,18 @@ const SPECS = [
   ['network-diagnostics', 'networkDiagnostics', 'network', 'Network', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['hardware-inventory', 'hardwareInventory', 'hardware', 'Cpu', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['event-warnings', 'eventWarnings', 'system', 'TriangleAlert', 'read-only', false, false, false, false, true, 'medium', emptyInput],
-  ['file-hash', 'fileHash', 'files', 'Fingerprint', 'read-only', false, false, true, true, true, 'medium', fileHashInput]
+  ['file-hash', 'fileHash', 'files', 'Fingerprint', 'read-only', false, false, true, true, true, 'medium', fileHashInput],
+  ['repair-dism-check-health', 'dismCheckHealth', 'repair', 'ShieldCheck', 'administrator', true, true, false, false, true, 'medium', administratorInput],
+  ['repair-dism-scan-health', 'dismScanHealth', 'repair', 'ShieldSearch', 'administrator', true, true, false, false, true, 'high', administratorInput],
+  ['repair-dism-restore-health', 'dismRestoreHealth', 'repair', 'ShieldPlus', 'administrator', true, true, false, false, true, 'high', administratorInput],
+  ['repair-sfc-verify-only', 'sfcVerifyOnly', 'repair', 'FileCheck2', 'administrator', true, true, false, false, true, 'high', administratorInput],
+  ['repair-sfc-scan-now', 'sfcScanNow', 'repair', 'FileCog', 'administrator', true, true, false, false, true, 'high', administratorInput],
+  ['repair-dns-flush', 'flushDns', 'repair', 'Network', 'administrator', true, true, false, false, true, 'low', administratorInput],
+  ['repair-winsock-reset', 'winsockReset', 'repair', 'Router', 'administrator', true, true, false, false, true, 'medium', administratorInput],
+  ['repair-tcpip-reset', 'tcpIpReset', 'repair', 'Cable', 'administrator', true, true, false, false, true, 'medium', administratorInput]
 ];
 
-function createToolRegistry(handlerResolver, { platform = process.platform } = {}) {
+function createToolRegistry(handlerResolver, { platform = process.platform, availabilityResolver = null } = {}) {
   const registry = SPECS.map(([id, engine, category, icon, riskLevel, requiresAdmin, supportsDryRun, supportsProgress, supportsCancel, supportsExport, estimatedCost, inputSchema]) => {
     const handler = handlerResolver(engine);
     if (typeof handler !== 'function') throw new Error(`Missing handler for enabled tool: ${id}`);
@@ -48,8 +57,9 @@ function createToolRegistry(handlerResolver, { platform = process.platform } = {
       id, engine, nameKey: `tools.${id}.name`, descriptionKey: `tools.${id}.description`, category, icon, riskLevel,
       requiresAdmin, supportsDryRun, supportsProgress, supportsCancel,
       supportsUndo: engine === 'organizeApply' || engine === 'organizeUndo', supportsExport, estimatedCost,
+      advisory: requiresAdmin ? { effectKey: `tools.${id}.effect`, doesNotKey: `tools.${id}.doesNot`, durationKey: `tools.${id}.duration`, restartMayBeRequired: ['dismRestoreHealth', 'sfcScanNow', 'winsockReset', 'tcpIpReset'].includes(engine) } : undefined,
       inputSchema, outputSchema, handler,
-      availabilityProbe: async () => platform === 'win32'
+      availabilityProbe: async () => requiresAdmin && availabilityResolver ? availabilityResolver(engine) : platform === 'win32'
         ? { available: true, capability: requiresAdmin ? 'windows-elevation' : 'windows-local' }
         : { available: false, reason: 'This tool requires Windows.', capability: 'windows-local' }
     });
@@ -67,7 +77,7 @@ async function serializeTool(tool) {
     supportsProgress: tool.supportsProgress, supportsCancel: tool.supportsCancel, supportsUndo: tool.supportsUndo,
     supportsExport: tool.supportsExport, estimatedCost: tool.estimatedCost,
     inputSchema: { id: `${tool.id}.input`, version: 1 }, outputSchema: { id: `${tool.id}.output`, version: 1 },
-    availability
+    availability, advisory: tool.advisory
   };
 }
 
