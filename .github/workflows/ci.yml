@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   verify:
+    name: Source verification
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,3 +24,31 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  windows-package:
+    name: Windows packaged runtime verification
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript
+        run: npm run check
+      - name: ESLint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build NSIS distribution
+        run: npm run desktop:dist
+      - name: Packaged operations smoke
+        run: npm run smoke:packaged-operations
+      - name: Installer lifecycle smoke
+        run: npm run smoke:installer
+      - name: Offline packaged smoke
+        run: npm run smoke:offline
+      - name: Verify release evidence without signing claim
+        run: node scripts/verify-release.cjs

@@ -71,7 +71,10 @@ async function main() {
     assert(accessibility.lang === 'ar' && accessibility.dir === 'rtl', 'Arabic locale did not apply RTL document metadata.');
     assert(accessibility.theme === 'high-contrast' && accessibility.motion === 'reduced' && accessibility.fontScale === '1.5', 'High contrast, reduced motion, or font scale did not apply.');
     assert(accessibility.keyboardFocusable === true, 'A visible button could not receive keyboard focus.');
-    for (const key of required) assert(evidence[key]?.success === true, `Expected successful packaged operation: ${key}.`);
+    for (const key of required) {
+      const detail = evidence[key]?.errors?.length ? ` Errors: ${JSON.stringify(evidence[key].errors)}` : '';
+      assert(evidence[key]?.success === true, `Expected successful packaged operation: ${key}.${detail}`);
+    }
     assert(evidence.cleanupPreview.summary.eligibleFiles === 1, 'Cleanup preview did not limit itself to the disposable aged fixture.');
     assert(evidence.cleanupApply.summary.quarantinedFiles === 1, 'Cleanup apply did not quarantine exactly one disposable file.');
     assert(evidence.cleanupUndo.summary.restoredFiles === 1, 'Cleanup undo did not restore the disposable file.');
