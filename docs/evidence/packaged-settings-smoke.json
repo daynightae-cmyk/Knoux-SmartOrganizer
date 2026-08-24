@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-08-24T10:25:53.794Z",
+  "packaged": true,
+  "isolatedUserData": true,
+  "executable": "release/win-unpacked/KNOuX SmartOrganizer.exe",
+  "exitCode": 0,
+  "evidence": {
+    "beforeVersion": 2,
+    "toolCount": 17,
+    "handlersAvailable": true,
+    "marker": "blue",
+    "writeObserved": true,
+    "sectionResetObserved": true
+  }
+}

@@ -4,12 +4,13 @@
 |---|---|---|---|---|---|
 | One root Electron architecture | Electron main, preload, React/Vite renderer | TypeScript + lint | win-unpacked start smoke | PASS | `electron/main.cjs`, `electron/preload.cjs` |
 | Secure renderer isolation | no Node integration, context isolation, sandbox and web security | static review | packaged start smoke | PASS | BrowserWindow webPreferences |
-| Typed allowlisted IPC | Named preload APIs; Zod validation on run/cancel/path inputs | contract tests | manual smoke pending | PARTIAL | `electron/preload.cjs`, `electron/main.cjs` |
-| Local settings | Versioned JSON with privacy-first defaults | settings contract test | manual persistence pending | PARTIAL | `settings.json` under user data |
+| Typed allowlisted IPC | Named preload APIs; strict per-tool Zod inputs; no command bridge | registry and rejection tests | packaged settings APIs invoked through preload | PASS | `electron/preload.cjs`, `electron/tool-registry.cjs`, packaged smoke evidence |
+| Global tool registry | Handler, risk, schemas, capability probe, lifecycle capabilities | registry consistency and rejection tests | 17 serialized tools verified in package | PASS | `electron/tool-registry.cjs`, `tests/tool-registry.test.ts` |
+| Local settings | Complete schema v2, strict validation, migration, atomic writes and backups | load/save/restart/import/reset/invalid/migration/unknown-key tests | write/read/reset through packaged preload IPC | PASS | `electron/settings.cjs`, `tests/settings.test.ts`, packaged smoke evidence |
 | Operation lifecycle/history/logs | Real tool lifecycle, cancellation token, history and NDJSON log | renderer contract | manual operation smoke pending | PARTIAL | `execute`, `addHistory`, `log` |
 | Read-only Windows tools | 14 registered handlers | localization contract | basic packaged process smoke | PARTIAL | `toolDefinitions`, Tool Matrix |
 | Smart Scan | real non-destructive local collection | code review | manual operation smoke pending | PARTIAL | `smartScan` handler |
-| Arabic / English / RTL | AR/EN dictionaries, document direction switch | parity test | visual RTL review pending | PARTIAL | `src/locales.ts` |
+| Arabic / English / RTL | AR/EN dictionaries, full settings copy, document direction switch | parity test | visual RTL review pending | PARTIAL | `src/locales.ts` |
 | Accessibility and DPI | semantic controls, visible controls and responsive layout | manual | pending | PARTIAL | `src/App.tsx`, `src/index.css` |
 | Cleanup/write actions/undo | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no unsafe success claim |
 | Repair/service/admin actions | intentionally not registered | N/A | N/A | NOT IMPLEMENTED | no elevation implementation |
@@ -27,9 +28,9 @@ This is an **unsigned development build**. It does not claim final release readi
 |---|---|---|
 | TypeScript | PASS | `npm run check` completed successfully |
 | Lint | PASS | `npm run lint` completed successfully |
-| Unit / contract tests | PASS | Vitest: 3 tests passed |
+| Unit / contract tests | PASS | Vitest: 15 tests passed across contracts, settings storage and registry security |
 | Production build | PASS | `npm run build` completed successfully |
-| Packaged app smoke | PASS | `KNOuX SmartOrganizer.exe` started and stayed alive for 8 seconds |
+| Packaged app smoke | PASS | Isolated packaged preload IPC proved tool enumeration and settings v2 write/read/reset; `docs/evidence/packaged-settings-smoke.json` |
 | Installer smoke | PASS | silent install exit 0; installed app started; uninstaller exit 0; temporary install directory removed |
 | Offline core | PARTIAL | static inspection shows no renderer network dependency; explicit firewall-isolated run not performed |
 
@@ -40,7 +41,7 @@ This is an **unsigned development build**. It does not claim final release readi
 | NSIS setup | `release/KNOuX-SmartOrganizer-Setup-x64.exe` | `CF403FBB025FFC10A1F93DE82E2BA282D965D8FF691399094D67AD39F9FB9902` |
 | Unpacked executable | `release/win-unpacked/KNOuX SmartOrganizer.exe` | `78964A15EFE11345D1381AF8D66F235B2FE0D784EE3E7A55C9868401E3C96726` |
 | File organizer | Downloads preview, explicit-confirm move, local undo journal | check/lint/test/build | package rebuilt; operation-level smoke pending | PARTIAL | `organizePreview`, `organizeApply`, `organizeUndo` |
-| Settings import / export / reset | Local JSON dialogs through named IPC only | check/lint/test/build | packaged operation smoke pending | PARTIAL | `knoux:settings-export`, `knoux:settings-import`, `knoux:settings-reset` |
+| Settings import / export / reset | Local JSON dialogs through named IPC; strict complete-document import; section/all reset | 8 storage tests plus check/lint/test/build | packaged write/read/section reset PASS; native dialog import/export smoke pending | PARTIAL | `knoux:settings-export`, `knoux:settings-import`, `knoux:settings-reset-section`, `knoux:settings-reset` |
 
 ## Latest artifact rebuild
 

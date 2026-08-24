@@ -49,6 +49,25 @@ function phase(operationId, toolId, phaseName, message, more = {}) {
 function applyRuntimeSettings(settings) {
   app.setLoginItemSettings({ openAtLogin: settings.general.startWithWindows, args: settings.general.startMinimized ? ['--start-minimized'] : [] });
 }
+async function runPackagedSettingsSmoke() {
+  const argument = process.argv.find(value => value.startsWith('--knoux-settings-smoke-output='));
+  if (!argument) return;
+  const target = path.resolve(argument.slice('--knoux-settings-smoke-output='.length));
+  const tempRoot = path.resolve(os.tmpdir()) + path.sep;
+  if (!target.startsWith(tempRoot)) throw new Error('Packaged smoke output must be inside the system temporary directory.');
+  const evidence = await mainWindow.webContents.executeJavaScript(`(async () => {
+    const before = await window.knoux.getSettings();
+    const tools = await window.knoux.listTools();
+    const marker = before.appearance.accent === 'blue' ? 'green' : 'blue';
+    const written = await window.knoux.updateSettings({ appearance: { ...before.appearance, accent: marker } });
+    const persisted = await window.knoux.getSettings();
+    const reset = await window.knoux.resetSettingsSection('appearance');
+    return { beforeVersion: before.settingsVersion, toolCount: tools.length, handlersAvailable: tools.every(tool => tool.availability && typeof tool.availability.available === 'boolean'), marker, writeObserved: written.appearance.accent === marker && persisted.appearance.accent === marker, sectionResetObserved: reset.appearance.accent === before.appearance.accent };
+  })()`);
+  await fsp.mkdir(path.dirname(target), { recursive: true });
+  await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, evidence }, null, 2), 'utf8');
+  app.isQuiting = true; app.quit();
+}
 function normalisePath(input) { const resolved = path.resolve(input); if (resolved.length > 32767) throw new Error('Path is too long.'); return resolved; }
 function allowedDirectory(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) throw new Error('Selected folder is unavailable.'); return resolved; }
 function allowedFile(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) throw new Error('Selected file is unavailable.'); return resolved; }
@@ -118,7 +137,32 @@ async function execute(request) {
     phase(operationId, tool.id, cancelled ? 'cancelled' : 'failed', error.message, { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: false }); await log('error', 'operation.failed', { operationId, toolId: tool.id, error: error.message }); return result;
   } finally { operations.delete(operationId); }
 }
-function createWindow() { const bounds = settingsCache?.general.rememberWindowBounds ? settingsCache.window.bounds : null; mainWindow = new BrowserWindow({ width: bounds?.width || 1480, height: bounds?.height || 940, x: bounds?.x, y: bounds?.y, minWidth: 960, minHeight: 640, show: false, backgroundColor: '#111118', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, enableRemoteModule: false } }); mainWindow.once('ready-to-show', () => { if (!settingsCache.general.startMinimized && !process.argv.includes('--start-minimized')) mainWindow.show(); }); mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html')); mainWindow.on('close', event => { if (!app.isQuiting && settingsCache?.general.closeBehavior === 'tray') { event.preventDefault(); mainWindow.hide(); } }); mainWindow.on('closed', () => { mainWindow = null; }); const saveBounds = () => { if (settingsCache?.general.rememberWindowBounds && mainWindow && !mainWindow.isMinimized() && !mainWindow.isMaximized()) updateSettings({ window: { ...settingsCache.window, bounds: mainWindow.getBounds() } }).catch(() => {}); }; mainWindow.on('resize', saveBounds); mainWindow.on('move', saveBounds); }
+function createWindow() {
+  const bounds = settingsCache?.general.rememberWindowBounds ? settingsCache.window.bounds : null;
+  mainWindow = new BrowserWindow({
+    width: bounds?.width || 1480, height: bounds?.height || 940, x: bounds?.x, y: bounds?.y, minWidth: 860, minHeight: 600,
+    show: false, backgroundColor: '#111118', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, enableRemoteModule: false }
+  });
+  mainWindow.once('ready-to-show', () => { if (!settingsCache.general.startMinimized && !process.argv.includes('--start-minimized')) mainWindow.show(); });
+  mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  mainWindow.webContents.once('did-finish-load', () => runPackagedSettingsSmoke().catch(async error => { const argument = process.argv.find(value => value.startsWith('--knoux-settings-smoke-output=')); if (argument) { const target = path.resolve(argument.slice('--knoux-settings-smoke-output='.length)); await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, error: error.message }, null, 2), 'utf8').catch(() => {}); } app.isQuiting = true; app.exit(1); }));
+  mainWindow.on('minimize', event => { if (settingsCache?.general.minimizeToTray) { event.preventDefault(); mainWindow.hide(); } });
+  mainWindow.on('close', async event => {
+    if (app.isQuiting) return;
+    if (settingsCache?.general.closeBehavior === 'tray') { event.preventDefault(); mainWindow.hide(); return; }
+    const shouldAsk = settingsCache?.general.closeBehavior === 'ask' || (settingsCache?.general.confirmExitActiveOperations && operations.size > 0);
+    if (shouldAsk) {
+      event.preventDefault();
+      const arabic = settingsCache?.localization.locale === 'ar';
+      const answer = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: arabic ? ['إلغاء', 'خروج'] : ['Cancel', 'Exit'], defaultId: 0, cancelId: 0, title: 'KNOuX SmartOrganizer', message: operations.size > 0 ? (arabic ? 'لا تزال هناك عمليات نشطة. هل تريد الخروج؟' : 'Operations are still active. Exit anyway?') : (arabic ? 'هل تريد الخروج من KNOuX SmartOrganizer؟' : 'Exit KNOuX SmartOrganizer?') });
+      if (answer.response === 1) { app.isQuiting = true; app.quit(); }
+    }
+  });
+  mainWindow.on('closed', () => { mainWindow = null; });
+  let boundsTimer = null;
+  const saveBounds = () => { if (!settingsCache?.general.rememberWindowBounds || !mainWindow || mainWindow.isMinimized() || mainWindow.isMaximized()) return; clearTimeout(boundsTimer); boundsTimer = setTimeout(() => updateSettings({ window: { ...settingsCache.window, bounds: mainWindow.getBounds() } }).catch(() => {}), 300); };
+  mainWindow.on('resize', saveBounds); mainWindow.on('move', saveBounds);
+}
 function createTray() { const icon = nativeImage.createEmpty(); tray = new Tray(icon); tray.setToolTip('KNOuX SmartOrganizer'); tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open', click: () => { mainWindow.show(); } }, { label: 'Smart Scan', click: () => execute({ toolId: 'smart-scan', inputs: {} }) }, { type: 'separator' }, { label: 'Exit', click: () => { app.isQuiting = true; app.quit(); } }])); tray.on('click', () => mainWindow.show()); }
 app.whenReady().then(async () => {
   await ensureAppStorage(); settingsStore = createSettingsStore({ userDataPath: app.getPath('userData') }); settingsCache = await settingsStore.load(); applyRuntimeSettings(settingsCache); createWindow(); createTray();

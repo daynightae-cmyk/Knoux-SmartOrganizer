@@ -17,7 +17,9 @@
 | event-warnings | system | bounded event-log reader | Read | No | N/A | N/A | N/A | Contract | Smoke pending final gate |
 | file-hash | files | Node streaming hash | Read | No | N/A | N/A | N/A | Contract | Smoke pending final gate |
 
-No write-capable, administrator, destructive, service-control, repair, or cleanup action is registered. The UI must not imply that unavailable actions exist.
+Every row is sourced from the runtime registry. Each enabled entry now has a strict input schema, structured output schema, concrete handler, availability probe, error path and renderer-safe serialized metadata. No arbitrary shell or command capability is exposed.
+
+No administrator, destructive, service-control, repair, or cleanup-apply action is registered yet. The UI derives availability from the registry and disables unavailable handlers.
 | organize-downloads-preview | files | `organizePreview` | Read | No | Yes | Yes | N/A | Contract | Packaged verification pending final gate |
 | organize-downloads-apply | files | `organizeApply` | Write | No | No | Yes | Yes | Contract | Packaged verification pending final gate |
 | organize-downloads-undo | files | `organizeUndo` | Write | No | No | Yes | Yes | Contract | Packaged verification pending final gate |
