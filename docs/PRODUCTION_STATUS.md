@@ -18,11 +18,13 @@
 | Services manager | bounded inventory, protected allowlist control and startup undo journal | strict service/action schema and registry tests | packaged smoke inventoried services and planned a fixed `manual` action for a non-protected service in dry-run mode; no live service change is used as test evidence | PASS | `electron/privileged-runner.cjs`, `docs/evidence/packaged-operations-smoke.json` |
 | Automation | durable local schedules restricted to bounded read-only tools and fixed Task Scheduler arguments | allowlist, persistence, malformed-input, pause/resume/run-history tests | packaged smoke created, ran, recorded and removed a `system-health` schedule | PASS | `electron/automation.cjs`, `tests/automation.test.ts`, `docs/evidence/packaged-operations-smoke.json` |
 | NSIS setup | Electron Builder NSIS configuration | installer build | install/launch/uninstall smoke recorded | PASS | `release/KNOuX-SmartOrganizer-Setup-x64.exe` |
-| CI | Node install, check, lint, test and build | workflow file | **PENDING EXTERNAL**: the workflow is ready but requires the release-candidate commit and push before GitHub can execute it | PENDING EXTERNAL | `.github/workflows/ci.yml` |
+| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, final Authenticode/hash verification, fresh-runner install verification | Workflow definition is committed; signed-release completion still requires a real workflow result for the exact closure SHA and a trusted Authenticode identity | PENDING EXTERNAL | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
 
 ## Release position
 
-This is an **unsigned release candidate**. All local implementation, test, packaged, installer, offline, accessibility, and evidence gates are complete. Final publication remains contingent on the external GitHub CI run for the release-candidate commit and on the final merge workflow; neither is claimed as complete here.
+This remains an **unsigned production candidate**. The release-closure workflow was added to `main` in commit `8819314330b8512488102afb696913ef3c9e62e5`. It fails closed if the final installer and application executable are not both reported by Windows as `Valid` Authenticode signatures with timestamps, and it verifies the downloaded installer again on a fresh GitHub-hosted Windows runner without a repository checkout or `node_modules` in that verification job.
+
+The status must not be changed to `SIGNED_PRODUCTION_RELEASE` until the exact final workflow artifact is signed by a trusted external identity and the corresponding Windows jobs complete successfully. The workflow expects signing material through protected GitHub secrets named `WINDOWS_SIGNING_PFX_BASE64` and `WINDOWS_SIGNING_PFX_PASSWORD`; no certificate or password is stored in this repository.
 
 ## Verification evidence
 
@@ -35,6 +37,8 @@ This is an **unsigned release candidate**. All local implementation, test, packa
 | Packaged app smoke | PASS | Isolated packaged preload IPC proved tool enumeration and settings v2 write/read/reset; `docs/evidence/packaged-settings-smoke.json` |
 | Installer smoke | PASS | silent install exit 0; installed app started; uninstaller exit 0; temporary install directory removed |
 | Offline core | PASS | Packaged application ran with Chromium host mapping `MAP * 0.0.0.0`; local health, disk, hash, duplicate, organizer, and settings flows completed. See `docs/evidence/OFFLINE_TEST.md` and `offline-smoke.json`. |
+| Trusted Authenticode | BLOCKED EXTERNAL | Requires a trusted certificate/signing identity outside the repository. No self-signed substitute is accepted. |
+| Signed-artifact Windows closure | PENDING EXTERNAL | `.github/workflows/release-closure.yml`; must pass for the exact final source SHA and uploaded artifact before release status changes. |
 
 ## Final local artifacts
 
