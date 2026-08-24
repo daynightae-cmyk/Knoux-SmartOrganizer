@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-08-24T10:41:04.520Z",
+  "packaged": true,
+  "isolatedUserData": true,
+  "processExitCode": 0,
+  "operation": "repair-dism-check-health",
+  "result": {
+    "success": true,
+    "adminRequired": true,
+    "dryRun": true,
+    "executable": "dism.exe",
+    "arguments": ["/Online", "/Cleanup-Image", "/CheckHealth"],
+    "elevationInvoked": false
+  }
+}

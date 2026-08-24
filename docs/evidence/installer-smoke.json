@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-08-24T14:02:05.968Z",
+  "setupExit": 0,
+  "installedAppSmokeExit": 0,
+  "uninstallExit": 0,
+  "installDirectoryRemoved": true,
+  "packaged": true,
+  "smokeAssertions": {
+    "cleanupFixtureIsolated": true,
+    "permanentDeletionObserved": false,
+    "cleanupFileRestored": true,
+    "startupFixtureIsolated": true,
+    "startupValueRestored": true,
+    "cancellationObserved": true,
+    "lifecyclePhases": [
+      "queued",
+      "preflight",
+      "running",
+      "progress",
+      "cancelled"
+    ],
+    "accessibilityVerified": true,
+    "accessibility": {
+      "applied": true,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "high-contrast",
+      "motion": "reduced",
+      "fontScale": "1.5",
+      "keyboardFocusable": true
+    },
+    "automationVerified": true,
+    "servicesDryRunVerified": true,
+    "repairsDryRunVerified": true
+  }
+}

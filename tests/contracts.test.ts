@@ -17,7 +17,7 @@ describe('localization contract', () => {
   });
 
   it('contains localized labels for every registered renderer tool key', () => {
-    for (const id of ['system-health', 'smart-scan', 'disk-overview', 'large-files', 'duplicate-files', 'empty-folders', 'downloads-inventory', 'temp-cleanup-preview', 'startup-items', 'installed-apps', 'network-diagnostics', 'hardware-inventory', 'event-warnings', 'file-hash']) {
+    for (const id of ['system-health', 'smart-scan', 'disk-overview', 'large-files', 'duplicate-files', 'empty-folders', 'downloads-inventory', 'organize-downloads-preview', 'organize-downloads-apply', 'organize-downloads-undo', 'temp-cleanup-preview', 'startup-items', 'installed-apps', 'network-diagnostics', 'hardware-inventory', 'event-warnings', 'file-hash', 'repair-dism-check-health', 'repair-dism-scan-health', 'repair-dism-restore-health', 'repair-sfc-verify-only', 'repair-sfc-scan-now', 'repair-dns-flush', 'repair-winsock-reset', 'repair-tcpip-reset']) {
       expect(dictionaries.ar[`tools.${id}.name`]).toBeTruthy();
       expect(dictionaries.en[`tools.${id}.description`]).toBeTruthy();
     }

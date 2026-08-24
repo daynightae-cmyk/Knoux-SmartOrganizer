@@ -103,7 +103,16 @@ function migrate(input) {
   return clone(defaults);
 }
 
-function createSettingsStore({ userDataPath, now = () => new Date() }) {
+const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+async function renameWithRetry(temp, target, rename = fsp.rename) {
+  let lastError;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try { await rename(temp, target); return; }
+    catch (error) { lastError = error; if (!['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || attempt === 5) throw error; await wait(40 * (attempt + 1)); }
+  }
+  throw lastError;
+}
+function createSettingsStore({ userDataPath, now = () => new Date(), rename = fsp.rename }) {
   const target = path.join(userDataPath, 'settings.json');
   const backup = path.join(userDataPath, 'settings.backup.json');
   let cache = null;
@@ -113,7 +122,7 @@ function createSettingsStore({ userDataPath, now = () => new Date() }) {
     if (fs.existsSync(target)) await fsp.copyFile(target, backup);
     const temp = `${target}.${process.pid}.${Date.now()}.tmp`;
     await fsp.writeFile(temp, JSON.stringify(value, null, 2), 'utf8');
-    await fsp.rename(temp, target);
+    try { await renameWithRetry(temp, target, rename); } finally { await fsp.unlink(temp).catch(() => {}); }
   }
   async function load() {
     await ensure();

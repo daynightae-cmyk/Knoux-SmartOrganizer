@@ -1,14 +1,14 @@
 {
-  "capturedAt": "2026-08-24T13:34:27.870Z",
+  "capturedAt": "2026-08-24T14:02:33.994Z",
   "packaged": true,
-  "fixture": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture",
+  "fixture": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture",
   "evidence": {
     "health": {
-      "operationId": "8f792c50-1c8a-4d85-adb1-c77c26cf424f",
+      "operationId": "c9e3b2b0-347c-42c0-98cb-a99df37e471c",
       "toolId": "system-health",
       "success": true,
-      "startedAt": "2026-08-24T13:34:00.765Z",
-      "finishedAt": "2026-08-24T13:34:03.093Z",
+      "startedAt": "2026-08-24T14:02:11.158Z",
+      "finishedAt": "2026-08-24T14:02:13.359Z",
       "summary": {
         "platform": "win32",
         "release": "10.0.19045",
@@ -16,11 +16,11 @@
         "cpuModel": "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz",
         "cpuCores": 4,
         "memoryTotalBytes": 12769726464,
-        "memoryFreeBytes": 2800869376,
-        "memoryUsedPercent": 78,
-        "uptimeSeconds": 156271,
+        "memoryFreeBytes": 2919071744,
+        "memoryUsedPercent": 77,
+        "uptimeSeconds": 157961,
         "systemDrive": "C:",
-        "systemDriveFreeBytes": 13899968512,
+        "systemDriveFreeBytes": 15617380352,
         "systemDriveTotalBytes": 191841771520,
         "battery": null
       },
@@ -32,11 +32,11 @@
       "undoMetadata": null
     },
     "smartScan": {
-      "operationId": "92ccef0a-95f7-4d71-ac0b-b0c7c2379ae2",
+      "operationId": "5a401cab-f30f-4e3b-b9c3-478ac570a55c",
       "toolId": "smart-scan",
       "success": true,
-      "startedAt": "2026-08-24T13:34:03.163Z",
-      "finishedAt": "2026-08-24T13:34:05.121Z",
+      "startedAt": "2026-08-24T14:02:13.406Z",
+      "finishedAt": "2026-08-24T14:02:15.312Z",
       "summary": {
         "health": {
           "platform": "win32",
@@ -45,11 +45,11 @@
           "cpuModel": "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz",
           "cpuCores": 4,
           "memoryTotalBytes": 12769726464,
-          "memoryFreeBytes": 2723446784,
-          "memoryUsedPercent": 79,
-          "uptimeSeconds": 156272,
+          "memoryFreeBytes": 2751950848,
+          "memoryUsedPercent": 78,
+          "uptimeSeconds": 157962,
           "systemDrive": "C:",
-          "systemDriveFreeBytes": 13899079680,
+          "systemDriveFreeBytes": 15617314816,
           "systemDriveTotalBytes": 191841771520,
           "battery": null
         },
@@ -61,7 +61,7 @@
         {
           "severity": "warning",
           "key": "diskPressure",
-          "value": 13899079680
+          "value": 15617314816
         },
         {
           "severity": "info",
@@ -81,11 +81,11 @@
       "undoMetadata": null
     },
     "servicesInventory": {
-      "operationId": "cb2787c5-1b1c-4025-91b4-6b88766d2ca4",
+      "operationId": "bdcfa681-c585-48ed-8684-db287e0ac404",
       "toolId": "services-inventory",
       "success": true,
-      "startedAt": "2026-08-24T13:34:05.168Z",
-      "finishedAt": "2026-08-24T13:34:07.496Z",
+      "startedAt": "2026-08-24T14:02:15.361Z",
+      "finishedAt": "2026-08-24T14:02:17.043Z",
       "summary": {
         "services": 272,
         "protectedServices": 17
@@ -849,7 +849,7 @@
           "name": "WdiSystemHost",
           "displayName": "Diagnostic System Host",
           "description": "The Diagnostic System Host is used by the Diagnostic Policy Service to host diagnostics that need to run in a Local System context.  If this service is stopped, any diagnostics that depend on it will no longer function.",
-          "status": "Stopped",
+          "status": "Running",
           "startupType": "Manual",
           "delayedAuto": false,
           "binaryPath": "C:\\WINDOWS\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
@@ -1161,7 +1161,7 @@
           "name": "gpsvc",
           "displayName": "Group Policy Client",
           "description": "The service is responsible for applying settings configured by administrators for the computer and users through the Group Policy component. If the service is disabled, the settings will not be applied and applications and components will not be manageable through Group Policy. Any components or applications that depend on the Group Policy component might not be functional if the service is disabled.",
-          "status": "Running",
+          "status": "Stopped",
           "startupType": "Auto",
           "delayedAuto": false,
           "binaryPath": "C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p",
@@ -3638,11 +3638,11 @@
       "name": "AxInstSV"
     },
     "serviceDryRun": {
-      "operationId": "0b68b5f4-4fc0-4a5d-aee5-08fd559c8dfb",
+      "operationId": "08004719-ece7-46de-919b-4bc67cdb1b9a",
       "toolId": "service-control",
       "success": true,
-      "startedAt": "2026-08-24T13:34:07.550Z",
-      "finishedAt": "2026-08-24T13:34:09.957Z",
+      "startedAt": "2026-08-24T14:02:17.093Z",
+      "finishedAt": "2026-08-24T14:02:19.095Z",
       "summary": {
         "dryRun": true,
         "serviceName": "AxInstSV",
@@ -3671,11 +3671,11 @@
       "undoMetadata": null
     },
     "disks": {
-      "operationId": "4dba8190-a117-4eac-a287-97aa1ebeda3d",
+      "operationId": "6ab8059e-821a-4397-8c4c-5d566b7e44ed",
       "toolId": "disk-overview",
       "success": true,
-      "startedAt": "2026-08-24T13:34:10.013Z",
-      "finishedAt": "2026-08-24T13:34:10.493Z",
+      "startedAt": "2026-08-24T14:02:19.161Z",
+      "finishedAt": "2026-08-24T14:02:19.583Z",
       "summary": {
         "drives": 2
       },
@@ -3685,14 +3685,14 @@
           "VolumeName": "",
           "FileSystem": "NTFS",
           "Size": 191841771520,
-          "FreeSpace": 13897007104
+          "FreeSpace": 15618994176
         },
         {
           "DeviceID": "D:",
           "VolumeName": "Day Night",
           "FileSystem": "NTFS",
           "Size": 62913507328,
-          "FreeSpace": 5677154304
+          "FreeSpace": 5665865728
         }
       ],
       "warnings": [],
@@ -3702,581 +3702,717 @@
       "undoMetadata": null
     },
     "processes": {
-      "operationId": "e0beab81-39ed-4326-aa24-bc0f7fc3dc96",
+      "operationId": "0a6a8287-6248-429c-8a97-ee707d0fe647",
       "toolId": "process-inventory",
       "success": true,
-      "startedAt": "2026-08-24T13:34:10.541Z",
-      "finishedAt": "2026-08-24T13:34:17.392Z",
+      "startedAt": "2026-08-24T14:02:19.626Z",
+      "finishedAt": "2026-08-24T14:02:25.916Z",
       "summary": {
-        "processes": 421,
+        "processes": 416,
         "readOnly": true
       },
       "items": [
         {
           "ProcessName": "chrome",
-          "Id": 10768,
-          "CPU": 3099,
-          "WS": 852131840,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787516628879)/"
-        },
-        {
-          "ProcessName": "chrome",
           "Id": 21652,
-          "CPU": 3452.234375,
-          "WS": 716206080,
+          "CPU": 3971.453125,
+          "WS": 760725504,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           "StartTime": "/Date(1787520845494)/"
         },
         {
           "ProcessName": "Manus",
           "Id": 21472,
-          "CPU": 8757.0625,
-          "WS": 648937472,
+          "CPU": 9486.9375,
+          "WS": 692117504,
           "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
           "StartTime": "/Date(1787515625657)/"
-        },
-        {
-          "ProcessName": "traycer-host",
-          "Id": 6876,
-          "CPU": 3735.328125,
-          "WS": 466718720,
-          "Path": "C:\\Users\\day night\\.traycer\\host\\install\\traycer-host.exe",
-          "StartTime": "/Date(1787422242338)/"
         },
         {
           "ProcessName": "MsMpEng",
           "Id": 3968,
           "CPU": null,
-          "WS": 454680576,
+          "WS": 459087872,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "opencode",
-          "Id": 27144,
-          "CPU": 58,
-          "WS": 421752832,
-          "Path": "C:\\Users\\day night\\.traycer\\host\\install\\resources\\providers\\opencode\\win32-x64\\opencode.exe",
-          "StartTime": "/Date(1787577625898)/"
-        },
-        {
-          "ProcessName": "opencode",
-          "Id": 16288,
-          "CPU": 23.578125,
-          "WS": 417554432,
-          "Path": "C:\\Users\\day night\\.traycer\\host\\install\\resources\\providers\\opencode\\win32-x64\\opencode.exe",
-          "StartTime": "/Date(1787577614228)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 21688,
-          "CPU": 219.71875,
-          "WS": 218275840,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499498492)/"
-        },
-        {
           "ProcessName": "chrome",
-          "Id": 17596,
-          "CPU": 1449.59375,
-          "WS": 213004288,
+          "Id": 28012,
+          "CPU": 298.078125,
+          "WS": 408080384,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787514493656)/"
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 5900,
-          "CPU": 1014.21875,
-          "WS": 158236672,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787514493467)/"
-        },
-        {
-          "ProcessName": "KNOuX SmartOrganizer",
-          "Id": 16916,
-          "CPU": 1.015625,
-          "WS": 151834624,
-          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
-          "StartTime": "/Date(1787578438734)/"
-        },
-        {
-          "ProcessName": "Manus",
-          "Id": 12744,
-          "CPU": 3715.21875,
-          "WS": 136028160,
-          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
-          "StartTime": "/Date(1787515624627)/"
-        },
-        {
-          "ProcessName": "KNOuX SmartOrganizer",
-          "Id": 21364,
-          "CPU": 0.921875,
-          "WS": 133304320,
-          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
-          "StartTime": "/Date(1787578439366)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 24468,
-          "CPU": 4.359375,
-          "WS": 121151488,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578117109)/"
+          "StartTime": "/Date(1787578545603)/"
         },
         {
           "ProcessName": "chrome",
           "Id": 9912,
-          "CPU": 777.40625,
-          "WS": 120459264,
+          "CPU": 786.625,
+          "WS": 315523072,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           "StartTime": "/Date(1787520122227)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 20076,
+          "CPU": 10.265625,
+          "WS": 288604160,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787579920932)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 17596,
+          "CPU": 1565.140625,
+          "WS": 261386240,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787514493656)/"
         },
         {
           "ProcessName": "Memory Compression",
           "Id": 2356,
           "CPU": null,
-          "WS": 112013312,
+          "WS": 258105344,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 26284,
-          "CPU": 2.59375,
-          "WS": 107393024,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578235979)/"
+          "ProcessName": "ChatGPT",
+          "Id": 21688,
+          "CPU": 223.609375,
+          "WS": 228597760,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499498492)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 24220,
-          "CPU": 2.84375,
-          "WS": 106536960,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578407634)/"
+          "ProcessName": "chrome",
+          "Id": 5900,
+          "CPU": 1056.609375,
+          "WS": 221585408,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787514493467)/"
         },
         {
-          "ProcessName": "node",
-          "Id": 12724,
-          "CPU": 4.09375,
-          "WS": 106098688,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787578152096)/"
+          "ProcessName": "SearchApp",
+          "Id": 9828,
+          "CPU": 30.015625,
+          "WS": 150376448,
+          "Path": "C:\\WINDOWS\\SystemApps\\Microsoft.Windows.Search_cw5n1h2txyewy\\SearchApp.exe",
+          "StartTime": "/Date(1787499707657)/"
         },
         {
           "ProcessName": "KNOuX SmartOrganizer",
-          "Id": 18088,
-          "CPU": 0.578125,
-          "WS": 103788544,
+          "Id": 25596,
+          "CPU": 0.953125,
+          "WS": 147030016,
           "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
-          "StartTime": "/Date(1787578439517)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 20472,
-          "CPU": 3.21875,
-          "WS": 103104512,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578339607)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 25552,
-          "CPU": 2.5625,
-          "WS": 102879232,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578260332)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 4292,
-          "CPU": 2.75,
-          "WS": 101773312,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578326735)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 5600,
-          "CPU": 3.375,
-          "WS": 100937728,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578148581)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 19612,
-          "CPU": 1.5625,
-          "WS": 100892672,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578340710)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 23892,
-          "CPU": 3.484375,
-          "WS": 100843520,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578159451)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 14604,
-          "CPU": 1.46875,
-          "WS": 100593664,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578181044)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 18736,
-          "CPU": 1.578125,
-          "WS": 100179968,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578200812)/"
+          "StartTime": "/Date(1787580129517)/"
         },
         {
           "ProcessName": "explorer",
           "Id": 6900,
-          "CPU": 791.71875,
-          "WS": 100102144,
+          "CPU": 832.59375,
+          "WS": 144818176,
           "Path": "C:\\WINDOWS\\Explorer.EXE",
           "StartTime": "/Date(1787422203409)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 28444,
-          "CPU": 1.359375,
-          "WS": 99729408,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578303111)/"
+          "ProcessName": "KNOuX SmartOrganizer",
+          "Id": 24216,
+          "CPU": 0.921875,
+          "WS": 143716352,
+          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+          "StartTime": "/Date(1787580130184)/"
+        },
+        {
+          "ProcessName": "Manus",
+          "Id": 12744,
+          "CPU": 4027.1875,
+          "WS": 133914624,
+          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
+          "StartTime": "/Date(1787515624627)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 10988,
-          "CPU": 1.734375,
-          "WS": 99012608,
+          "Id": 27084,
+          "CPU": 4.765625,
+          "WS": 131682304,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578130734)/"
+          "StartTime": "/Date(1787579967203)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 27684,
-          "CPU": 1.859375,
-          "WS": 98344960,
+          "Id": 22384,
+          "CPU": 4.578125,
+          "WS": 126140416,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578161437)/"
+          "StartTime": "/Date(1787579980809)/"
+        },
+        {
+          "ProcessName": "traycer-host",
+          "Id": 6876,
+          "CPU": 3739.1875,
+          "WS": 125890560,
+          "Path": "C:\\Users\\day night\\.traycer\\host\\install\\traycer-host.exe",
+          "StartTime": "/Date(1787422242338)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 5964,
+          "Id": 25204,
+          "CPU": 4.921875,
+          "WS": 122130432,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580110016)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 22304,
+          "CPU": 1.984375,
+          "WS": 119476224,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580065688)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 3796,
+          "CPU": 8.53125,
+          "WS": 107548672,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578816727)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 6664,
+          "CPU": 10.59375,
+          "WS": 105598976,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787578793038)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 23420,
+          "CPU": 1.875,
+          "WS": 105472000,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579953401)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 26340,
+          "CPU": 2.984375,
+          "WS": 105025536,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579651191)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 27856,
+          "CPU": 3.15625,
+          "WS": 104828928,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579667700)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 21744,
+          "CPU": 2.71875,
+          "WS": 101339136,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580088606)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 6660,
+          "CPU": 2.140625,
+          "WS": 100597760,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579926730)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 19036,
+          "CPU": 1.90625,
+          "WS": 100425728,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579872531)/"
+        },
+        {
+          "ProcessName": "node",
+          "Id": 21676,
+          "CPU": 1.5,
+          "WS": 99827712,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787580130608)/"
+        },
+        {
+          "ProcessName": "KNOuX SmartOrganizer",
+          "Id": 2936,
+          "CPU": 0.4375,
+          "WS": 99639296,
+          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+          "StartTime": "/Date(1787580130237)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 11528,
+          "CPU": 2.484375,
+          "WS": 99454976,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579903220)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 19428,
           "CPU": 1.46875,
-          "WS": 98029568,
+          "WS": 99381248,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578374507)/"
+          "StartTime": "/Date(1787579862019)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 14892,
-          "CPU": 1.65625,
-          "WS": 97718272,
+          "Id": 13020,
+          "CPU": 2.328125,
+          "WS": 99205120,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578362426)/"
+          "StartTime": "/Date(1787579836650)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 24600,
-          "CPU": 1.359375,
-          "WS": 97599488,
+          "Id": 23996,
+          "CPU": 1.71875,
+          "WS": 98930688,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578292396)/"
+          "StartTime": "/Date(1787579882732)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 24684,
-          "CPU": 1.4375,
-          "WS": 97206272,
+          "Id": 28512,
+          "CPU": 1.78125,
+          "WS": 98476032,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578234748)/"
+          "StartTime": "/Date(1787580005772)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 27360,
-          "CPU": 1.4375,
+          "Id": 27592,
+          "CPU": 1.328125,
+          "WS": 98037760,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580025587)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 26032,
+          "CPU": 1.25,
+          "WS": 97845248,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580037708)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 18136,
+          "CPU": 4,
+          "WS": 97320960,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579537221)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 6360,
+          "CPU": 1.609375,
+          "WS": 97202176,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579570898)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 8124,
+          "CPU": 2.359375,
+          "WS": 97013760,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787580126624)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 16544,
+          "CPU": 1.71875,
+          "WS": 96788480,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579562181)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 17996,
+          "CPU": 1.328125,
           "WS": 96399360,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578087698)/"
+          "StartTime": "/Date(1787579947674)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 22264,
-          "CPU": 1.28125,
-          "WS": 95711232,
+          "Id": 11532,
+          "CPU": 1.65625,
+          "WS": 96333824,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578448080)/"
+          "StartTime": "/Date(1787579993626)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 23272,
-          "CPU": 1.3125,
-          "WS": 95342592,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578435350)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 27884,
-          "CPU": 1.359375,
-          "WS": 95109120,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578351787)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 25460,
+          "Id": 26756,
           "CPU": 1.265625,
-          "WS": 94781440,
+          "WS": 96157696,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787578423652)/"
+          "StartTime": "/Date(1787580054824)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 12104,
+          "CPU": 1.828125,
+          "WS": 95301632,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579913410)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 8920,
+          "CPU": 1.390625,
+          "WS": 94711808,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579958092)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 27960,
+          "CPU": 2.21875,
+          "WS": 94109696,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579465666)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 25548,
+          "CPU": 1.5,
+          "WS": 92016640,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579196268)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 27832,
+          "CPU": 1.609375,
+          "WS": 91643904,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579229967)/"
+        },
+        {
+          "ProcessName": "opencode",
+          "Id": 16288,
+          "CPU": 37.796875,
+          "WS": 91557888,
+          "Path": "C:\\Users\\day night\\.traycer\\host\\install\\resources\\providers\\opencode\\win32-x64\\opencode.exe",
+          "StartTime": "/Date(1787577614228)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 4292,
+          "CPU": 1.75,
+          "WS": 91435008,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579440365)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 3016,
+          "CPU": 1.96875,
+          "WS": 88346624,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579156648)/"
         },
         {
           "ProcessName": "Manus",
           "Id": 3704,
-          "CPU": 172.484375,
-          "WS": 78753792,
+          "CPU": 193.171875,
+          "WS": 87248896,
           "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
           "StartTime": "/Date(1787515623776)/"
         },
         {
+          "ProcessName": "pwsh",
+          "Id": 19728,
+          "CPU": 1.4375,
+          "WS": 84205568,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579428798)/"
+        },
+        {
           "ProcessName": "ChatGPT",
           "Id": 8304,
-          "CPU": 294,
-          "WS": 71434240,
+          "CPU": 299.09375,
+          "WS": 77328384,
           "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
           "StartTime": "/Date(1787499481113)/"
-        },
-        {
-          "ProcessName": "powershell",
-          "Id": 12804,
-          "CPU": 1.046875,
-          "WS": 68698112,
-          "Path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-          "StartTime": "/Date(1787578450545)/"
-        },
-        {
-          "ProcessName": "Registry",
-          "Id": 108,
-          "CPU": null,
-          "WS": 66088960,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "SearchIndexer",
           "Id": 4052,
           "CPU": null,
-          "WS": 57962496,
+          "WS": 71725056,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "node",
-          "Id": 27732,
-          "CPU": 0.25,
-          "WS": 55640064,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787578437356)/"
+          "ProcessName": "pwsh",
+          "Id": 28160,
+          "CPU": 2.34375,
+          "WS": 70561792,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787579018400)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 18456,
+          "CPU": 0.8125,
+          "WS": 69992448,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787578703284)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 14220,
-          "CPU": 2.515625,
-          "WS": 55435264,
+          "Id": 22888,
+          "CPU": 2.8125,
+          "WS": 68784128,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577699991)/"
+          "StartTime": "/Date(1787578749183)/"
+        },
+        {
+          "ProcessName": "powershell",
+          "Id": 22824,
+          "CPU": 1.125,
+          "WS": 68694016,
+          "Path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+          "StartTime": "/Date(1787580139629)/"
+        },
+        {
+          "ProcessName": "Registry",
+          "Id": 108,
+          "CPU": null,
+          "WS": 66269184,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 5788,
+          "CPU": 2.109375,
+          "WS": 60047360,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578554346)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 20472,
+          "CPU": 3.9375,
+          "WS": 57712640,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578339607)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 20332,
+          "CPU": 1.59375,
+          "WS": 54710272,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578629358)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 23148,
+          "CPU": 1.6875,
+          "WS": 53395456,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578513837)/"
+        },
+        {
+          "ProcessName": "ChatGPT",
+          "Id": 22172,
+          "CPU": 165.9375,
+          "WS": 52899840,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499498489)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 22648,
+          "CPU": 5.015625,
+          "WS": 52846592,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578654629)/"
         },
         {
           "ProcessName": "TextInputHost",
           "Id": 10308,
-          "CPU": 30.046875,
-          "WS": 52908032,
+          "CPU": 30.34375,
+          "WS": 51773440,
           "Path": "C:\\WINDOWS\\SystemApps\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\TextInputHost.exe",
           "StartTime": "/Date(1787422220433)/"
         },
         {
-          "ProcessName": "chrome",
-          "Id": 6884,
-          "CPU": 0.140625,
-          "WS": 51466240,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787576768503)/"
+          "ProcessName": "node",
+          "Id": 3180,
+          "CPU": 0.28125,
+          "WS": 51736576,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787580129474)/"
+        },
+        {
+          "ProcessName": "pwsh",
+          "Id": 18884,
+          "CPU": 1.640625,
+          "WS": 51585024,
+          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+          "StartTime": "/Date(1787578476615)/"
         },
         {
           "ProcessName": "node",
-          "Id": 14536,
-          "CPU": 0.234375,
-          "WS": 51089408,
+          "Id": 25468,
+          "CPU": 0.3125,
+          "WS": 51335168,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787578437851)/"
+          "StartTime": "/Date(1787580127223)/"
         },
         {
           "ProcessName": "node",
-          "Id": 20160,
-          "CPU": 0.421875,
-          "WS": 47173632,
+          "Id": 23676,
+          "CPU": 0.28125,
+          "WS": 46178304,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787578150739)/"
+          "StartTime": "/Date(1787580128401)/"
         },
         {
-          "ProcessName": "KNOuX SmartOrganizer",
-          "Id": 7040,
+          "ProcessName": "node",
+          "Id": 19152,
           "CPU": 0.0625,
-          "WS": 41766912,
-          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
-          "StartTime": "/Date(1787578439367)/"
+          "WS": 44847104,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787580128263)/"
         },
         {
           "ProcessName": "dwm",
           "Id": 1268,
           "CPU": null,
-          "WS": 38977536,
+          "WS": 44507136,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "KNOuX SmartOrganizer",
+          "Id": 18096,
+          "CPU": 0.03125,
+          "WS": 43573248,
+          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_SmartOrganizer\\release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+          "StartTime": "/Date(1787580130175)/"
         },
         {
           "ProcessName": "WhatsApp.Root",
           "Id": 11816,
-          "CPU": 130.28125,
-          "WS": 38182912,
+          "CPU": 130.78125,
+          "WS": 39972864,
           "Path": "C:\\Program Files\\WindowsApps\\5319275A.WhatsAppDesktop_2.2632.100.0_x64__cv1g1gvanyjgm\\WhatsApp.Root.exe",
           "StartTime": "/Date(1787422246328)/"
         },
         {
-          "ProcessName": "git",
-          "Id": 27136,
-          "CPU": 6.609375,
-          "WS": 36741120,
-          "Path": "C:\\Program Files\\Git\\mingw64\\libexec\\git-core\\git.exe",
-          "StartTime": "/Date(1787577623150)/"
-        },
-        {
-          "ProcessName": "WinStore.App",
-          "Id": 13744,
-          "CPU": 15.28125,
-          "WS": 36569088,
-          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsStore_22607.1401.5.0_x64__8wekyb3d8bbwe\\WinStore.App.exe",
-          "StartTime": "/Date(1787576273146)/"
-        },
-        {
           "ProcessName": "chrome",
           "Id": 20996,
-          "CPU": 558.84375,
-          "WS": 36392960,
+          "CPU": 573.953125,
+          "WS": 38535168,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           "StartTime": "/Date(1787514493662)/"
         },
         {
-          "ProcessName": "chrome",
-          "Id": 3148,
-          "CPU": 7.71875,
-          "WS": 34672640,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787516628905)/"
+          "ProcessName": "WinStore.App",
+          "Id": 13744,
+          "CPU": 15.78125,
+          "WS": 36614144,
+          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsStore_22607.1401.5.0_x64__8wekyb3d8bbwe\\WinStore.App.exe",
+          "StartTime": "/Date(1787576273146)/"
         },
         {
           "ProcessName": "SearchApp",
           "Id": 7672,
-          "CPU": 48.421875,
-          "WS": 32587776,
+          "CPU": 49.546875,
+          "WS": 34226176,
           "Path": "C:\\WINDOWS\\SystemApps\\Microsoft.Windows.Search_cw5n1h2txyewy\\SearchApp.exe",
           "StartTime": "/Date(1787422210584)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 864,
-          "CPU": null,
-          "WS": 31842304,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 19620,
-          "CPU": 53.40625,
-          "WS": 31813632,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787515002836)/"
-        },
-        {
           "ProcessName": "msedgewebview2",
           "Id": 9508,
-          "CPU": 259.15625,
-          "WS": 31539200,
+          "CPU": 259.59375,
+          "WS": 33067008,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787422215012)/"
         },
         {
           "ProcessName": "chrome",
-          "Id": 26500,
-          "CPU": 0,
-          "WS": 30593024,
+          "Id": 19620,
+          "CPU": 56,
+          "WS": 32751616,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787578312618)/"
+          "StartTime": "/Date(1787515002836)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 20380,
-          "CPU": 6.015625,
-          "WS": 29360128,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576532208)/"
+          "ProcessName": "svchost",
+          "Id": 864,
+          "CPU": null,
+          "WS": 32559104,
+          "Path": null,
+          "StartTime": null
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 4608,
-          "CPU": 3.15625,
-          "WS": 27721728,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577401764)/"
+          "ProcessName": "chrome",
+          "Id": 2668,
+          "CPU": 0.046875,
+          "WS": 31129600,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787580102632)/"
+        },
+        {
+          "ProcessName": "StartMenuExperienceHost",
+          "Id": 7724,
+          "CPU": 18.859375,
+          "WS": 30941184,
+          "Path": "C:\\WINDOWS\\SystemApps\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\StartMenuExperienceHost.exe",
+          "StartTime": "/Date(1787422210732)/"
+        },
+        {
+          "ProcessName": "CompatTelRunner",
+          "Id": 12396,
+          "CPU": null,
+          "WS": 30908416,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "msedgewebview2",
           "Id": 8584,
-          "CPU": 22.515625,
-          "WS": 26738688,
+          "CPU": 22.84375,
+          "WS": 28893184,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787422212757)/"
         },
         {
-          "ProcessName": "ShellExperienceHost",
-          "Id": 2344,
-          "CPU": 80.078125,
-          "WS": 26677248,
-          "Path": "C:\\WINDOWS\\SystemApps\\ShellExperienceHost_cw5n1h2txyewy\\ShellExperienceHost.exe",
-          "StartTime": "/Date(1787422249408)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 23004,
-          "CPU": 4,
-          "WS": 26406912,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577651715)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 16688,
-          "CPU": 3.78125,
-          "WS": 25993216,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577207369)/"
+          "ProcessName": "msedgewebview2",
+          "Id": 23368,
+          "CPU": 1.328125,
+          "WS": 25489408,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787576341762)/"
         },
         {
           "ProcessName": "codex",
           "Id": 14836,
-          "CPU": 46.6875,
-          "WS": 25239552,
+          "CPU": 47.078125,
+          "WS": 25374720,
           "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\resources\\codex.exe",
           "StartTime": "/Date(1787499484558)/"
         },
@@ -4284,183 +4420,7 @@
           "ProcessName": "lsass",
           "Id": 728,
           "CPU": null,
-          "WS": 24875008,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 14648,
-          "CPU": 2.34375,
-          "WS": 23937024,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576272080)/"
-        },
-        {
-          "ProcessName": "WmiPrvSE",
-          "Id": 10548,
-          "CPU": null,
-          "WS": 23711744,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 5248,
-          "CPU": null,
-          "WS": 23506944,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 3244,
-          "CPU": 37.453125,
-          "WS": 23138304,
-          "Path": "C:\\WINDOWS\\system32\\svchost.exe",
-          "StartTime": "/Date(1787422202467)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 756,
-          "CPU": null,
-          "WS": 23093248,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "msedgewebview2",
-          "Id": 23368,
-          "CPU": 1.25,
-          "WS": 23072768,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787576341762)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 11640,
-          "CPU": 3.234375,
-          "WS": 22900736,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576325185)/"
-        },
-        {
-          "ProcessName": "sidecar",
-          "Id": 4180,
-          "CPU": 1.140625,
-          "WS": 22450176,
-          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\sidecar.exe",
-          "StartTime": "/Date(1787578144730)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 25276,
-          "CPU": 3.59375,
-          "WS": 22237184,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577097833)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 16336,
-          "CPU": 46.984375,
-          "WS": 22237184,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499483399)/"
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 14712,
-          "CPU": 176.90625,
-          "WS": 22003712,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787515002829)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 22172,
-          "CPU": 165.625,
-          "WS": 21696512,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499498489)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2676,
-          "CPU": null,
-          "WS": 21487616,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 12088,
-          "CPU": 4.984375,
-          "WS": 21344256,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787577426712)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 26532,
-          "CPU": 3.859375,
-          "WS": 20918272,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576827314)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 11224,
-          "CPU": 394.203125,
-          "WS": 20701184,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499483403)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 21944,
-          "CPU": 5.90625,
-          "WS": 20488192,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499498735)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 8068,
-          "CPU": 5.640625,
-          "WS": 20475904,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499498921)/"
-        },
-        {
-          "ProcessName": "iScrRec",
-          "Id": 4060,
-          "CPU": 53.703125,
-          "WS": 19705856,
-          "Path": null,
-          "StartTime": "/Date(1787422263147)/"
-        },
-        {
-          "ProcessName": "manus-computer-operator",
-          "Id": 12080,
-          "CPU": 8.0625,
-          "WS": 19501056,
-          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\manus-computer-operator.exe",
-          "StartTime": "/Date(1787515626846)/"
-        },
-        {
-          "ProcessName": "urban-vpn-app",
-          "Id": 7548,
-          "CPU": 147.625,
-          "WS": 19304448,
-          "Path": "C:\\Program Files\\UrbanVPN\\bin\\urban-vpn-app.exe",
-          "StartTime": "/Date(1787422231180)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2436,
-          "CPU": null,
-          "WS": 19136512,
+          "WS": 25255936,
           "Path": null,
           "StartTime": null
         },
@@ -4468,223 +4428,335 @@
           "ProcessName": "svchost",
           "Id": 3628,
           "CPU": null,
-          "WS": 18882560,
+          "WS": 24608768,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "taskhostw",
-          "Id": 12660,
-          "CPU": 17.15625,
-          "WS": 18812928,
-          "Path": null,
-          "StartTime": "/Date(1787498114400)/"
-        },
-        {
           "ProcessName": "svchost",
-          "Id": 3540,
-          "CPU": 81.953125,
-          "WS": 18563072,
+          "Id": 3244,
+          "CPU": 37.890625,
+          "WS": 24444928,
           "Path": "C:\\WINDOWS\\system32\\svchost.exe",
-          "StartTime": "/Date(1787422202454)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 7112,
-          "CPU": 2.015625,
-          "WS": 18505728,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576765955)/"
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 19144,
-          "CPU": 6.984375,
-          "WS": 18313216,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787514500428)/"
-        },
-        {
-          "ProcessName": "SystemSettingsBroker",
-          "Id": 1056,
-          "CPU": 33.375,
-          "WS": 17973248,
-          "Path": "C:\\Windows\\System32\\SystemSettingsBroker.exe",
-          "StartTime": "/Date(1787475424162)/"
-        },
-        {
-          "ProcessName": "RuntimeBroker",
-          "Id": 8556,
-          "CPU": 15.390625,
-          "WS": 17850368,
-          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787422249997)/"
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 18132,
-          "CPU": 3.875,
-          "WS": 17801216,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787515002763)/"
-        },
-        {
-          "ProcessName": "RuntimeBroker",
-          "Id": 10116,
-          "CPU": 4.53125,
-          "WS": 17711104,
-          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787422216499)/"
-        },
-        {
-          "ProcessName": "sihost",
-          "Id": 5884,
-          "CPU": 51.984375,
-          "WS": 17526784,
-          "Path": "C:\\WINDOWS\\system32\\sihost.exe",
-          "StartTime": "/Date(1787422202433)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 20620,
-          "CPU": 2.25,
-          "WS": 17317888,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575943791)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 19352,
-          "CPU": 0.171875,
-          "WS": 17268736,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578149925)/"
-        },
-        {
-          "ProcessName": "pwsh",
-          "Id": 24352,
-          "CPU": 2,
-          "WS": 17031168,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575925033)/"
-        },
-        {
-          "ProcessName": "powershell",
-          "Id": 14552,
-          "CPU": 31.953125,
-          "WS": 16863232,
-          "Path": null,
-          "StartTime": "/Date(1787473711549)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 7364,
-          "CPU": 33.859375,
-          "WS": 16842752,
-          "Path": "C:\\WINDOWS\\system32\\svchost.exe",
-          "StartTime": "/Date(1787422206870)/"
-        },
-        {
-          "ProcessName": "StartMenuExperienceHost",
-          "Id": 7724,
-          "CPU": 18.609375,
-          "WS": 16510976,
-          "Path": "C:\\WINDOWS\\SystemApps\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\StartMenuExperienceHost.exe",
-          "StartTime": "/Date(1787422210732)/"
-        },
-        {
-          "ProcessName": "IDMan",
-          "Id": 1100,
-          "CPU": 29.5625,
-          "WS": 16289792,
-          "Path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMan.exe",
-          "StartTime": "/Date(1787422238284)/"
+          "StartTime": "/Date(1787422202467)/"
         },
         {
           "ProcessName": "RuntimeBroker",
           "Id": 18672,
-          "CPU": 10.703125,
-          "WS": 16244736,
+          "CPU": 15.4375,
+          "WS": 24395776,
           "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
           "StartTime": "/Date(1787501310354)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 20236,
-          "CPU": 3.96875,
-          "WS": 16199680,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575765538)/"
+          "ProcessName": "svchost",
+          "Id": 5248,
+          "CPU": null,
+          "WS": 24305664,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "iScrRec",
+          "Id": 4060,
+          "CPU": 56.1875,
+          "WS": 23916544,
+          "Path": null,
+          "StartTime": "/Date(1787422263147)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 18132,
+          "CPU": 4.078125,
+          "WS": 23613440,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787515002763)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 756,
+          "CPU": null,
+          "WS": 22781952,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "ChatGPT",
+          "Id": 16336,
+          "CPU": 47.171875,
+          "WS": 22257664,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499483399)/"
         },
         {
           "ProcessName": "RuntimeBroker",
-          "Id": 7912,
-          "CPU": 3.546875,
-          "WS": 16101376,
+          "Id": 7172,
+          "CPU": 15.28125,
+          "WS": 21803008,
           "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787422211146)/"
+          "StartTime": "/Date(1787422211924)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 18008,
-          "CPU": 3.34375,
-          "WS": 16048128,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575573413)/"
+          "ProcessName": "WindowsPackageManagerServer",
+          "Id": 15628,
+          "CPU": 3.140625,
+          "WS": 21270528,
+          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.DesktopAppInstaller_1.29.290.0_x64__8wekyb3d8bbwe\\WindowsPackageManagerServer.exe",
+          "StartTime": "/Date(1787576282280)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 17148,
-          "CPU": 3,
-          "WS": 15572992,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787576067572)/"
+          "ProcessName": "ChatGPT",
+          "Id": 11224,
+          "CPU": 402.859375,
+          "WS": 21143552,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499483403)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 7148,
-          "CPU": 17.703125,
-          "WS": 15540224,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422214360)/"
+          "ProcessName": "ChatGPT",
+          "Id": 8068,
+          "CPU": 5.78125,
+          "WS": 20803584,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499498921)/"
+        },
+        {
+          "ProcessName": "ChatGPT",
+          "Id": 21944,
+          "CPU": 5.984375,
+          "WS": 20774912,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499498735)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2676,
+          "CPU": null,
+          "WS": 20398080,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3540,
+          "CPU": 84.40625,
+          "WS": 20119552,
+          "Path": "C:\\WINDOWS\\system32\\svchost.exe",
+          "StartTime": "/Date(1787422202454)/"
+        },
+        {
+          "ProcessName": "taskhostw",
+          "Id": 12660,
+          "CPU": 17.78125,
+          "WS": 19931136,
+          "Path": null,
+          "StartTime": "/Date(1787498114400)/"
+        },
+        {
+          "ProcessName": "sidecar",
+          "Id": 4180,
+          "CPU": 10.46875,
+          "WS": 19632128,
+          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\sidecar.exe",
+          "StartTime": "/Date(1787578144730)/"
+        },
+        {
+          "ProcessName": "urban-vpn-app",
+          "Id": 7548,
+          "CPU": 152.703125,
+          "WS": 19505152,
+          "Path": "C:\\Program Files\\UrbanVPN\\bin\\urban-vpn-app.exe",
+          "StartTime": "/Date(1787422231180)/"
+        },
+        {
+          "ProcessName": "sidecar",
+          "Id": 21812,
+          "CPU": 158.859375,
+          "WS": 19472384,
+          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\sidecar.exe",
+          "StartTime": "/Date(1787573567938)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2436,
+          "CPU": null,
+          "WS": 19316736,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "IDMan",
+          "Id": 1100,
+          "CPU": 30.453125,
+          "WS": 19161088,
+          "Path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMan.exe",
+          "StartTime": "/Date(1787422238284)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 7364,
+          "CPU": 34.015625,
+          "WS": 19148800,
+          "Path": "C:\\WINDOWS\\system32\\svchost.exe",
+          "StartTime": "/Date(1787422206870)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 14712,
+          "CPU": 177.375,
+          "WS": 19091456,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787515002829)/"
+        },
+        {
+          "ProcessName": "powershell",
+          "Id": 14552,
+          "CPU": 32.484375,
+          "WS": 19013632,
+          "Path": null,
+          "StartTime": "/Date(1787473711549)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 19144,
+          "CPU": 7.453125,
+          "WS": 18808832,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787514500428)/"
+        },
+        {
+          "ProcessName": "manus-computer-operator",
+          "Id": 12080,
+          "CPU": 8.265625,
+          "WS": 18751488,
+          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\manus-computer-operator.exe",
+          "StartTime": "/Date(1787515626846)/"
+        },
+        {
+          "ProcessName": "RuntimeBroker",
+          "Id": 8556,
+          "CPU": 15.546875,
+          "WS": 18616320,
+          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+          "StartTime": "/Date(1787422249997)/"
+        },
+        {
+          "ProcessName": "sihost",
+          "Id": 5884,
+          "CPU": 52.828125,
+          "WS": 18493440,
+          "Path": "C:\\WINDOWS\\system32\\sihost.exe",
+          "StartTime": "/Date(1787422202433)/"
+        },
+        {
+          "ProcessName": "RuntimeBroker",
+          "Id": 10116,
+          "CPU": 4.546875,
+          "WS": 18415616,
+          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+          "StartTime": "/Date(1787422216499)/"
+        },
+        {
+          "ProcessName": "WmiPrvSE",
+          "Id": 16976,
+          "CPU": null,
+          "WS": 17391616,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "sidecar",
           "Id": 5236,
-          "CPU": 22.703125,
-          "WS": 15372288,
+          "CPU": 38.40625,
+          "WS": 17375232,
           "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\sidecar.exe",
           "StartTime": "/Date(1787572662622)/"
         },
         {
+          "ProcessName": "SystemSettingsBroker",
+          "Id": 1056,
+          "CPU": 33.46875,
+          "WS": 16613376,
+          "Path": "C:\\Windows\\System32\\SystemSettingsBroker.exe",
+          "StartTime": "/Date(1787475424162)/"
+        },
+        {
+          "ProcessName": "SearchProtocolHost",
+          "Id": 22268,
+          "CPU": null,
+          "WS": 16584704,
+          "Path": null,
+          "StartTime": null
+        },
+        {
           "ProcessName": "Manus",
           "Id": 11192,
-          "CPU": 25.859375,
-          "WS": 15372288,
+          "CPU": 28.5625,
+          "WS": 16560128,
           "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
           "StartTime": "/Date(1787515624624)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 5560,
-          "CPU": 2.640625,
-          "WS": 15130624,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575429549)/"
+          "ProcessName": "ShellExperienceHost",
+          "Id": 2344,
+          "CPU": 80.203125,
+          "WS": 16429056,
+          "Path": "C:\\WINDOWS\\SystemApps\\ShellExperienceHost_cw5n1h2txyewy\\ShellExperienceHost.exe",
+          "StartTime": "/Date(1787422249408)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3004,
+          "CPU": null,
+          "WS": 16412672,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "RuntimeBroker",
+          "Id": 7912,
+          "CPU": 3.5625,
+          "WS": 16179200,
+          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+          "StartTime": "/Date(1787422211146)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 6332,
+          "CPU": null,
+          "WS": 16158720,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "msedgewebview2",
+          "Id": 7148,
+          "CPU": 17.96875,
+          "WS": 15896576,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422214360)/"
+        },
+        {
+          "ProcessName": "RuntimeBroker",
+          "Id": 11280,
+          "CPU": 2.03125,
+          "WS": 15368192,
+          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+          "StartTime": "/Date(1787422790023)/"
         },
         {
           "ProcessName": "pwsh",
-          "Id": 3796,
-          "CPU": 2.203125,
-          "WS": 14815232,
+          "Id": 21336,
+          "CPU": 4.84375,
+          "WS": 15220736,
           "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787575444202)/"
+          "StartTime": "/Date(1787527643342)/"
         },
         {
           "ProcessName": "node",
           "Id": 6456,
-          "CPU": 0.5625,
-          "WS": 14778368,
+          "CPU": 0.578125,
+          "WS": 15159296,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787492688902)/"
         },
@@ -4692,45 +4764,37 @@
           "ProcessName": "svchost",
           "Id": 1864,
           "CPU": null,
-          "WS": 14585856,
+          "WS": 14852096,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "esbuild",
-          "Id": 25740,
-          "CPU": 0.15625,
-          "WS": 14249984,
-          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_Rec\\node_modules\\@esbuild\\win32-x64\\esbuild.exe",
-          "StartTime": "/Date(1787578152752)/"
+          "ProcessName": "conhost",
+          "Id": 20596,
+          "CPU": null,
+          "WS": 14655488,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "node",
           "Id": 14680,
           "CPU": 0.890625,
-          "WS": 13926400,
+          "WS": 13930496,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787480451482)/"
         },
         {
-          "ProcessName": "sidecar",
-          "Id": 21812,
-          "CPU": 152.703125,
-          "WS": 13701120,
-          "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\resources\\bin\\sidecar.exe",
-          "StartTime": "/Date(1787573567938)/"
-        },
-        {
-          "ProcessName": "SecurityHealthService",
-          "Id": 10908,
+          "ProcessName": "svchost",
+          "Id": 404,
           "CPU": null,
-          "WS": 13602816,
+          "WS": 13651968,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "svchost",
-          "Id": 404,
+          "ProcessName": "SecurityHealthService",
+          "Id": 10908,
           "CPU": null,
           "WS": 13537280,
           "Path": null,
@@ -4738,49 +4802,33 @@
         },
         {
           "ProcessName": "RuntimeBroker",
-          "Id": 11280,
-          "CPU": 1.875,
-          "WS": 13451264,
+          "Id": 14792,
+          "CPU": 0.015625,
+          "WS": 13512704,
           "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787422790023)/"
+          "StartTime": "/Date(1787580097567)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 3868,
           "CPU": null,
-          "WS": 13393920,
+          "WS": 13352960,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "SearchFilterHost",
-          "Id": 28652,
-          "CPU": null,
-          "WS": 13316096,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "RuntimeBroker",
-          "Id": 7172,
-          "CPU": 14.078125,
-          "WS": 13004800,
-          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787422211924)/"
+          "ProcessName": "dllhost",
+          "Id": 10436,
+          "CPU": 2.671875,
+          "WS": 13123584,
+          "Path": "C:\\WINDOWS\\system32\\DllHost.exe",
+          "StartTime": "/Date(1787499501060)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 1752,
           "CPU": null,
-          "WS": 12824576,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "SearchProtocolHost",
-          "Id": 22268,
-          "CPU": null,
-          "WS": 12795904,
+          "WS": 13033472,
           "Path": null,
           "StartTime": null
         },
@@ -4788,17 +4836,9 @@
           "ProcessName": "node",
           "Id": 22108,
           "CPU": 0.46875,
-          "WS": 12484608,
+          "WS": 12873728,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787492585695)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 3004,
-          "CPU": null,
-          "WS": 12427264,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "LockApp",
@@ -4812,7 +4852,7 @@
           "ProcessName": "svchost",
           "Id": 1816,
           "CPU": null,
-          "WS": 12296192,
+          "WS": 12279808,
           "Path": null,
           "StartTime": null
         },
@@ -4820,7 +4860,7 @@
           "ProcessName": "svchost",
           "Id": 2328,
           "CPU": null,
-          "WS": 11935744,
+          "WS": 11890688,
           "Path": null,
           "StartTime": null
         },
@@ -4828,33 +4868,25 @@
           "ProcessName": "Manus",
           "Id": 2100,
           "CPU": 0.734375,
-          "WS": 11878400,
+          "WS": 11833344,
           "Path": "C:\\Program Files\\WindowsApps\\ManusAI.Manus_1.7.2.0_x64__vajzd2mq3s8wj\\Manus.exe",
           "StartTime": "/Date(1787515631230)/"
         },
         {
-          "ProcessName": "pwsh",
-          "Id": 21336,
-          "CPU": 4.578125,
-          "WS": 11755520,
-          "Path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-          "StartTime": "/Date(1787527643342)/"
+          "ProcessName": "esbuild",
+          "Id": 18240,
+          "CPU": 0.015625,
+          "WS": 11665408,
+          "Path": "D:\\Knoux Projects\\Knoux_Project_Center\\01_Ready\\Knoux_Rec\\node_modules\\@esbuild\\win32-x64\\esbuild.exe",
+          "StartTime": "/Date(1787580132039)/"
         },
         {
           "ProcessName": "ctfmon",
           "Id": 6500,
-          "CPU": 90.453125,
-          "WS": 11743232,
+          "CPU": 92.375,
+          "WS": 11603968,
           "Path": null,
           "StartTime": "/Date(1787422202666)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 14124,
-          "CPU": null,
-          "WS": 11485184,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "node",
@@ -4866,9 +4898,17 @@
         },
         {
           "ProcessName": "svchost",
+          "Id": 22864,
+          "CPU": null,
+          "WS": 11370496,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
           "Id": 1300,
           "CPU": null,
-          "WS": 11268096,
+          "WS": 11292672,
           "Path": null,
           "StartTime": null
         },
@@ -4883,24 +4923,24 @@
         {
           "ProcessName": "chrome",
           "Id": 3536,
-          "CPU": 0.890625,
-          "WS": 11071488,
+          "CPU": 0.921875,
+          "WS": 11104256,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           "StartTime": "/Date(1787514500428)/"
         },
         {
           "ProcessName": "svchost",
-          "Id": 6332,
-          "CPU": null,
-          "WS": 10637312,
-          "Path": null,
-          "StartTime": null
+          "Id": 8796,
+          "CPU": 105.15625,
+          "WS": 10805248,
+          "Path": "C:\\WINDOWS\\System32\\svchost.exe",
+          "StartTime": "/Date(1787422213220)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 2020,
           "CPU": null,
-          "WS": 10633216,
+          "WS": 10801152,
           "Path": null,
           "StartTime": null
         },
@@ -4908,39 +4948,55 @@
           "ProcessName": "node",
           "Id": 15700,
           "CPU": 14.921875,
-          "WS": 10551296,
+          "WS": 10584064,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787494747080)/"
-        },
-        {
-          "ProcessName": "services",
-          "Id": 688,
-          "CPU": null,
-          "WS": 10395648,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "svchost",
           "Id": 3652,
           "CPU": null,
-          "WS": 10371072,
+          "WS": 10330112,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "WmiPrvSE",
+          "Id": 7456,
+          "CPU": null,
+          "WS": 10252288,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "services",
+          "Id": 688,
+          "CPU": null,
+          "WS": 10203136,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "audiodg",
+          "Id": 12072,
+          "CPU": 1.109375,
+          "WS": 10133504,
+          "Path": null,
+          "StartTime": "/Date(1787575455551)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 1656,
           "CPU": null,
-          "WS": 10047488,
+          "WS": 10080256,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "svchost",
-          "Id": 13120,
+          "ProcessName": "SearchFilterHost",
+          "Id": 28364,
           "CPU": null,
-          "WS": 9994240,
+          "WS": 9912320,
           "Path": null,
           "StartTime": null
         },
@@ -4953,18 +5009,10 @@
           "StartTime": "/Date(1787480451103)/"
         },
         {
-          "ProcessName": "audiodg",
-          "Id": 12072,
-          "CPU": 0.734375,
-          "WS": 9732096,
-          "Path": null,
-          "StartTime": "/Date(1787575455551)/"
-        },
-        {
           "ProcessName": "msedgewebview2",
           "Id": 7864,
-          "CPU": 86.34375,
-          "WS": 9609216,
+          "CPU": 86.5,
+          "WS": 9777152,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787422214366)/"
         },
@@ -4972,7 +5020,31 @@
           "ProcessName": "svchost",
           "Id": 1880,
           "CPU": null,
-          "WS": 9560064,
+          "WS": 9531392,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "ChatGPT",
+          "Id": 14176,
+          "CPU": 24.375,
+          "WS": 9527296,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499483474)/"
+        },
+        {
+          "ProcessName": "MpDefenderCoreService",
+          "Id": 3944,
+          "CPU": null,
+          "WS": 9506816,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 14124,
+          "CPU": null,
+          "WS": 9449472,
           "Path": null,
           "StartTime": null
         },
@@ -4980,7 +5052,23 @@
           "ProcessName": "winlogon",
           "Id": 988,
           "CPU": null,
-          "WS": 9437184,
+          "WS": 9424896,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "msedgewebview2",
+          "Id": 11720,
+          "CPU": 185,
+          "WS": 9355264,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422254918)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2836,
+          "CPU": null,
+          "WS": 9277440,
           "Path": null,
           "StartTime": null
         },
@@ -4988,7 +5076,7 @@
           "ProcessName": "ChatGPT",
           "Id": 16096,
           "CPU": 0.671875,
-          "WS": 9228288,
+          "WS": 9195520,
           "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
           "StartTime": "/Date(1787499509195)/"
         },
@@ -4999,22 +5087,6 @@
           "WS": 9129984,
           "Path": "C:\\Windows\\System32\\oobe\\UserOOBEBroker.exe",
           "StartTime": "/Date(1787426754403)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2836,
-          "CPU": null,
-          "WS": 9097216,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "powershell",
-          "Id": 21764,
-          "CPU": 1.296875,
-          "WS": 9093120,
-          "Path": null,
-          "StartTime": "/Date(1787576758521)/"
         },
         {
           "ProcessName": "node",
@@ -5036,7 +5108,7 @@
           "ProcessName": "svchost",
           "Id": 3876,
           "CPU": null,
-          "WS": 8749056,
+          "WS": 8802304,
           "Path": null,
           "StartTime": null
         },
@@ -5044,7 +5116,15 @@
           "ProcessName": "svchost",
           "Id": 1396,
           "CPU": null,
-          "WS": 8740864,
+          "WS": 8769536,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 1136,
+          "CPU": null,
+          "WS": 8634368,
           "Path": null,
           "StartTime": null
         },
@@ -5058,49 +5138,41 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 3436,
-          "CPU": null,
-          "WS": 8470528,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
           "Id": 4808,
           "CPU": null,
-          "WS": 8445952,
+          "WS": 8536064,
           "Path": null,
           "StartTime": null
         },
         {
           "ProcessName": "conhost",
-          "Id": 22076,
-          "CPU": 0.03125,
-          "WS": 8421376,
+          "Id": 21892,
+          "CPU": 0.015625,
+          "WS": 8417280,
           "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578450566)/"
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 14176,
-          "CPU": 24.046875,
-          "WS": 8318976,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499483474)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 1136,
-          "CPU": null,
-          "WS": 8318976,
-          "Path": null,
-          "StartTime": null
+          "StartTime": "/Date(1787580139644)/"
         },
         {
           "ProcessName": "dasHost",
           "Id": 22060,
           "CPU": null,
-          "WS": 8314880,
+          "WS": 8298496,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2632,
+          "CPU": null,
+          "WS": 8298496,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3436,
+          "CPU": null,
+          "WS": 8245248,
           "Path": null,
           "StartTime": null
         },
@@ -5108,15 +5180,7 @@
           "ProcessName": "igfxCUIService",
           "Id": 2392,
           "CPU": null,
-          "WS": 8241152,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 22864,
-          "CPU": null,
-          "WS": 8232960,
+          "WS": 8212480,
           "Path": null,
           "StartTime": null
         },
@@ -5124,7 +5188,7 @@
           "ProcessName": "svchost",
           "Id": 1212,
           "CPU": null,
-          "WS": 8110080,
+          "WS": 8101888,
           "Path": null,
           "StartTime": null
         },
@@ -5145,25 +5209,17 @@
           "StartTime": "/Date(1787494745485)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 2632,
-          "CPU": null,
-          "WS": 7938048,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 1152,
-          "CPU": null,
-          "WS": 7823360,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "msedgewebview2",
+          "Id": 9404,
+          "CPU": 0.15625,
+          "WS": 7852032,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787576342981)/"
         },
         {
           "ProcessName": "node",
           "Id": 13064,
-          "CPU": 0.640625,
+          "CPU": 0.65625,
           "WS": 7798784,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787491904908)/"
@@ -5177,268 +5233,316 @@
           "StartTime": "/Date(1787480450851)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 8796,
-          "CPU": 103.59375,
-          "WS": 7790592,
-          "Path": "C:\\WINDOWS\\System32\\svchost.exe",
-          "StartTime": "/Date(1787422213220)/"
-        },
-        {
           "ProcessName": "urban-vpn-service",
           "Id": 4004,
           "CPU": null,
-          "WS": 7790592,
+          "WS": 7696384,
           "Path": null,
           "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 13044,
-          "CPU": null,
-          "WS": 7761920,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "RuntimeBroker",
-          "Id": 22924,
-          "CPU": 1.34375,
-          "WS": 7606272,
-          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
-          "StartTime": "/Date(1787576273761)/"
         },
         {
           "ProcessName": "ChatGPT",
           "Id": 13072,
-          "CPU": 6.21875,
-          "WS": 7376896,
+          "CPU": 6.328125,
+          "WS": 7667712,
           "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
           "StartTime": "/Date(1787499498949)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 24380,
-          "CPU": 0.046875,
-          "WS": 7168000,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578148565)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 23584,
-          "CPU": 0.171875,
-          "WS": 7077888,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578159375)/"
+          "ProcessName": "RuntimeBroker",
+          "Id": 22924,
+          "CPU": 1.375,
+          "WS": 7667712,
+          "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+          "StartTime": "/Date(1787576273761)/"
         },
         {
           "ProcessName": "svchost",
-          "Id": 2288,
+          "Id": 1152,
           "CPU": null,
-          "WS": 7069696,
+          "WS": 7647232,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "conhost",
-          "Id": 21140,
-          "CPU": 0.140625,
-          "WS": 7061504,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578339597)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 14408,
-          "CPU": 0.078125,
-          "WS": 7057408,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578117100)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 25044,
-          "CPU": 0.078125,
-          "WS": 7057408,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578130715)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 26908,
-          "CPU": 0.140625,
-          "WS": 7045120,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578235967)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 24192,
-          "CPU": 0.078125,
-          "WS": 7036928,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578423641)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 19296,
-          "CPU": 0.015625,
-          "WS": 7032832,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578435333)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 12280,
-          "CPU": 0.078125,
-          "WS": 7028736,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578407620)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 26360,
-          "CPU": 0.03125,
-          "WS": 7028736,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578448024)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 6536,
-          "CPU": 0.0625,
-          "WS": 7024640,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578087690)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 6548,
-          "CPU": 0.078125,
-          "WS": 7016448,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578161412)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 21668,
-          "CPU": 0.03125,
-          "WS": 7012352,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578326699)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 6100,
-          "CPU": 0.0625,
-          "WS": 7008256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578351778)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 19740,
-          "CPU": 0.0625,
-          "WS": 7008256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578200797)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 20812,
-          "CPU": 0.0625,
-          "WS": 7008256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578181029)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 26948,
-          "CPU": 0.09375,
-          "WS": 7008256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578303100)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 7544,
-          "CPU": 0.046875,
-          "WS": 7008256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578340693)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 27652,
-          "CPU": 0.078125,
-          "WS": 7000064,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578234736)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 24040,
-          "CPU": 0.0625,
-          "WS": 7000064,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578292384)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 28428,
-          "CPU": 0.046875,
-          "WS": 7000064,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578362342)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 6484,
-          "CPU": 0.03125,
-          "WS": 6987776,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578260300)/"
-        },
-        {
-          "ProcessName": "node",
-          "Id": 1744,
-          "CPU": 0.546875,
-          "WS": 6975488,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787470910725)/"
-        },
-        {
-          "ProcessName": "NisSrv",
-          "Id": 6632,
-          "CPU": null,
-          "WS": 6967296,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "msedgewebview2",
+          "Id": 21572,
+          "CPU": 0.203125,
+          "WS": 7405568,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787576342973)/"
         },
         {
           "ProcessName": "fontdrvhost",
           "Id": 436,
           "CPU": null,
-          "WS": 6967296,
+          "WS": 7299072,
           "Path": null,
           "StartTime": null
         },
         {
           "ProcessName": "conhost",
-          "Id": 25536,
-          "CPU": 0.03125,
-          "WS": 6963200,
+          "Id": 10480,
+          "CPU": 0.09375,
+          "WS": 7159808,
           "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787578374495)/"
+          "StartTime": "/Date(1787579993618)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 25040,
+          "CPU": 0.15625,
+          "WS": 7155712,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579913392)/"
+        },
+        {
+          "ProcessName": "csrss",
+          "Id": 612,
+          "CPU": null,
+          "WS": 7147520,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "rundll32",
+          "Id": 13944,
+          "CPU": 0.671875,
+          "WS": 7073792,
+          "Path": "C:\\WINDOWS\\system32\\rundll32.exe",
+          "StartTime": "/Date(1787516668943)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 20388,
+          "CPU": 0.046875,
+          "WS": 7073792,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579836635)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 5560,
+          "CPU": 0.046875,
+          "WS": 7061504,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579953391)/"
+        },
+        {
+          "ProcessName": "NisSrv",
+          "Id": 6632,
+          "CPU": null,
+          "WS": 7053312,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 14640,
+          "CPU": 0.109375,
+          "WS": 7053312,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579926721)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 21844,
+          "CPU": 0.078125,
+          "WS": 7049216,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579651182)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 24348,
+          "CPU": 0.09375,
+          "WS": 7049216,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580005756)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 25644,
+          "CPU": 0.0625,
+          "WS": 7041024,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580110006)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 11300,
+          "CPU": 0.3125,
+          "WS": 7036928,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579570888)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 2268,
+          "CPU": 0.109375,
+          "WS": 7036928,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580065686)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 27288,
+          "CPU": 0.15625,
+          "WS": 7036928,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579667689)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 24532,
+          "CPU": 0.09375,
+          "WS": 7032832,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580126595)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 20544,
+          "CPU": 0.09375,
+          "WS": 7024640,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580088524)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 22176,
+          "CPU": 0.03125,
+          "WS": 7024640,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580037699)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 27924,
+          "CPU": 0.109375,
+          "WS": 7024640,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579958078)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2288,
+          "CPU": null,
+          "WS": 7020544,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 23056,
+          "CPU": 0.09375,
+          "WS": 7016448,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579967191)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 24124,
+          "CPU": 0.0625,
+          "WS": 7016448,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579980798)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 28388,
+          "CPU": 0.03125,
+          "WS": 7012352,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579862005)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 1440,
+          "CPU": 1.625,
+          "WS": 7008256,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578816719)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 28488,
+          "CPU": 0.0625,
+          "WS": 7008256,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579872522)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 26916,
+          "CPU": 0.046875,
+          "WS": 7008256,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579903209)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 20284,
+          "CPU": 0.046875,
+          "WS": 7008256,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580025556)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3184,
+          "CPU": null,
+          "WS": 7004160,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 28316,
+          "CPU": 0.046875,
+          "WS": 7000064,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579882718)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 23168,
+          "CPU": 0.046875,
+          "WS": 7000064,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579947666)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 12520,
+          "CPU": 0.03125,
+          "WS": 6983680,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787580054770)/"
+        },
+        {
+          "ProcessName": "node",
+          "Id": 1744,
+          "CPU": 0.546875,
+          "WS": 6979584,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787470910725)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 1576,
           "CPU": null,
-          "WS": 6946816,
+          "WS": 6934528,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 27708,
+          "CPU": 0.03125,
+          "WS": 6885376,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579562158)/"
         },
         {
           "ProcessName": "alg",
@@ -5457,48 +5561,112 @@
           "StartTime": "/Date(1787493258467)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 3184,
-          "CPU": null,
-          "WS": 6782976,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "conhost",
+          "Id": 2416,
+          "CPU": 0.09375,
+          "WS": 6844416,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579465654)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 9404,
-          "CPU": 0.15625,
-          "WS": 6660096,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787576342981)/"
+          "ProcessName": "conhost",
+          "Id": 21768,
+          "CPU": 0.078125,
+          "WS": 6795264,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579537207)/"
+        },
+        {
+          "ProcessName": "taskhostw",
+          "Id": 6196,
+          "CPU": 174.234375,
+          "WS": 6746112,
+          "Path": "C:\\WINDOWS\\system32\\taskhostw.exe",
+          "StartTime": "/Date(1787422202491)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 9372,
+          "CPU": 0.078125,
+          "WS": 6721536,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579440341)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 23600,
+          "CPU": 0.03125,
+          "WS": 6705152,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579428787)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 11564,
+          "CPU": 0.09375,
+          "WS": 6656000,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579229957)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 21064,
+          "CPU": 0.03125,
+          "WS": 6647808,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579196253)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 26844,
+          "CPU": 0.078125,
+          "WS": 6643712,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579156639)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 25368,
+          "CPU": 0.046875,
+          "WS": 6635520,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787579018390)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 740,
           "CPU": null,
-          "WS": 6623232,
+          "WS": 6574080,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "csrss",
-          "Id": 612,
-          "CPU": null,
-          "WS": 6590464,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "conhost",
+          "Id": 26864,
+          "CPU": 0.171875,
+          "WS": 6545408,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578749175)/"
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 18420,
+          "CPU": 6.890625,
+          "WS": 6537216,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787514493698)/"
+        },
+        {
+          "ProcessName": "node",
+          "Id": 6044,
+          "CPU": 0.578125,
+          "WS": 6492160,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787493258814)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 3604,
-          "CPU": null,
-          "WS": 6479872,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2916,
           "CPU": null,
           "WS": 6471680,
           "Path": null,
@@ -5513,26 +5681,42 @@
           "StartTime": "/Date(1787527643333)/"
         },
         {
-          "ProcessName": "rundll32",
-          "Id": 13944,
-          "CPU": 0.640625,
-          "WS": 6393856,
-          "Path": "C:\\WINDOWS\\system32\\rundll32.exe",
-          "StartTime": "/Date(1787516668943)/"
-        },
-        {
-          "ProcessName": "traycer",
-          "Id": 7132,
-          "CPU": 2.578125,
-          "WS": 6377472,
-          "Path": "C:\\Users\\day night\\.traycer\\cli\\bin\\traycer.exe",
-          "StartTime": "/Date(1787422238378)/"
-        },
-        {
-          "ProcessName": "MpDefenderCoreService",
-          "Id": 3944,
+          "ProcessName": "svchost",
+          "Id": 2916,
           "CPU": null,
-          "WS": 6356992,
+          "WS": 6434816,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 25488,
+          "CPU": 0.03125,
+          "WS": 6426624,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578654619)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 17052,
+          "CPU": 0.046875,
+          "WS": 6422528,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578629350)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 24512,
+          "CPU": 0.078125,
+          "WS": 6402048,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578554337)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 24920,
+          "CPU": null,
+          "WS": 6397952,
           "Path": null,
           "StartTime": null
         },
@@ -5554,6 +5738,22 @@
         },
         {
           "ProcessName": "conhost",
+          "Id": 16120,
+          "CPU": 0.03125,
+          "WS": 6254592,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578513830)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2124,
+          "CPU": null,
+          "WS": 6242304,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "conhost",
           "Id": 16276,
           "CPU": 1.71875,
           "WS": 6230016,
@@ -5561,44 +5761,36 @@
           "StartTime": "/Date(1787524858649)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 2124,
-          "CPU": null,
-          "WS": 6217728,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "conhost",
+          "Id": 27932,
+          "CPU": 0.046875,
+          "WS": 6197248,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578476602)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 21572,
-          "CPU": 0.171875,
-          "WS": 6111232,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787576342973)/"
+          "ProcessName": "conhost",
+          "Id": 21140,
+          "CPU": 0.15625,
+          "WS": 6193152,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787578339597)/"
+        },
+        {
+          "ProcessName": "AggregatorHost",
+          "Id": 13388,
+          "CPU": null,
+          "WS": 6156288,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "svchost",
           "Id": 3828,
           "CPU": null,
-          "WS": 6107136,
+          "WS": 6111232,
           "Path": null,
           "StartTime": null
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 10632,
-          "CPU": 0.125,
-          "WS": 6098944,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577699981)/"
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 18420,
-          "CPU": 6.765625,
-          "WS": 6057984,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787514493698)/"
         },
         {
           "ProcessName": "conhost",
@@ -5609,42 +5801,26 @@
           "StartTime": "/Date(1787493258292)/"
         },
         {
-          "ProcessName": "taskhostw",
-          "Id": 6196,
-          "CPU": 174.15625,
-          "WS": 6025216,
-          "Path": "C:\\WINDOWS\\system32\\taskhostw.exe",
-          "StartTime": "/Date(1787422202491)/"
+          "ProcessName": "svchost",
+          "Id": 2492,
+          "CPU": null,
+          "WS": 5963776,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "node",
           "Id": 9260,
           "CPU": 0.46875,
-          "WS": 5918720,
+          "WS": 5922816,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787480723014)/"
-        },
-        {
-          "ProcessName": "WindowsPackageManagerServer",
-          "Id": 15628,
-          "CPU": 1.328125,
-          "WS": 5881856,
-          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.DesktopAppInstaller_1.29.290.0_x64__8wekyb3d8bbwe\\WindowsPackageManagerServer.exe",
-          "StartTime": "/Date(1787576282280)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 9968,
           "CPU": null,
-          "WS": 5881856,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2492,
-          "CPU": null,
-          "WS": 5779456,
+          "WS": 5914624,
           "Path": null,
           "StartTime": null
         },
@@ -5652,25 +5828,9 @@
           "ProcessName": "svchost",
           "Id": 1140,
           "CPU": null,
-          "WS": 5738496,
+          "WS": 5672960,
           "Path": null,
           "StartTime": null
-        },
-        {
-          "ProcessName": "WUDFHost",
-          "Id": 1684,
-          "CPU": null,
-          "WS": 5709824,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "node",
-          "Id": 6044,
-          "CPU": 0.5625,
-          "WS": 5693440,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787493258814)/"
         },
         {
           "ProcessName": "wininit",
@@ -5682,9 +5842,17 @@
         },
         {
           "ProcessName": "svchost",
+          "Id": 13120,
+          "CPU": null,
+          "WS": 5619712,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
           "Id": 10476,
           "CPU": null,
-          "WS": 5632000,
+          "WS": 5607424,
           "Path": null,
           "StartTime": null
         },
@@ -5692,25 +5860,9 @@
           "ProcessName": "chrome",
           "Id": 17816,
           "CPU": 0.09375,
-          "WS": 5619712,
+          "WS": 5607424,
           "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
           "StartTime": "/Date(1787514493489)/"
-        },
-        {
-          "ProcessName": "git-remote-https",
-          "Id": 24532,
-          "CPU": 4.3125,
-          "WS": 5476352,
-          "Path": "C:\\Program Files\\Git\\mingw64\\libexec\\git-core\\git-remote-https.exe",
-          "StartTime": "/Date(1787577604912)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 18780,
-          "CPU": null,
-          "WS": 5431296,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "conhost",
@@ -5721,20 +5873,44 @@
           "StartTime": "/Date(1787492585001)/"
         },
         {
-          "ProcessName": "cmd",
-          "Id": 19816,
-          "CPU": 0.046875,
-          "WS": 5357568,
-          "Path": "C:\\WINDOWS\\system32\\cmd.exe",
-          "StartTime": "/Date(1787578152016)/"
-        },
-        {
-          "ProcessName": "AggregatorHost",
-          "Id": 13388,
+          "ProcessName": "svchost",
+          "Id": 18780,
           "CPU": null,
-          "WS": 5296128,
+          "WS": 5390336,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 2116,
+          "CPU": null,
+          "WS": 5382144,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "WUDFHost",
+          "Id": 1684,
+          "CPU": null,
+          "WS": 5324800,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "chrome",
+          "Id": 13036,
+          "CPU": 3.140625,
+          "WS": 5279744,
+          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+          "StartTime": "/Date(1787516624009)/"
+        },
+        {
+          "ProcessName": "cmd",
+          "Id": 27656,
+          "CPU": 0.03125,
+          "WS": 5242880,
+          "Path": "C:\\WINDOWS\\system32\\cmd.exe",
+          "StartTime": "/Date(1787580130466)/"
         },
         {
           "ProcessName": "node",
@@ -5745,66 +5921,50 @@
           "StartTime": "/Date(1787484226445)/"
         },
         {
-          "ProcessName": "cmd",
-          "Id": 21360,
-          "CPU": 0.03125,
-          "WS": 5226496,
-          "Path": "C:\\WINDOWS\\system32\\cmd.exe",
-          "StartTime": "/Date(1787578149904)/"
-        },
-        {
-          "ProcessName": "git",
-          "Id": 1620,
-          "CPU": 1.296875,
-          "WS": 5185536,
-          "Path": "C:\\Program Files\\Git\\mingw64\\bin\\git.exe",
-          "StartTime": "/Date(1787577604015)/"
+          "ProcessName": "svchost",
+          "Id": 21340,
+          "CPU": null,
+          "WS": 5189632,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "svchost",
           "Id": 1428,
           "CPU": null,
-          "WS": 5181440,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 2116,
-          "CPU": null,
-          "WS": 5115904,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "chrome",
-          "Id": 13036,
-          "CPU": 3.125,
-          "WS": 5070848,
-          "Path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "StartTime": "/Date(1787516624009)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 21340,
-          "CPU": null,
-          "WS": 5050368,
+          "WS": 5169152,
           "Path": null,
           "StartTime": null
         },
         {
           "ProcessName": "msedgewebview2",
           "Id": 16324,
-          "CPU": 0.109375,
-          "WS": 4947968,
+          "CPU": 0.140625,
+          "WS": 5074944,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787576343440)/"
         },
         {
           "ProcessName": "svchost",
+          "Id": 6908,
+          "CPU": null,
+          "WS": 4993024,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
           "Id": 2108,
           "CPU": null,
-          "WS": 4915200,
+          "WS": 4988928,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 8608,
+          "CPU": null,
+          "WS": 4956160,
           "Path": null,
           "StartTime": null
         },
@@ -5817,6 +5977,14 @@
           "StartTime": "/Date(1787494745837)/"
         },
         {
+          "ProcessName": "svchost",
+          "Id": 2484,
+          "CPU": null,
+          "WS": 4775936,
+          "Path": null,
+          "StartTime": null
+        },
+        {
           "ProcessName": "HelpPane",
           "Id": 21408,
           "CPU": 0.375,
@@ -5825,26 +5993,18 @@
           "StartTime": "/Date(1787455589588)/"
         },
         {
-          "ProcessName": "svchost",
-          "Id": 2484,
-          "CPU": null,
-          "WS": 4763648,
-          "Path": null,
-          "StartTime": null
-        },
-        {
           "ProcessName": "cmd",
-          "Id": 7932,
+          "Id": 26352,
           "CPU": 0.015625,
-          "WS": 4706304,
+          "WS": 4714496,
           "Path": "C:\\WINDOWS\\system32\\cmd.exe",
-          "StartTime": "/Date(1787578437828)/"
+          "StartTime": "/Date(1787580128238)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 2564,
           "CPU": null,
-          "WS": 4661248,
+          "WS": 4665344,
           "Path": null,
           "StartTime": null
         },
@@ -5852,7 +6012,7 @@
           "ProcessName": "svchost",
           "Id": 2900,
           "CPU": null,
-          "WS": 4612096,
+          "WS": 4657152,
           "Path": null,
           "StartTime": null
         },
@@ -5860,7 +6020,7 @@
           "ProcessName": "dllhost",
           "Id": 21084,
           "CPU": 0.34375,
-          "WS": 4599808,
+          "WS": 4575232,
           "Path": "C:\\WINDOWS\\system32\\DllHost.exe",
           "StartTime": "/Date(1787453812934)/"
         },
@@ -5874,19 +6034,27 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 6908,
+          "Id": 3100,
           "CPU": null,
-          "WS": 4476928,
+          "WS": 4489216,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "svchost",
-          "Id": 3100,
-          "CPU": null,
-          "WS": 4468736,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "msedgewebview2",
+          "Id": 4544,
+          "CPU": 1.34375,
+          "WS": 4411392,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422214393)/"
+        },
+        {
+          "ProcessName": "msedgewebview2",
+          "Id": 12632,
+          "CPU": 0.078125,
+          "WS": 4378624,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787576343072)/"
         },
         {
           "ProcessName": "cmd",
@@ -5897,22 +6065,6 @@
           "StartTime": "/Date(1787494745470)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 4544,
-          "CPU": 1.328125,
-          "WS": 4345856,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422214393)/"
-        },
-        {
-          "ProcessName": "msedgewebview2",
-          "Id": 11720,
-          "CPU": 184.75,
-          "WS": 4308992,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422254918)/"
-        },
-        {
           "ProcessName": "cmd",
           "Id": 15564,
           "CPU": 0.015625,
@@ -5921,34 +6073,26 @@
           "StartTime": "/Date(1787480450837)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 23628,
-          "CPU": 0.125,
-          "WS": 4198400,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577651683)/"
-        },
-        {
           "ProcessName": "svchost",
           "Id": 21040,
           "CPU": null,
-          "WS": 4190208,
+          "WS": 4169728,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "StoreDesktopExtension",
-          "Id": 23624,
-          "CPU": 0.109375,
-          "WS": 4190208,
-          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsStore_22607.1401.5.0_x64__8wekyb3d8bbwe\\StoreDesktopExtension.exe",
-          "StartTime": "/Date(1787576279443)/"
+          "ProcessName": "traycer",
+          "Id": 7132,
+          "CPU": 2.578125,
+          "WS": 4128768,
+          "Path": "C:\\Users\\day night\\.traycer\\cli\\bin\\traycer.exe",
+          "StartTime": "/Date(1787422238378)/"
         },
         {
           "ProcessName": "csrss",
           "Id": 524,
           "CPU": null,
-          "WS": 4104192,
+          "WS": 4128768,
           "Path": null,
           "StartTime": null
         },
@@ -5969,14 +6113,6 @@
           "StartTime": "/Date(1787494747057)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 15068,
-          "CPU": 0.03125,
-          "WS": 4022272,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577625959)/"
-        },
-        {
           "ProcessName": "cmd",
           "Id": 14160,
           "CPU": 0,
@@ -5986,7 +6122,7 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 2768,
+          "Id": 2908,
           "CPU": null,
           "WS": 3969024,
           "Path": null,
@@ -6010,73 +6146,41 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 2908,
+          "Id": 2768,
           "CPU": null,
-          "WS": 3862528,
+          "WS": 3944448,
           "Path": null,
           "StartTime": null
-        },
-        {
-          "ProcessName": "ChatGPT",
-          "Id": 3484,
-          "CPU": 0.96875,
-          "WS": 3837952,
-          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
-          "StartTime": "/Date(1787499664538)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 10900,
-          "CPU": 0.15625,
-          "WS": 3837952,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577426700)/"
-        },
-        {
-          "ProcessName": "WUDFHost",
-          "Id": 464,
-          "CPU": null,
-          "WS": 3833856,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 8608,
-          "CPU": null,
-          "WS": 3780608,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 7260,
-          "CPU": 0.09375,
-          "WS": 3756032,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577401748)/"
         },
         {
           "ProcessName": "DataExchangeHost",
           "Id": 18776,
           "CPU": 1.265625,
-          "WS": 3678208,
+          "WS": 3911680,
           "Path": "C:\\Windows\\System32\\DataExchangeHost.exe",
           "StartTime": "/Date(1787476040474)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 21680,
-          "CPU": 0.015625,
-          "WS": 3661824,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577614335)/"
+          "ProcessName": "ChatGPT",
+          "Id": 3484,
+          "CPU": 0.96875,
+          "WS": 3829760,
+          "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+          "StartTime": "/Date(1787499664538)/"
+        },
+        {
+          "ProcessName": "WUDFHost",
+          "Id": 464,
+          "CPU": null,
+          "WS": 3817472,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "svchost",
           "Id": 7116,
           "CPU": null,
-          "WS": 3624960,
+          "WS": 3620864,
           "Path": null,
           "StartTime": null
         },
@@ -6084,7 +6188,7 @@
           "ProcessName": "node",
           "Id": 14872,
           "CPU": 1.796875,
-          "WS": 3575808,
+          "WS": 3579904,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787471027771)/"
         },
@@ -6097,58 +6201,58 @@
           "StartTime": "/Date(1787492585675)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 21372,
-          "CPU": 0.046875,
-          "WS": 3493888,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787515626855)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 26660,
-          "CPU": 0.25,
-          "WS": 3424256,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577207347)/"
-        },
-        {
           "ProcessName": "svchost",
-          "Id": 7416,
+          "Id": 4240,
           "CPU": null,
-          "WS": 3379200,
+          "WS": 3502080,
           "Path": null,
           "StartTime": null
         },
         {
           "ProcessName": "conhost",
-          "Id": 12612,
-          "CPU": 0.0625,
-          "WS": 3325952,
+          "Id": 21680,
+          "CPU": 0.015625,
+          "WS": 3407872,
           "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577603752)/"
+          "StartTime": "/Date(1787577614335)/"
+        },
+        {
+          "ProcessName": "conhost",
+          "Id": 21372,
+          "CPU": 0.046875,
+          "WS": 3391488,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787515626855)/"
         },
         {
           "ProcessName": "svchost",
-          "Id": 4240,
+          "Id": 7416,
+          "CPU": null,
+          "WS": 3371008,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "iScrRecExt",
+          "Id": 5576,
+          "CPU": 219.234375,
+          "WS": 3231744,
+          "Path": null,
+          "StartTime": "/Date(1787422276629)/"
+        },
+        {
+          "ProcessName": "dllhost",
+          "Id": 5904,
           "CPU": null,
           "WS": 3215360,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "dllhost",
-          "Id": 10436,
-          "CPU": 2.359375,
-          "WS": 3211264,
-          "Path": "C:\\WINDOWS\\system32\\DllHost.exe",
-          "StartTime": "/Date(1787499501060)/"
-        },
-        {
           "ProcessName": "svchost",
           "Id": 15340,
           "CPU": null,
-          "WS": 3170304,
+          "WS": 3158016,
           "Path": null,
           "StartTime": null
         },
@@ -6156,39 +6260,31 @@
           "ProcessName": "node",
           "Id": 18888,
           "CPU": 1.078125,
-          "WS": 3117056,
+          "WS": 3112960,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787475580123)/"
         },
         {
-          "ProcessName": "git",
-          "Id": 18080,
-          "CPU": 0.015625,
-          "WS": 3108864,
-          "Path": "C:\\Program Files\\Git\\mingw64\\libexec\\git-core\\git.exe",
-          "StartTime": "/Date(1787577604375)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 25020,
-          "CPU": 0.03125,
-          "WS": 3010560,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787577097755)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 3660,
-          "CPU": null,
-          "WS": 2981888,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "msedgewebview2",
+          "Id": 11812,
+          "CPU": 196.53125,
+          "WS": 3080192,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422255178)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 3468,
           "CPU": null,
-          "WS": 2945024,
+          "WS": 2990080,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3660,
+          "CPU": null,
+          "WS": 2973696,
           "Path": null,
           "StartTime": null
         },
@@ -6201,6 +6297,14 @@
           "StartTime": "/Date(1787492688319)/"
         },
         {
+          "ProcessName": "PresentationFontCache",
+          "Id": 3240,
+          "CPU": null,
+          "WS": 2867200,
+          "Path": null,
+          "StartTime": null
+        },
+        {
           "ProcessName": "conhost",
           "Id": 14992,
           "CPU": 0.03125,
@@ -6209,42 +6313,10 @@
           "StartTime": "/Date(1787491904265)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 11812,
-          "CPU": 196.53125,
-          "WS": 2863104,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422255178)/"
-        },
-        {
-          "ProcessName": "PresentationFontCache",
-          "Id": 3240,
-          "CPU": null,
-          "WS": 2854912,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 24752,
-          "CPU": 0.125,
-          "WS": 2830336,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576532035)/"
-        },
-        {
-          "ProcessName": "iScrRecExt",
-          "Id": 5576,
-          "CPU": 213.484375,
-          "WS": 2826240,
-          "Path": null,
-          "StartTime": "/Date(1787422276629)/"
-        },
-        {
           "ProcessName": "svchost",
           "Id": 16108,
           "CPU": null,
-          "WS": 2797568,
+          "WS": 2801664,
           "Path": null,
           "StartTime": null
         },
@@ -6252,15 +6324,23 @@
           "ProcessName": "svchost",
           "Id": 3708,
           "CPU": null,
-          "WS": 2781184,
+          "WS": 2768896,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "jucheck",
+          "Id": 8204,
+          "CPU": 7.90625,
+          "WS": 2752512,
+          "Path": "C:\\Program Files (x86)\\Common Files\\Java\\Java Update\\jucheck.exe",
+          "StartTime": "/Date(1787422551877)/"
         },
         {
           "ProcessName": "fontdrvhost",
           "Id": 892,
           "CPU": null,
-          "WS": 2662400,
+          "WS": 2707456,
           "Path": null,
           "StartTime": null
         },
@@ -6268,47 +6348,47 @@
           "ProcessName": "svchost",
           "Id": 7108,
           "CPU": null,
-          "WS": 2625536,
+          "WS": 2654208,
           "Path": null,
           "StartTime": null
+        },
+        {
+          "ProcessName": "ApplicationFrameHost",
+          "Id": 7848,
+          "CPU": 3.71875,
+          "WS": 2596864,
+          "Path": "C:\\WINDOWS\\system32\\ApplicationFrameHost.exe",
+          "StartTime": "/Date(1787422361026)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 3292,
           "CPU": null,
-          "WS": 2621440,
+          "WS": 2576384,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 12632,
-          "CPU": 0.078125,
-          "WS": 2510848,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787576343072)/"
+          "ProcessName": "jusched",
+          "Id": 1664,
+          "CPU": 8.21875,
+          "WS": 2449408,
+          "Path": "C:\\Program Files (x86)\\Common Files\\Java\\Java Update\\jusched.exe",
+          "StartTime": "/Date(1787422248797)/"
         },
         {
-          "ProcessName": "dllhost",
-          "Id": 5904,
-          "CPU": null,
-          "WS": 2457600,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "SearchApp",
-          "Id": 9828,
-          "CPU": 23.734375,
-          "WS": 2412544,
-          "Path": "C:\\WINDOWS\\SystemApps\\Microsoft.Windows.Search_cw5n1h2txyewy\\SearchApp.exe",
-          "StartTime": "/Date(1787499707657)/"
+          "ProcessName": "StoreDesktopExtension",
+          "Id": 23624,
+          "CPU": 0.125,
+          "WS": 2420736,
+          "Path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsStore_22607.1401.5.0_x64__8wekyb3d8bbwe\\StoreDesktopExtension.exe",
+          "StartTime": "/Date(1787576279443)/"
         },
         {
           "ProcessName": "msedgewebview2",
           "Id": 22524,
           "CPU": 5.453125,
-          "WS": 2338816,
+          "WS": 2334720,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787465782894)/"
         },
@@ -6324,33 +6404,41 @@
           "ProcessName": "svchost",
           "Id": 3608,
           "CPU": null,
-          "WS": 2285568,
+          "WS": 2265088,
           "Path": null,
           "StartTime": null
-        },
-        {
-          "ProcessName": "jusched",
-          "Id": 1664,
-          "CPU": 8.1875,
-          "WS": 2285568,
-          "Path": "C:\\Program Files (x86)\\Common Files\\Java\\Java Update\\jusched.exe",
-          "StartTime": "/Date(1787422248797)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 14236,
           "CPU": null,
-          "WS": 2252800,
+          "WS": 2236416,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "jucheck",
-          "Id": 8204,
-          "CPU": 7.875,
-          "WS": 2244608,
-          "Path": "C:\\Program Files (x86)\\Common Files\\Java\\Java Update\\jucheck.exe",
-          "StartTime": "/Date(1787422551877)/"
+          "ProcessName": "svchost",
+          "Id": 17636,
+          "CPU": null,
+          "WS": 2183168,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 7048,
+          "CPU": null,
+          "WS": 2174976,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "wscript",
+          "Id": 6308,
+          "CPU": 0.28125,
+          "WS": 2166784,
+          "Path": "C:\\WINDOWS\\System32\\wscript.exe",
+          "StartTime": "/Date(1787422202511)/"
         },
         {
           "ProcessName": "node",
@@ -6362,41 +6450,9 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 17636,
-          "CPU": null,
-          "WS": 2146304,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "wscript",
-          "Id": 6308,
-          "CPU": 0.265625,
-          "WS": 2113536,
-          "Path": "C:\\WINDOWS\\System32\\wscript.exe",
-          "StartTime": "/Date(1787422202511)/"
-        },
-        {
-          "ProcessName": "ApplicationFrameHost",
-          "Id": 7848,
-          "CPU": 3.71875,
-          "WS": 2105344,
-          "Path": "C:\\WINDOWS\\system32\\ApplicationFrameHost.exe",
-          "StartTime": "/Date(1787422361026)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 7048,
-          "CPU": null,
-          "WS": 2105344,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
           "Id": 3816,
           "CPU": null,
-          "WS": 1998848,
+          "WS": 2015232,
           "Path": null,
           "StartTime": null
         },
@@ -6404,7 +6460,15 @@
           "ProcessName": "svchost",
           "Id": 4512,
           "CPU": null,
-          "WS": 1970176,
+          "WS": 1982464,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "spoolsv",
+          "Id": 3372,
+          "CPU": null,
+          "WS": 1949696,
           "Path": null,
           "StartTime": null
         },
@@ -6417,12 +6481,12 @@
           "StartTime": "/Date(1787576341934)/"
         },
         {
-          "ProcessName": "spoolsv",
-          "Id": 3372,
-          "CPU": null,
-          "WS": 1937408,
-          "Path": null,
-          "StartTime": null
+          "ProcessName": "node",
+          "Id": 5636,
+          "CPU": 0.328125,
+          "WS": 1929216,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787473885547)/"
         },
         {
           "ProcessName": "cmd",
@@ -6434,11 +6498,11 @@
         },
         {
           "ProcessName": "node",
-          "Id": 5636,
-          "CPU": 0.328125,
-          "WS": 1929216,
+          "Id": 20644,
+          "CPU": 1.171875,
+          "WS": 1904640,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787473885547)/"
+          "StartTime": "/Date(1787472190629)/"
         },
         {
           "ProcessName": "codex-code-mode-host",
@@ -6447,22 +6511,6 @@
           "WS": 1896448,
           "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.818.5229.0_x64__2p2nqsd0c76g0\\app\\resources\\codex-code-mode-host.exe",
           "StartTime": "/Date(1787499570993)/"
-        },
-        {
-          "ProcessName": "node",
-          "Id": 20644,
-          "CPU": 1.171875,
-          "WS": 1896448,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787472190629)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 16156,
-          "CPU": 0.515625,
-          "WS": 1867776,
-          "Path": null,
-          "StartTime": "/Date(1787576758535)/"
         },
         {
           "ProcessName": "node",
@@ -6491,24 +6539,16 @@
         {
           "ProcessName": "svchost",
           "Id": 15640,
-          "CPU": 0.078125,
-          "WS": 1716224,
+          "CPU": 0.09375,
+          "WS": 1736704,
           "Path": "C:\\WINDOWS\\system32\\svchost.exe",
           "StartTime": "/Date(1787475423262)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 3916,
-          "CPU": null,
-          "WS": 1650688,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "msedgewebview2",
           "Id": 1340,
           "CPU": 0.109375,
-          "WS": 1642496,
+          "WS": 1634304,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787577172893)/"
         },
@@ -6522,25 +6562,9 @@
         },
         {
           "ProcessName": "svchost",
-          "Id": 3788,
+          "Id": 3916,
           "CPU": null,
-          "WS": 1581056,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 5124,
-          "CPU": null,
-          "WS": 1548288,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 10400,
-          "CPU": null,
-          "WS": 1527808,
+          "WS": 1626112,
           "Path": null,
           "StartTime": null
         },
@@ -6548,7 +6572,23 @@
           "ProcessName": "svchost",
           "Id": 4128,
           "CPU": null,
-          "WS": 1523712,
+          "WS": 1613824,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3788,
+          "CPU": null,
+          "WS": 1589248,
+          "Path": null,
+          "StartTime": null
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 5124,
+          "CPU": null,
+          "WS": 1531904,
           "Path": null,
           "StartTime": null
         },
@@ -6572,7 +6612,7 @@
           "ProcessName": "svchost",
           "Id": 6376,
           "CPU": null,
-          "WS": 1478656,
+          "WS": 1458176,
           "Path": null,
           "StartTime": null
         },
@@ -6580,7 +6620,7 @@
           "ProcessName": "svchost",
           "Id": 5148,
           "CPU": null,
-          "WS": 1445888,
+          "WS": 1458176,
           "Path": null,
           "StartTime": null
         },
@@ -6593,6 +6633,14 @@
           "StartTime": null
         },
         {
+          "ProcessName": "svchost",
+          "Id": 10400,
+          "CPU": null,
+          "WS": 1380352,
+          "Path": null,
+          "StartTime": null
+        },
+        {
           "ProcessName": "node",
           "Id": 10700,
           "CPU": 0.328125,
@@ -6601,42 +6649,26 @@
           "StartTime": "/Date(1787475579728)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 25116,
-          "CPU": 0.046875,
-          "WS": 1261568,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576827187)/"
+          "ProcessName": "System",
+          "Id": 4,
+          "CPU": null,
+          "WS": 1265664,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "RuntimeBroker",
           "Id": 2684,
           "CPU": 0.046875,
-          "WS": 1208320,
+          "WS": 1241088,
           "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
           "StartTime": "/Date(1787422249542)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 20044,
-          "CPU": 0.078125,
-          "WS": 1159168,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576272058)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 21928,
-          "CPU": 0.171875,
-          "WS": 1150976,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576325173)/"
         },
         {
           "ProcessName": "svchost",
           "Id": 3884,
           "CPU": null,
-          "WS": 1126400,
+          "WS": 1216512,
           "Path": null,
           "StartTime": null
         },
@@ -6644,7 +6676,7 @@
           "ProcessName": "node",
           "Id": 24180,
           "CPU": 0.65625,
-          "WS": 1122304,
+          "WS": 1187840,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787534212319)/"
         },
@@ -6652,9 +6684,17 @@
           "ProcessName": "node",
           "Id": 23384,
           "CPU": 0.703125,
-          "WS": 1114112,
+          "WS": 1167360,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787534603421)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 13304,
+          "CPU": null,
+          "WS": 1105920,
+          "Path": null,
+          "StartTime": null
         },
         {
           "ProcessName": "node",
@@ -6663,14 +6703,6 @@
           "WS": 1101824,
           "Path": "C:\\Program Files\\nodejs\\node.exe",
           "StartTime": "/Date(1787530143018)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 13304,
-          "CPU": null,
-          "WS": 1069056,
-          "Path": null,
-          "StartTime": null
         },
         {
           "ProcessName": "Video.UI",
@@ -6689,18 +6721,10 @@
           "StartTime": "/Date(1787484226038)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 23408,
-          "CPU": 0.09375,
-          "WS": 1040384,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575943783)/"
-        },
-        {
           "ProcessName": "Everything",
           "Id": 3752,
           "CPU": null,
-          "WS": 995328,
+          "WS": 1019904,
           "Path": null,
           "StartTime": null
         },
@@ -6713,6 +6737,22 @@
           "StartTime": "/Date(1787422789176)/"
         },
         {
+          "ProcessName": "msedgewebview2",
+          "Id": 13676,
+          "CPU": 756.0625,
+          "WS": 966656,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422259552)/"
+        },
+        {
+          "ProcessName": "svchost",
+          "Id": 3892,
+          "CPU": null,
+          "WS": 962560,
+          "Path": null,
+          "StartTime": null
+        },
+        {
           "ProcessName": "cmd",
           "Id": 12476,
           "CPU": 0.015625,
@@ -6721,82 +6761,10 @@
           "StartTime": "/Date(1787484226417)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 22848,
-          "CPU": 0.109375,
-          "WS": 958464,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575925015)/"
-        },
-        {
-          "ProcessName": "svchost",
-          "Id": 3892,
-          "CPU": null,
-          "WS": 913408,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "msedgewebview2",
-          "Id": 13676,
-          "CPU": 756.0625,
-          "WS": 913408,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422259552)/"
-        },
-        {
-          "ProcessName": "System",
-          "Id": 4,
-          "CPU": null,
-          "WS": 901120,
-          "Path": null,
-          "StartTime": null
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 17412,
-          "CPU": 0.046875,
-          "WS": 892928,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575429537)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 17760,
-          "CPU": 0.09375,
-          "WS": 892928,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575444195)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 3544,
-          "CPU": 0.125,
-          "WS": 892928,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575573401)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 19240,
-          "CPU": 0.15625,
-          "WS": 888832,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576765945)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 6912,
-          "CPU": 2.53125,
-          "WS": 856064,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787422238384)/"
-        },
-        {
           "ProcessName": "msedgewebview2",
           "Id": 3900,
           "CPU": 0.390625,
-          "WS": 749568,
+          "WS": 872448,
           "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
           "StartTime": "/Date(1787422254997)/"
         },
@@ -6809,20 +6777,36 @@
           "StartTime": "/Date(1787534602982)/"
         },
         {
+          "ProcessName": "msedgewebview2",
+          "Id": 8688,
+          "CPU": 0.109375,
+          "WS": 655360,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422213013)/"
+        },
+        {
+          "ProcessName": "WR_Tray_Icon",
+          "Id": 1908,
+          "CPU": 0.4375,
+          "WS": 655360,
+          "Path": null,
+          "StartTime": "/Date(1787422323027)/"
+        },
+        {
           "ProcessName": "TPMProvisioningService",
           "Id": 3932,
           "CPU": null,
-          "WS": 655360,
+          "WS": 647168,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 8688,
-          "CPU": 0.109375,
-          "WS": 593920,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422213013)/"
+          "ProcessName": "conhost",
+          "Id": 6912,
+          "CPU": 2.53125,
+          "WS": 638976,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787422238384)/"
         },
         {
           "ProcessName": "igfxTray",
@@ -6881,18 +6865,10 @@
           "StartTime": "/Date(1787473885367)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 19952,
-          "CPU": 0.09375,
-          "WS": 286720,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787576067565)/"
-        },
-        {
           "ProcessName": "cmd",
           "Id": 11212,
           "CPU": 0.015625,
-          "WS": 274432,
+          "WS": 270336,
           "Path": "C:\\WINDOWS\\system32\\cmd.exe",
           "StartTime": "/Date(1787475579524)/"
         },
@@ -6908,7 +6884,7 @@
           "ProcessName": "cmd",
           "Id": 10416,
           "CPU": 0.015625,
-          "WS": 266240,
+          "WS": 262144,
           "Path": "C:\\WINDOWS\\system32\\cmd.exe",
           "StartTime": "/Date(1787472189914)/"
         },
@@ -6919,6 +6895,14 @@
           "WS": 245760,
           "Path": "C:\\WINDOWS\\system32\\cmd.exe",
           "StartTime": "/Date(1787472190605)/"
+        },
+        {
+          "ProcessName": "cmd",
+          "Id": 8292,
+          "CPU": 0,
+          "WS": 245760,
+          "Path": "C:\\WINDOWS\\system32\\cmd.exe",
+          "StartTime": "/Date(1787475580105)/"
         },
         {
           "ProcessName": "cmd",
@@ -6937,14 +6921,6 @@
           "StartTime": "/Date(1787471027716)/"
         },
         {
-          "ProcessName": "cmd",
-          "Id": 8292,
-          "CPU": 0,
-          "WS": 245760,
-          "Path": "C:\\WINDOWS\\system32\\cmd.exe",
-          "StartTime": "/Date(1787475580105)/"
-        },
-        {
           "ProcessName": "conhost",
           "Id": 21460,
           "CPU": 0.015625,
@@ -6961,6 +6937,14 @@
           "StartTime": "/Date(1787471027089)/"
         },
         {
+          "ProcessName": "conhost",
+          "Id": 4560,
+          "CPU": 0.140625,
+          "WS": 200704,
+          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
+          "StartTime": "/Date(1787499484679)/"
+        },
+        {
           "ProcessName": "cmd",
           "Id": 20960,
           "CPU": 0.015625,
@@ -6970,19 +6954,11 @@
         },
         {
           "ProcessName": "conhost",
-          "Id": 4560,
-          "CPU": 0.140625,
-          "WS": 200704,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787499484679)/"
-        },
-        {
-          "ProcessName": "conhost",
-          "Id": 22360,
-          "CPU": 0.203125,
-          "WS": 196608,
-          "Path": "C:\\WINDOWS\\system32\\conhost.exe",
-          "StartTime": "/Date(1787575765530)/"
+          "Id": 2460,
+          "CPU": 0.09375,
+          "WS": 155648,
+          "Path": null,
+          "StartTime": "/Date(1787473711561)/"
         },
         {
           "ProcessName": "igfxHK",
@@ -6993,20 +6969,20 @@
           "StartTime": "/Date(1787422206135)/"
         },
         {
-          "ProcessName": "node",
-          "Id": 1464,
-          "CPU": 0.25,
-          "WS": 69632,
-          "Path": "C:\\Program Files\\nodejs\\node.exe",
-          "StartTime": "/Date(1787534603145)/"
-        },
-        {
           "ProcessName": "SecurityHealthSystray",
           "Id": 10812,
           "CPU": 0.296875,
           "WS": 69632,
           "Path": "C:\\Windows\\System32\\SecurityHealthSystray.exe",
           "StartTime": "/Date(1787422225870)/"
+        },
+        {
+          "ProcessName": "node",
+          "Id": 1464,
+          "CPU": 0.25,
+          "WS": 69632,
+          "Path": "C:\\Program Files\\nodejs\\node.exe",
+          "StartTime": "/Date(1787534603145)/"
         },
         {
           "ProcessName": "CompPkgSrv",
@@ -7033,14 +7009,6 @@
           "StartTime": "/Date(1787422255178)/"
         },
         {
-          "ProcessName": "msedgewebview2",
-          "Id": 9748,
-          "CPU": 1.75,
-          "WS": 45056,
-          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
-          "StartTime": "/Date(1787422255246)/"
-        },
-        {
           "ProcessName": "ChatGPT",
           "Id": 15188,
           "CPU": 0.046875,
@@ -7049,32 +7017,24 @@
           "StartTime": "/Date(1787499481456)/"
         },
         {
-          "ProcessName": "conhost",
-          "Id": 2460,
-          "CPU": 0.09375,
-          "WS": 36864,
-          "Path": null,
-          "StartTime": "/Date(1787473711561)/"
+          "ProcessName": "msedgewebview2",
+          "Id": 9748,
+          "CPU": 1.75,
+          "WS": 45056,
+          "Path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.101\\msedgewebview2.exe",
+          "StartTime": "/Date(1787422255246)/"
         },
         {
-          "ProcessName": "WR_Tray_Icon",
-          "Id": 1908,
-          "CPU": 0.4375,
-          "WS": 16384,
-          "Path": null,
-          "StartTime": "/Date(1787422323027)/"
-        },
-        {
-          "ProcessName": "Idle",
-          "Id": 0,
+          "ProcessName": "smss",
+          "Id": 376,
           "CPU": null,
           "WS": 8192,
           "Path": null,
           "StartTime": null
         },
         {
-          "ProcessName": "smss",
-          "Id": 376,
+          "ProcessName": "Idle",
+          "Id": 0,
           "CPU": null,
           "WS": 8192,
           "Path": null,
@@ -7088,11 +7048,11 @@
       "undoMetadata": null
     },
     "battery": {
-      "operationId": "21a08471-2e0f-4e30-a38b-eab56129d52c",
+      "operationId": "bad868f9-23ec-47bb-9f56-a09637a852f6",
       "toolId": "battery-status",
       "success": true,
-      "startedAt": "2026-08-24T13:34:17.463Z",
-      "finishedAt": "2026-08-24T13:34:18.108Z",
+      "startedAt": "2026-08-24T14:02:25.974Z",
+      "finishedAt": "2026-08-24T14:02:26.333Z",
       "summary": {
         "batteryPresent": false,
         "batteries": 0,
@@ -7106,11 +7066,11 @@
       "undoMetadata": null
     },
     "startupItems": {
-      "operationId": "1621fad3-cb7b-4bc6-9f71-d4ef69845b4c",
+      "operationId": "59d343e4-4eb5-4733-be7e-111ddedbc5fc",
       "toolId": "startup-items",
       "success": true,
-      "startedAt": "2026-08-24T13:34:18.182Z",
-      "finishedAt": "2026-08-24T13:34:19.119Z",
+      "startedAt": "2026-08-24T14:02:26.393Z",
+      "finishedAt": "2026-08-24T14:02:26.783Z",
       "summary": {
         "entries": 9
       },
@@ -7140,7 +7100,7 @@
           "enabled": true
         },
         {
-          "name": "KNOuXSmoke_14536_1787578437952",
+          "name": "KNOuXSmoke_23676_1787580128819",
           "command": "cmd.exe /c exit 0",
           "source": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
           "enabled": true
@@ -7177,11 +7137,11 @@
       "undoMetadata": null
     },
     "installedApps": {
-      "operationId": "9c54dc97-3a8e-4f8f-8786-6f8128586293",
+      "operationId": "2fc2ee2a-5d0b-4670-8fd0-bae8f1f566c5",
       "toolId": "installed-apps",
       "success": true,
-      "startedAt": "2026-08-24T13:34:19.165Z",
-      "finishedAt": "2026-08-24T13:34:20.207Z",
+      "startedAt": "2026-08-24T14:02:26.832Z",
+      "finishedAt": "2026-08-24T14:02:27.816Z",
       "summary": {
         "applications": 208
       },
@@ -8650,11 +8610,11 @@
       "undoMetadata": null
     },
     "networkDiagnostics": {
-      "operationId": "81c48af3-849c-47fa-8ec5-7ab85d7b400b",
+      "operationId": "15ba6d32-1033-4652-bae0-1155f7ab32e6",
       "toolId": "network-diagnostics",
       "success": true,
-      "startedAt": "2026-08-24T13:34:20.262Z",
-      "finishedAt": "2026-08-24T13:34:21.964Z",
+      "startedAt": "2026-08-24T14:02:27.866Z",
+      "finishedAt": "2026-08-24T14:02:28.737Z",
       "summary": {
         "activeAddresses": 8,
         "dnsConfigured": 7
@@ -8724,11 +8684,11 @@
       "undoMetadata": null
     },
     "hardwareInventory": {
-      "operationId": "ad2ccc18-8c36-42cf-b4be-40144e5c4062",
+      "operationId": "46dc3669-bdb2-4b05-9cd9-e913e93b0c77",
       "toolId": "hardware-inventory",
       "success": true,
-      "startedAt": "2026-08-24T13:34:22.013Z",
-      "finishedAt": "2026-08-24T13:34:23.729Z",
+      "startedAt": "2026-08-24T14:02:28.798Z",
+      "finishedAt": "2026-08-24T14:02:30.367Z",
       "summary": {
         "cpu": "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz",
         "gpuCount": 1
@@ -8759,16 +8719,107 @@
       "undoMetadata": null
     },
     "eventWarnings": {
-      "operationId": "7a148438-e983-487b-8777-48b67852b7ea",
+      "operationId": "15336ab9-98b0-44cb-914c-3519a6620fbd",
       "toolId": "event-warnings",
       "success": true,
-      "startedAt": "2026-08-24T13:34:23.786Z",
-      "finishedAt": "2026-08-24T13:34:24.535Z",
+      "startedAt": "2026-08-24T14:02:30.424Z",
+      "finishedAt": "2026-08-24T14:02:31.336Z",
       "summary": {
         "warningsAndErrors": 50,
         "periodDays": 7
       },
       "items": [
+        {
+          "TimeCreated": "/Date(1787579184398)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579184398)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787579184373)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579184372)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787579131540)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579131539)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787579131524)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579131524)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787579122555)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579122555)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787579122497)/",
+          "Id": 7000,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "/Date(1787579122497)/",
+          "Id": 7009,
+          "ProviderName": "Service Control Manager",
+          "LevelDisplayName": "Error",
+          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
+        },
+        {
+          "TimeCreated": "/Date(1787578539398)/",
+          "Id": 10016,
+          "ProviderName": "Microsoft-Windows-DistributedCOM",
+          "LevelDisplayName": "Warning",
+          "Message": "The machine-default permission settings do not grant Local Activation permission for the COM Server application with CLSID \r\n{C2F03A33-21F5-47FA-B4BB-156362A2F239}\r\n and APPID \r\n{316CDED5-E4AE-4B15-9113-7055D84DCC97}\r\n to the user DN\\day night SID (S-1-5-21-1186600403-2180284064-1548121244-1000) from address LocalHost (Using LRPC) running in the application container Microsoft.Windows.ShellExperienceHost_10.0.19041.5072_neutral_neutral_cw5n1h2txyewy SID (S-1-15-2-155514346-2573954481-755741238-1654018636-1233331829-3075935687-2861478708). This security permission can be modified using the Component Services administrative tool."
+        },
         {
           "TimeCreated": "/Date(1787578242772)/",
           "Id": 10016,
@@ -9027,97 +9078,6 @@
           "ProviderName": "Service Control Manager",
           "LevelDisplayName": "Error",
           "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
-        },
-        {
-          "TimeCreated": "/Date(1787574453665)/",
-          "Id": 7009,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
-        },
-        {
-          "TimeCreated": "/Date(1787574453609)/",
-          "Id": 7000,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
-        },
-        {
-          "TimeCreated": "/Date(1787574453609)/",
-          "Id": 7009,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
-        },
-        {
-          "TimeCreated": "/Date(1787573882987)/",
-          "Id": 10016,
-          "ProviderName": "Microsoft-Windows-DistributedCOM",
-          "LevelDisplayName": "Warning",
-          "Message": "The machine-default permission settings do not grant Local Activation permission for the COM Server application with CLSID \r\n{C2F03A33-21F5-47FA-B4BB-156362A2F239}\r\n and APPID \r\n{316CDED5-E4AE-4B15-9113-7055D84DCC97}\r\n to the user DN\\day night SID (S-1-5-21-1186600403-2180284064-1548121244-1000) from address LocalHost (Using LRPC) running in the application container Microsoft.Windows.ShellExperienceHost_10.0.19041.5072_neutral_neutral_cw5n1h2txyewy SID (S-1-15-2-155514346-2573954481-755741238-1654018636-1233331829-3075935687-2861478708). This security permission can be modified using the Component Services administrative tool."
-        },
-        {
-          "TimeCreated": "/Date(1787573877703)/",
-          "Id": 10001,
-          "ProviderName": "Microsoft-Windows-DistributedCOM",
-          "LevelDisplayName": "Error",
-          "Message": "Unable to start a DCOM Server: {9F156763-7844-4DC4-B2B1-901F640F5155} as Unavailable/Unavailable. The error:\r\n\"2147942402\"\r\nHappened while starting this command:\r\n\"C:\\WINDOWS\\system32\\DllHost.exe\" /Processid:{9F156763-7844-4DC4-B2B1-901F640F5155}"
-        },
-        {
-          "TimeCreated": "/Date(1787573877661)/",
-          "Id": 10001,
-          "ProviderName": "Microsoft-Windows-DistributedCOM",
-          "LevelDisplayName": "Error",
-          "Message": "Unable to start a DCOM Server: {9F156763-7844-4DC4-B2B1-901F640F5155} as Unavailable/Unavailable. The error:\r\n\"2147942402\"\r\nHappened while starting this command:\r\n\"C:\\WINDOWS\\system32\\DllHost.exe\" /Processid:{9F156763-7844-4DC4-B2B1-901F640F5155}"
-        },
-        {
-          "TimeCreated": "/Date(1787573702305)/",
-          "Id": 7000,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
-        },
-        {
-          "TimeCreated": "/Date(1787573702305)/",
-          "Id": 7009,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
-        },
-        {
-          "TimeCreated": "/Date(1787573702239)/",
-          "Id": 7000,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
-        },
-        {
-          "TimeCreated": "/Date(1787573702209)/",
-          "Id": 7009,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
-        },
-        {
-          "TimeCreated": "/Date(1787572729412)/",
-          "Id": 10001,
-          "ProviderName": "Microsoft-Windows-DistributedCOM",
-          "LevelDisplayName": "Error",
-          "Message": "Unable to start a DCOM Server: {9F156763-7844-4DC4-B2B1-901F640F5155} as Unavailable/Unavailable. The error:\r\n\"2147942402\"\r\nHappened while starting this command:\r\n\"C:\\WINDOWS\\system32\\DllHost.exe\" /Processid:{9F156763-7844-4DC4-B2B1-901F640F5155}"
-        },
-        {
-          "TimeCreated": "/Date(1787572725006)/",
-          "Id": 7000,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "The Browser service failed to start due to the following error: \r\nThe service did not respond to the start or control request in a timely fashion."
-        },
-        {
-          "TimeCreated": "/Date(1787572725006)/",
-          "Id": 7009,
-          "ProviderName": "Service Control Manager",
-          "LevelDisplayName": "Error",
-          "Message": "A timeout was reached (30000 milliseconds) while waiting for the Browser service to connect."
         }
       ],
       "warnings": [],
@@ -9127,13 +9087,13 @@
       "undoMetadata": null
     },
     "emptyFolders": {
-      "operationId": "9e6e95f7-1d7e-4a93-ac3d-72eceebd44a8",
+      "operationId": "14e55ed2-1a0a-418e-bc87-bcd455c7b3e4",
       "toolId": "empty-folders",
       "success": true,
-      "startedAt": "2026-08-24T13:34:24.585Z",
-      "finishedAt": "2026-08-24T13:34:24.590Z",
+      "startedAt": "2026-08-24T14:02:31.391Z",
+      "finishedAt": "2026-08-24T14:02:31.402Z",
       "summary": {
-        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture",
+        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture",
         "foldersScanned": 1,
         "emptyFolders": 0
       },
@@ -9145,16 +9105,16 @@
       "undoMetadata": null
     },
     "downloadsInventory": {
-      "operationId": "6d31fe61-5c3e-482a-9e20-825c0ede4166",
+      "operationId": "1950f7f6-6baa-4195-a412-0593c151c34d",
       "toolId": "downloads-inventory",
       "success": true,
-      "startedAt": "2026-08-24T13:34:24.681Z",
-      "finishedAt": "2026-08-24T13:34:24.769Z",
+      "startedAt": "2026-08-24T14:02:31.455Z",
+      "finishedAt": "2026-08-24T14:02:31.533Z",
       "summary": {
         "folder": "C:\\Users\\day night\\Downloads",
-        "files": 438,
-        "totalBytes": 1907116830,
-        "extensionGroups": 35
+        "files": 440,
+        "totalBytes": 1909275770,
+        "extensionGroups": 36
       },
       "items": [
         {
@@ -9818,6 +9778,12 @@
           "createdAt": "2026-07-31T01:32:42.624Z"
         },
         {
+          "path": "C:\\Users\\day night\\Downloads\\knoux-screenshot-2026-08-24T13-59-25-832Z.png",
+          "size": 1791910,
+          "modifiedAt": "2026-08-24T13:59:26.472Z",
+          "createdAt": "2026-08-24T13:59:26.082Z"
+        },
+        {
           "path": "C:\\Users\\day night\\Downloads\\ChatGPT Image Jul 28, 2026, 10_51_30 PM (3).png",
           "size": 1789568,
           "modifiedAt": "2026-07-28T18:51:30.527Z",
@@ -10350,12 +10316,6 @@
           "size": 455916,
           "modifiedAt": "2026-07-30T01:37:42.796Z",
           "createdAt": "2026-07-30T01:49:58.679Z"
-        },
-        {
-          "path": "C:\\Users\\day night\\Downloads\\day-night-—-international-shipments (1).zip",
-          "size": 452515,
-          "modifiedAt": "2026-07-30T01:34:14.938Z",
-          "createdAt": "2026-07-30T01:34:06.820Z"
         }
       ],
       "warnings": [],
@@ -10365,18 +10325,18 @@
       "undoMetadata": null
     },
     "hash": {
-      "operationId": "feaf2ae6-69c1-4b31-872c-574bca2d091d",
+      "operationId": "ff865bcb-7b9e-4c40-8b70-30b9e9a576fa",
       "toolId": "file-hash",
       "success": true,
-      "startedAt": "2026-08-24T13:34:24.831Z",
-      "finishedAt": "2026-08-24T13:34:24.850Z",
+      "startedAt": "2026-08-24T14:02:31.587Z",
+      "finishedAt": "2026-08-24T14:02:31.598Z",
       "summary": {
         "algorithm": "sha256",
-        "file": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt"
+        "file": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt"
       },
       "items": [
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt",
           "algorithm": "sha256",
           "digest": "58d3224f590dc58c36a047771e76846d05af42e94ca0767a70009d30c104bc8e"
         }
@@ -10388,13 +10348,13 @@
       "undoMetadata": null
     },
     "large": {
-      "operationId": "fcfb4998-d8fe-4967-b6e2-7dc0ffbf00a7",
+      "operationId": "73c57a08-7002-4237-b07c-c531e3f874fd",
       "toolId": "large-files",
       "success": true,
-      "startedAt": "2026-08-24T13:34:24.911Z",
-      "finishedAt": "2026-08-24T13:34:24.919Z",
+      "startedAt": "2026-08-24T14:02:31.651Z",
+      "finishedAt": "2026-08-24T14:02:31.660Z",
       "summary": {
-        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture",
+        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture",
         "filesScanned": 4,
         "matchingFiles": 4,
         "thresholdBytes": 1,
@@ -10402,28 +10362,28 @@
       },
       "items": [
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt",
           "size": 31,
-          "modifiedAt": "2026-08-24T13:33:58.267Z",
-          "createdAt": "2026-08-24T13:33:58.266Z"
+          "modifiedAt": "2026-08-24T14:02:09.396Z",
+          "createdAt": "2026-08-24T14:02:09.395Z"
         },
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-a.txt",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-a.txt",
           "size": 13,
-          "modifiedAt": "2026-08-24T13:33:58.267Z",
-          "createdAt": "2026-08-24T13:33:58.267Z"
+          "modifiedAt": "2026-08-24T14:02:09.396Z",
+          "createdAt": "2026-08-24T14:02:09.396Z"
         },
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-b.txt",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-b.txt",
           "size": 13,
-          "modifiedAt": "2026-08-24T13:33:58.267Z",
-          "createdAt": "2026-08-24T13:33:58.267Z"
+          "modifiedAt": "2026-08-24T14:02:09.397Z",
+          "createdAt": "2026-08-24T14:02:09.397Z"
         },
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\photo.jpg",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\photo.jpg",
           "size": 13,
-          "modifiedAt": "2026-08-24T13:33:58.268Z",
-          "createdAt": "2026-08-24T13:33:58.268Z"
+          "modifiedAt": "2026-08-24T14:02:09.397Z",
+          "createdAt": "2026-08-24T14:02:09.397Z"
         }
       ],
       "warnings": [],
@@ -10433,13 +10393,13 @@
       "undoMetadata": null
     },
     "duplicates": {
-      "operationId": "6e428e56-6f08-47ec-b7ff-c8d8923f6e43",
+      "operationId": "2876b577-3e10-4b79-9ffd-310e866f3353",
       "toolId": "duplicate-files",
       "success": true,
-      "startedAt": "2026-08-24T13:34:24.984Z",
-      "finishedAt": "2026-08-24T13:34:25.012Z",
+      "startedAt": "2026-08-24T14:02:31.725Z",
+      "finishedAt": "2026-08-24T14:02:31.743Z",
       "summary": {
-        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture",
+        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture",
         "filesScanned": 4,
         "candidateFiles": 3,
         "duplicateGroups": 1,
@@ -10453,16 +10413,16 @@
           "reclaimableBytes": 13,
           "files": [
             {
-              "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-a.txt",
+              "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-a.txt",
               "size": 13,
-              "modifiedAt": "2026-08-24T13:33:58.267Z",
-              "createdAt": "2026-08-24T13:33:58.267Z"
+              "modifiedAt": "2026-08-24T14:02:09.396Z",
+              "createdAt": "2026-08-24T14:02:09.396Z"
             },
             {
-              "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-b.txt",
+              "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-b.txt",
               "size": 13,
-              "modifiedAt": "2026-08-24T13:33:58.267Z",
-              "createdAt": "2026-08-24T13:33:58.267Z"
+              "modifiedAt": "2026-08-24T14:02:09.397Z",
+              "createdAt": "2026-08-24T14:02:09.397Z"
             }
           ]
         }
@@ -10474,39 +10434,39 @@
       "undoMetadata": null
     },
     "preview": {
-      "operationId": "024d6dd3-54ba-4085-865c-48201076217d",
+      "operationId": "236924f8-9731-4198-9d4f-08013f61031e",
       "toolId": "organize-downloads-preview",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.062Z",
-      "finishedAt": "2026-08-24T13:34:25.064Z",
+      "startedAt": "2026-08-24T14:02:31.791Z",
+      "finishedAt": "2026-08-24T14:02:31.802Z",
       "summary": {
-        "sourceFolder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture",
+        "sourceFolder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture",
         "plannedMoves": 4,
         "previewOnly": true
       },
       "items": [
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-a.txt",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-a.txt",
           "category": "Documents",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-a.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-a.txt",
           "size": 13
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-b.txt",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-b.txt",
           "category": "Documents",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-b.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-b.txt",
           "size": 13
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt",
           "category": "Documents",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\hash-fixture.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\hash-fixture.txt",
           "size": 31
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\photo.jpg",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\photo.jpg",
           "category": "Images",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Images\\photo.jpg",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Images\\photo.jpg",
           "size": 13
         }
       ],
@@ -10517,32 +10477,32 @@
       "undoMetadata": null
     },
     "apply": {
-      "operationId": "856e69c9-936b-467c-a368-5da147e25d7b",
+      "operationId": "9fb74595-3dd5-4402-bceb-b67d21c18437",
       "toolId": "organize-downloads-apply",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.131Z",
-      "finishedAt": "2026-08-24T13:34:25.149Z",
+      "startedAt": "2026-08-24T14:02:31.853Z",
+      "finishedAt": "2026-08-24T14:02:31.878Z",
       "summary": {
-        "journalId": "af743442-07c4-4b81-b9c0-bf195bff9af7",
+        "journalId": "6a25971d-f7d1-4ef5-845d-0a69ddc5eb08",
         "movedFiles": 4,
         "skippedFiles": 0
       },
       "items": [
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-a.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-a.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-a.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-a.txt"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-b.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-b.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-b.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-b.txt"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\hash-fixture.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\hash-fixture.txt"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\photo.jpg",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Images\\photo.jpg"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\photo.jpg",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Images\\photo.jpg"
         }
       ],
       "warnings": [],
@@ -10550,37 +10510,37 @@
       "partial": false,
       "restartRequired": false,
       "undoMetadata": {
-        "journalId": "af743442-07c4-4b81-b9c0-bf195bff9af7",
+        "journalId": "6a25971d-f7d1-4ef5-845d-0a69ddc5eb08",
         "action": "organize-downloads"
       }
     },
     "undo": {
-      "operationId": "98bc107e-da5a-498d-8f20-765c23425f42",
+      "operationId": "206ee7ef-07aa-45a2-b002-9110810f7967",
       "toolId": "organize-downloads-undo",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.200Z",
-      "finishedAt": "2026-08-24T13:34:25.214Z",
+      "startedAt": "2026-08-24T14:02:31.932Z",
+      "finishedAt": "2026-08-24T14:02:31.952Z",
       "summary": {
-        "journalId": "af743442-07c4-4b81-b9c0-bf195bff9af7",
+        "journalId": "6a25971d-f7d1-4ef5-845d-0a69ddc5eb08",
         "restoredFiles": 4,
         "skippedFiles": 0
       },
       "items": [
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\photo.jpg",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Images\\photo.jpg"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\photo.jpg",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Images\\photo.jpg"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\hash-fixture.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\hash-fixture.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\hash-fixture.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\hash-fixture.txt"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-b.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-b.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-b.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-b.txt"
         },
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\duplicate-a.txt",
-          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\fixture\\Documents\\duplicate-a.txt"
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\duplicate-a.txt",
+          "destination": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\fixture\\Documents\\duplicate-a.txt"
         }
       ],
       "warnings": [],
@@ -10589,25 +10549,25 @@
       "restartRequired": false,
       "undoMetadata": null
     },
-    "cleanupFixture": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\cleanup-fixture",
+    "cleanupFixture": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\cleanup-fixture",
     "cleanupPreview": {
-      "operationId": "3582c251-6bdf-4988-94b6-8f5b94ae9b18",
+      "operationId": "39d3f274-fc87-4729-bc8d-89bb89529a4b",
       "toolId": "temp-cleanup-preview",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.281Z",
-      "finishedAt": "2026-08-24T13:34:25.282Z",
+      "startedAt": "2026-08-24T14:02:32.002Z",
+      "finishedAt": "2026-08-24T14:02:32.003Z",
       "summary": {
-        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\cleanup-fixture",
+        "folder": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\cleanup-fixture",
         "eligibleFiles": 1,
         "eligibleBytes": 43,
         "readOnlyPreview": true
       },
       "items": [
         {
-          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
+          "path": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
           "size": 43,
-          "modifiedAt": "2026-07-24T13:33:58.267Z",
-          "createdAt": "2026-08-24T13:33:58.268Z"
+          "modifiedAt": "2026-07-24T14:02:09.398Z",
+          "createdAt": "2026-08-24T14:02:09.398Z"
         }
       ],
       "warnings": [],
@@ -10617,21 +10577,21 @@
       "undoMetadata": null
     },
     "cleanupApply": {
-      "operationId": "285661c4-7c06-404b-ba50-806b9b811cd1",
+      "operationId": "980a5c0c-dca4-4522-89ff-1a755c52b552",
       "toolId": "temp-cleanup-apply",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.354Z",
-      "finishedAt": "2026-08-24T13:34:25.366Z",
+      "startedAt": "2026-08-24T14:02:32.071Z",
+      "finishedAt": "2026-08-24T14:02:32.082Z",
       "summary": {
-        "journalId": "48447880-a613-4277-b0eb-fd31f0280450",
+        "journalId": "6255830b-e7f9-4ee7-8ab3-4eec9b2829bc",
         "quarantinedFiles": 1,
         "quarantinedBytes": 43,
         "recoverable": true
       },
       "items": [
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
-          "quarantine": "C:\\Users\\day night\\AppData\\Roaming\\knoux-smartorganizer\\cleanup-quarantine\\48447880-a613-4277-b0eb-fd31f0280450\\3bfdd6b356e83ab5-recoverable-aged-temp-file.tmp",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
+          "quarantine": "C:\\Users\\day night\\AppData\\Roaming\\knoux-smartorganizer\\cleanup-quarantine\\6255830b-e7f9-4ee7-8ab3-4eec9b2829bc\\7c8b3836bdafef9d-recoverable-aged-temp-file.tmp",
           "size": 43
         }
       ],
@@ -10640,26 +10600,26 @@
       "partial": false,
       "restartRequired": false,
       "undoMetadata": {
-        "journalId": "48447880-a613-4277-b0eb-fd31f0280450",
+        "journalId": "6255830b-e7f9-4ee7-8ab3-4eec9b2829bc",
         "action": "temp-cleanup"
       }
     },
     "cleanupUndo": {
-      "operationId": "47e97d67-4bbb-46b9-8176-d997bd3b9777",
+      "operationId": "b05339cc-e536-4b6d-a032-4c4f3c4d68a4",
       "toolId": "temp-cleanup-undo",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.432Z",
-      "finishedAt": "2026-08-24T13:34:25.434Z",
+      "startedAt": "2026-08-24T14:02:32.135Z",
+      "finishedAt": "2026-08-24T14:02:32.154Z",
       "summary": {
-        "journalId": "48447880-a613-4277-b0eb-fd31f0280450",
+        "journalId": "6255830b-e7f9-4ee7-8ab3-4eec9b2829bc",
         "restoredFiles": 1,
         "skippedFiles": 0,
         "recoverable": true
       },
       "items": [
         {
-          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-MVu0SI\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
-          "quarantine": "C:\\Users\\day night\\AppData\\Roaming\\knoux-smartorganizer\\cleanup-quarantine\\48447880-a613-4277-b0eb-fd31f0280450\\3bfdd6b356e83ab5-recoverable-aged-temp-file.tmp",
+          "source": "C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-packaged-operations-vntwUc\\cleanup-fixture\\recoverable-aged-temp-file.tmp",
+          "quarantine": "C:\\Users\\day night\\AppData\\Roaming\\knoux-smartorganizer\\cleanup-quarantine\\6255830b-e7f9-4ee7-8ab3-4eec9b2829bc\\7c8b3836bdafef9d-recoverable-aged-temp-file.tmp",
           "size": 43
         }
       ],
@@ -10670,21 +10630,21 @@
       "undoMetadata": null
     },
     "startupDisable": {
-      "operationId": "bb08e19e-59b7-49c6-8c2f-57bcbc0312d3",
+      "operationId": "655cafe9-0e9b-43b9-aedd-278a365dc0fa",
       "toolId": "startup-disable",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.509Z",
-      "finishedAt": "2026-08-24T13:34:25.649Z",
+      "startedAt": "2026-08-24T14:02:32.195Z",
+      "finishedAt": "2026-08-24T14:02:32.319Z",
       "summary": {
-        "valueName": "KNOuXSmoke_14536_1787578437952",
+        "valueName": "KNOuXSmoke_23676_1787580128819",
         "changed": true,
         "dryRun": false,
-        "journalId": "6b7a6a41-bfb5-4c86-9963-dbbf76099137",
+        "journalId": "37e772e7-8bc5-4496-a64d-0a0bd90bc525",
         "recoverable": true
       },
       "items": [
         {
-          "valueName": "KNOuXSmoke_14536_1787578437952",
+          "valueName": "KNOuXSmoke_23676_1787580128819",
           "state": "disabled"
         }
       ],
@@ -10693,26 +10653,26 @@
       "partial": false,
       "restartRequired": false,
       "undoMetadata": {
-        "journalId": "6b7a6a41-bfb5-4c86-9963-dbbf76099137",
+        "journalId": "37e772e7-8bc5-4496-a64d-0a0bd90bc525",
         "action": "startup-disable"
       }
     },
     "startupRestore": {
-      "operationId": "a81c7ecb-fbbb-457b-bd1b-57eff78e0679",
+      "operationId": "6a326b17-21e1-4533-9c08-ce4091d7f49c",
       "toolId": "startup-restore",
       "success": true,
-      "startedAt": "2026-08-24T13:34:25.695Z",
-      "finishedAt": "2026-08-24T13:34:25.798Z",
+      "startedAt": "2026-08-24T14:02:32.361Z",
+      "finishedAt": "2026-08-24T14:02:32.445Z",
       "summary": {
-        "valueName": "KNOuXSmoke_14536_1787578437952",
+        "valueName": "KNOuXSmoke_23676_1787580128819",
         "changed": true,
         "dryRun": false,
-        "journalId": "6b7a6a41-bfb5-4c86-9963-dbbf76099137",
+        "journalId": "37e772e7-8bc5-4496-a64d-0a0bd90bc525",
         "recoverable": true
       },
       "items": [
         {
-          "valueName": "KNOuXSmoke_14536_1787578437952",
+          "valueName": "KNOuXSmoke_23676_1787580128819",
           "state": "restored"
         }
       ],
@@ -10723,7 +10683,7 @@
       "undoMetadata": null
     },
     "automation": {
-      "id": "74d3146d-c99c-4322-a6ec-21ac16027a6a",
+      "id": "4e6b74c8-e4dd-406a-b3ef-cd7d1ee1ecae",
       "toolId": "system-health",
       "label": "KNOuX packaged automation smoke",
       "trigger": {
@@ -10731,16 +10691,16 @@
         "time": "23:59"
       },
       "enabled": true,
-      "createdAt": "2026-08-24T13:34:25.848Z",
-      "updatedAt": "2026-08-24T13:34:25.848Z",
+      "createdAt": "2026-08-24T14:02:32.491Z",
+      "updatedAt": "2026-08-24T14:02:32.491Z",
       "lastRun": null
     },
     "automationRun": {
-      "operationId": "643ef4e5-8188-4ea2-b1d4-9e0dc1fec1b0",
+      "operationId": "8c877d80-611d-41f7-85d1-3213f7e9a71e",
       "toolId": "system-health",
       "success": true,
-      "startedAt": "2026-08-24T13:34:26.026Z",
-      "finishedAt": "2026-08-24T13:34:26.900Z",
+      "startedAt": "2026-08-24T14:02:32.678Z",
+      "finishedAt": "2026-08-24T14:02:33.379Z",
       "summary": {
         "platform": "win32",
         "release": "10.0.19045",
@@ -10748,11 +10708,11 @@
         "cpuModel": "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz",
         "cpuCores": 4,
         "memoryTotalBytes": 12769726464,
-        "memoryFreeBytes": 2305351680,
-        "memoryUsedPercent": 82,
-        "uptimeSeconds": 156295,
+        "memoryFreeBytes": 2716073984,
+        "memoryUsedPercent": 79,
+        "uptimeSeconds": 157981,
         "systemDrive": "C:",
-        "systemDriveFreeBytes": 13896237056,
+        "systemDriveFreeBytes": 15617970176,
         "systemDriveTotalBytes": 191841771520,
         "battery": null
       },
@@ -10765,11 +10725,11 @@
     },
     "automationRemoved": true,
     "cancellation": {
-      "operationId": "90322db7-f196-4391-a176-f7953dd55a64",
+      "operationId": "56cf9261-2c4d-4676-b842-549127bbffad",
       "toolId": "large-files",
       "success": false,
-      "startedAt": "2026-08-24T13:34:27.197Z",
-      "finishedAt": "2026-08-24T13:34:27.226Z",
+      "startedAt": "2026-08-24T14:02:33.498Z",
+      "finishedAt": "2026-08-24T14:02:33.512Z",
       "summary": {},
       "items": [],
       "warnings": [],
@@ -10789,11 +10749,11 @@
     ],
     "repairDryRuns": [
       {
-        "operationId": "52d3e962-553d-4723-93e1-6ac6b8d08cd8",
+        "operationId": "326edeb5-29b7-4f4f-a621-4fae77df2b60",
         "toolId": "repair-dism-check-health",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.278Z",
-        "finishedAt": "2026-08-24T13:34:27.279Z",
+        "startedAt": "2026-08-24T14:02:33.556Z",
+        "finishedAt": "2026-08-24T14:02:33.557Z",
         "summary": {
           "operation": "dismCheckHealth",
           "execution": "dry-run",
@@ -10818,11 +10778,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "6133e8d2-a87a-4662-833c-e5c4e64903ee",
+        "operationId": "92f444e9-fefc-49a9-8f9e-bf67c10b6f9e",
         "toolId": "repair-dism-scan-health",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.279Z",
-        "finishedAt": "2026-08-24T13:34:27.280Z",
+        "startedAt": "2026-08-24T14:02:33.558Z",
+        "finishedAt": "2026-08-24T14:02:33.558Z",
         "summary": {
           "operation": "dismScanHealth",
           "execution": "dry-run",
@@ -10847,11 +10807,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "76c9e9d9-6874-4b3e-8e5d-7980b6bd9444",
+        "operationId": "6e1e436d-fae7-4417-b2d7-c31181ed0887",
         "toolId": "repair-dism-restore-health",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.280Z",
-        "finishedAt": "2026-08-24T13:34:27.280Z",
+        "startedAt": "2026-08-24T14:02:33.558Z",
+        "finishedAt": "2026-08-24T14:02:33.559Z",
         "summary": {
           "operation": "dismRestoreHealth",
           "execution": "dry-run",
@@ -10876,11 +10836,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "2e06d362-4d5b-4755-83e8-91becaf4956e",
+        "operationId": "3146573f-72ae-40d8-95c4-495aaae32a40",
         "toolId": "repair-sfc-verify-only",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.280Z",
-        "finishedAt": "2026-08-24T13:34:27.281Z",
+        "startedAt": "2026-08-24T14:02:33.559Z",
+        "finishedAt": "2026-08-24T14:02:33.559Z",
         "summary": {
           "operation": "sfcVerifyOnly",
           "execution": "dry-run",
@@ -10905,11 +10865,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "03af8049-2398-4aa7-8420-980a276f1faf",
+        "operationId": "69388380-ad43-400e-a74d-6f21318f6614",
         "toolId": "repair-sfc-scan-now",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.281Z",
-        "finishedAt": "2026-08-24T13:34:27.281Z",
+        "startedAt": "2026-08-24T14:02:33.559Z",
+        "finishedAt": "2026-08-24T14:02:33.560Z",
         "summary": {
           "operation": "sfcScanNow",
           "execution": "dry-run",
@@ -10934,11 +10894,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "fad32b62-1da0-4111-bb6d-15ded757adb5",
+        "operationId": "93a00e18-5942-401d-8566-118f349545c2",
         "toolId": "repair-dns-flush",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.282Z",
-        "finishedAt": "2026-08-24T13:34:27.282Z",
+        "startedAt": "2026-08-24T14:02:33.560Z",
+        "finishedAt": "2026-08-24T14:02:33.560Z",
         "summary": {
           "operation": "flushDns",
           "execution": "dry-run",
@@ -10963,11 +10923,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "3f8b1052-c4bd-4bfa-8571-7bae909cf979",
+        "operationId": "36f93075-61db-4bed-991c-2269edd04d3c",
         "toolId": "repair-winsock-reset",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.282Z",
-        "finishedAt": "2026-08-24T13:34:27.282Z",
+        "startedAt": "2026-08-24T14:02:33.561Z",
+        "finishedAt": "2026-08-24T14:02:33.561Z",
         "summary": {
           "operation": "winsockReset",
           "execution": "dry-run",
@@ -10992,11 +10952,11 @@
         "undoMetadata": null
       },
       {
-        "operationId": "33b446f2-410a-447c-83e8-fb70f4e75269",
+        "operationId": "c534b2ca-cd54-4d7f-afb5-e2188f6e702a",
         "toolId": "repair-tcpip-reset",
         "success": true,
-        "startedAt": "2026-08-24T13:34:27.283Z",
-        "finishedAt": "2026-08-24T13:34:27.283Z",
+        "startedAt": "2026-08-24T14:02:33.561Z",
+        "finishedAt": "2026-08-24T14:02:33.562Z",
         "summary": {
           "operation": "tcpIpReset",
           "execution": "dry-run",
@@ -11022,11 +10982,11 @@
       }
     ],
     "adminDryRun": {
-      "operationId": "52d3e962-553d-4723-93e1-6ac6b8d08cd8",
+      "operationId": "326edeb5-29b7-4f4f-a621-4fae77df2b60",
       "toolId": "repair-dism-check-health",
       "success": true,
-      "startedAt": "2026-08-24T13:34:27.278Z",
-      "finishedAt": "2026-08-24T13:34:27.279Z",
+      "startedAt": "2026-08-24T14:02:33.556Z",
+      "finishedAt": "2026-08-24T14:02:33.557Z",
       "summary": {
         "operation": "dismCheckHealth",
         "execution": "dry-run",
@@ -11078,5 +11038,7 @@
     "automationVerified": true,
     "servicesDryRunVerified": true,
     "repairsDryRunVerified": true
-  }
+  },
+  "offlineHostRules": "MAP * 0.0.0.0",
+  "offlineVerified": true
 }
