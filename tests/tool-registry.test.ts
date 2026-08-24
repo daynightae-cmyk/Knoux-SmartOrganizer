@@ -43,4 +43,13 @@ describe('tool registry', () => {
     expect(hash.inputSchema.safeParse({ filePath: 'x'.repeat(32768) }).success).toBe(false);
     expect(hash.inputSchema.safeParse({ filePath: 'C:\\fixture', algorithm: 'md5' }).success).toBe(false);
   });
+
+  it('permits a bounded organizer fixture folder but rejects renderer command fields', () => {
+    const registry = createToolRegistry(() => handler);
+    const preview = registry.find((tool: { id: string }) => tool.id === 'organize-downloads-preview');
+    const apply = registry.find((tool: { id: string }) => tool.id === 'organize-downloads-apply');
+    expect(preview.inputSchema.safeParse({ folder: 'C:\\fixture', limit: 100 }).success).toBe(true);
+    expect(apply.inputSchema.safeParse({ folder: 'C:\\fixture', confirm: true, limit: 100 }).success).toBe(true);
+    expect(apply.inputSchema.safeParse({ folder: 'C:\\fixture', confirm: true, command: 'Remove-Item' }).success).toBe(false);
+  });
 });

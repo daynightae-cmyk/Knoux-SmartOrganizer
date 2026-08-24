@@ -7,7 +7,8 @@ const scanInput = z.object({
 }).strict();
 const largeFilesInput = scanInput.extend({ thresholdBytes: z.number().int().min(1).optional() }).strict();
 const duplicatesInput = scanInput.extend({ minimumBytes: z.number().int().min(1).optional() }).strict();
-const organizeApplyInput = z.object({ confirm: z.literal(true), limit: z.number().int().min(1).max(200000).optional() }).strict();
+const organizePreviewInput = z.object({ folder: z.string().min(1).max(32767).optional(), limit: z.number().int().min(1).max(200000).optional() }).strict();
+const organizeApplyInput = z.object({ folder: z.string().min(1).max(32767).optional(), confirm: z.literal(true), limit: z.number().int().min(1).max(200000).optional() }).strict();
 const organizeUndoInput = z.object({ journalId: z.string().uuid() }).strict();
 const fileHashInput = z.object({ filePath: z.string().min(1).max(32767), algorithm: z.enum(['sha256', 'sha512']).optional() }).strict();
 const outputSchema = z.object({
@@ -27,7 +28,7 @@ const SPECS = [
   ['duplicate-files', 'duplicates', 'storage', 'Copy', 'read-only', false, false, true, true, true, 'high', duplicatesInput],
   ['empty-folders', 'emptyFolders', 'files', 'FolderSearch2', 'read-only', false, false, true, true, true, 'medium', scanInput],
   ['downloads-inventory', 'downloadsInventory', 'files', 'Download', 'read-only', false, false, true, true, true, 'medium', z.object({ limit: z.number().int().min(1).max(200000).optional() }).strict()],
-  ['organize-downloads-preview', 'organizePreview', 'files', 'FolderCog', 'read-only', false, true, true, true, true, 'medium', z.object({ limit: z.number().int().min(1).max(200000).optional() }).strict()],
+  ['organize-downloads-preview', 'organizePreview', 'files', 'FolderCog', 'read-only', false, true, true, true, true, 'medium', organizePreviewInput],
   ['organize-downloads-apply', 'organizeApply', 'files', 'FolderInput', 'safe-write', false, false, true, true, true, 'medium', organizeApplyInput],
   ['organize-downloads-undo', 'organizeUndo', 'files', 'Undo2', 'safe-write', false, false, true, true, true, 'medium', organizeUndoInput],
   ['temp-cleanup-preview', 'tempPreview', 'cleanup', 'Trash2', 'read-only', false, true, true, true, true, 'medium', z.object({ limit: z.number().int().min(1).max(25000).optional() }).strict()],

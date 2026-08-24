@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-08-24T10:30:45.506Z",
+  "packaged": true,
+  "isolatedUserData": true,
+  "disposableFixture": {
+    "nestedDirectories": true,
+    "emptyDirectory": true,
+    "unicodeArabicFilename": true,
+    "verifiedDuplicatePair": true,
+    "realUserFoldersModified": false
+  },
+  "results": {
+    "systemHealth": true,
+    "diskOverview": true,
+    "fileHash": {
+      "success": true,
+      "sha256": "4e68ae9db81a3eb0ad33b5b5d4864214bf6f31d50338adbff183c4c48c755f2a"
+    },
+    "largeFiles": { "success": true, "matchingFiles": 4 },
+    "duplicates": { "success": true, "duplicateGroups": 1 },
+    "organizerPreview": { "success": true, "plannedMoves": 4 },
+    "organizerApply": { "success": true, "movedFiles": 4 },
+    "organizerUndo": { "success": true, "restoredFiles": 4 },
+    "settingsWriteReadReset": true
+  },
+  "processExitCode": 0
+}
