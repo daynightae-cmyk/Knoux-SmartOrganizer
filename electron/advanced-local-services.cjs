@@ -1,5 +1,3 @@
-const path = require('node:path');
-
 const TYPE_GROUPS = Object.freeze({
   Images: new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.svg', '.bmp', '.tif', '.tiff', '.raw']),
   Video: new Set(['.mp4', '.mkv', '.mov', '.avi', '.webm', '.wmv', '.m4v']),
@@ -12,8 +10,31 @@ const TYPE_GROUPS = Object.freeze({
   Fonts: new Set(['.ttf', '.otf', '.woff', '.woff2'])
 });
 
+function pathSegments(value) {
+  return String(value || '').split(/[\\/]+/).filter(Boolean);
+}
+
+function portableBasename(value) {
+  const segments = pathSegments(value);
+  return segments.at(-1) || '';
+}
+
+function portableExtension(value) {
+  const name = portableBasename(value);
+  const dot = name.lastIndexOf('.');
+  return dot <= 0 ? '' : name.slice(dot).toLowerCase();
+}
+
+function relativeSegments(root, filePath) {
+  const rootParts = pathSegments(root);
+  const fileParts = pathSegments(filePath);
+  if (!rootParts.length) return fileParts;
+  const rootMatches = rootParts.every((part, index) => String(fileParts[index] || '').toLowerCase() === part.toLowerCase());
+  return rootMatches ? fileParts.slice(rootParts.length) : fileParts;
+}
+
 function classifyFileType(filePath) {
-  const ext = path.extname(String(filePath || '')).toLowerCase();
+  const ext = portableExtension(filePath);
   for (const [group, extensions] of Object.entries(TYPE_GROUPS)) if (extensions.has(ext)) return group;
   return ext ? 'Other' : 'No extension';
 }
@@ -57,9 +78,8 @@ function buildStorageIntelligence(files, root, now = Date.now()) {
     totalBytes += size;
     increment(typeMap, classifyFileType(filePath), size);
     increment(ageMap, ageBucket(file?.modifiedAt, now), size);
-    increment(extensionMap, path.extname(filePath).toLowerCase() || '(none)', size);
-    const relative = root ? path.relative(root, filePath) : filePath;
-    const segments = relative.split(path.sep).filter(Boolean);
+    increment(extensionMap, portableExtension(filePath) || '(none)', size);
+    const segments = relativeSegments(root, filePath);
     const bucket = segments.length > 1 ? segments[0] : '(root)';
     increment(folderMap, bucket, size);
   }
@@ -76,7 +96,7 @@ function buildStorageIntelligence(files, root, now = Date.now()) {
 }
 
 function pathDepth(filePath) {
-  return String(filePath || '').split(/[\\/]+/).filter(Boolean).length;
+  return pathSegments(filePath).length;
 }
 
 function protectedPath(filePath) {
@@ -129,7 +149,7 @@ function privacyExposure(files) {
   ];
 
   for (const file of safeFiles) {
-    const name = path.basename(String(file?.path || ''));
+    const name = portableBasename(file?.path);
     const matched = patterns.find(pattern => pattern.test(name));
     if (!matched) continue;
     const record = { path: file.path, name, category: matched.category, size: Number(file?.size) || 0, modifiedAt: file?.modifiedAt || null, metadataOnly: true };
