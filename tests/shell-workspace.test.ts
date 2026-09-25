@@ -79,7 +79,7 @@ describe('unified shell workspace', () => {
     const cancellable = tools.find(tool => tool.id === 'smart-scan');
     expect(cancellable.supportsCancel).toBe(true);
     const running = { operationId: 'o', toolId: 'smart-scan', startedAt: '', updatedAt: '', progress: null, phase: 'progress', summary: {}, warnings: [], errors: [], cancelRequested: false, undoMetadata: null, message: '', at: '' } as never;
-    const awaitingAdmin = { ...running, phase: 'awaiting-admin' };
+    const awaitingAdmin = { operationId: 'o', toolId: 'smart-scan', startedAt: '', updatedAt: '', phase: 'awaiting-admin', progress: null, summary: {}, warnings: [], errors: [], cancelRequested: false, undoMetadata: null, message: '', at: '' } as never;
     expect(cancelAllowed(cancellable, running)).toBe(true);
     expect(cancelAllowed(cancellable, awaitingAdmin)).toBe(false);
     expect(cancelAllowed(cancellable, null)).toBe(false);
@@ -120,6 +120,7 @@ describe('unified shell workspace', () => {
 
   it('maps only real backend operation phases in the activity drawer', () => {
     expect(ACTIVE_PHASES).toEqual(['queued', 'preflight', 'awaiting-confirmation', 'awaiting-admin', 'running', 'progress']);
+    expect(SMART_SCAN_TOTAL).toBe(7);
     expect(isActivePhase('progress')).toBe(true);
     expect(isActivePhase('completed')).toBe(false);
     expect(phaseLabelKey('awaiting-admin')).toBe('phase.awaiting-admin');
@@ -148,14 +149,13 @@ describe('unified shell workspace', () => {
   });
 
   it('derives Smart Scan stages only from real backend progress events', () => {
-    expect(SMART_SCAN_TOTAL).toBe(7);
     const staged = { operationId: 'o', toolId: 'smart-scan', startedAt: '', updatedAt: '', progress: null, phase: 'progress', summary: {}, warnings: [], errors: [], cancelRequested: false, undoMetadata: null, message: 'Built Downloads storage intelligence', current: 3, total: 7, percent: 43, at: '' } as never;
     expect(smartScanStageFromEvent(staged)).toBe(3);
     expect(smartScanStageFromEvent(null)).toBe(0);
     const result = {
       operationId: 'o', toolId: 'smart-scan', success: true, startedAt: '', finishedAt: '',
       summary: { smartScore: 82, scoreReasons: ['disk-pressure'] }, items: [{ severity: 'info', key: 'largeDownloads', value: 4 }], warnings: [], errors: []
-    } as never;
+    };
     expect(smartScore(result)).toBe(82);
     expect(smartScoreReasons(result)).toEqual(['disk-pressure']);
     expect(scoreReasonKey('disk-pressure')).toBe('smartScan.reason.disk-pressure');
