@@ -14,8 +14,9 @@
     "test": "vitest run",
     "build": "vite build",
     "desktop:dev": "npm run build && electron .",
-    "desktop:pack": "npm run build && electron-builder --dir",
-    "desktop:dist": "npm run build && electron-builder",
+    "desktop:pack": "npm run build && electron-builder --dir --publish never",
+    "desktop:dist": "npm run build && electron-builder --publish never",
+    "desktop:dist:release": "npm run build && electron-builder",
     "smoke:packaged-operations": "node scripts/packaged-operations-smoke.cjs",
     "smoke:installer": "node scripts/installer-smoke.cjs",
     "smoke:offline": "node scripts/offline-smoke.cjs",
@@ -46,10 +47,26 @@
     "productName": "KNOuX SmartOrganizer",
     "copyright": "Copyright © 2026 Knoux Technologies",
     "icon": "build/icon.ico",
-    "directories": { "output": "release" },
-    "files": ["dist/**/*", "electron/**/*", "shared/**/*", "package.json"],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "shared/**/*",
+      "package.json"
+    ],
     "asar": true,
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -59,5 +76,9 @@
       "artifactName": "KNOuX-SmartOrganizer-Setup-x64.${ext}",
       "deleteAppDataOnUninstall": false
     }
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "@swc/core@1.16.1": true
   }
 }
