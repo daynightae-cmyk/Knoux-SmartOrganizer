@@ -1,9 +1,51 @@
 const fs = require('node:fs');
+const fsp = require('node:fs/promises');
+const os = require('node:os');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
+const verificationKit = require('./verification.cjs');
 
 const execFileAsync = promisify(execFile);
+
+/** Documented log locations Windows writes for each allowlisted operation. */
+const LOG_LOCATIONS = Object.freeze({
+  dismCheckHealth: Object.freeze(['%windir%\\Logs\\DISM\\dism.log']),
+  dismScanHealth: Object.freeze(['%windir%\\Logs\\DISM\\dism.log']),
+  dismRestoreHealth: Object.freeze(['%windir%\\Logs\\DISM\\dism.log', '%windir%\\Logs\\CBS\\CBS.log']),
+  sfcVerifyOnly: Object.freeze(['%windir%\\Logs\\CBS\\CBS.log']),
+  sfcScanNow: Object.freeze(['%windir%\\Logs\\CBS\\CBS.log']),
+  flushDns: Object.freeze([]),
+  winsockReset: Object.freeze(['%windir%\\inf\\setupapi.dev.log']),
+  tcpIpReset: Object.freeze(['%windir%\\inf\\setupapi.dev.log', '%windir%\\System32\\LogFiles\\TCPIP\\tcpip_statistics.log'])
+});
+
+/** Documented outcome text Windows emits, mapped to a normalized state. */
+const OUTCOME_PATTERNS = Object.freeze([
+  { engine: 'dismCheckHealth', pattern: /no component store corruption detected/i, state: 'healthy', restartMayBeRequired: false },
+  { engine: 'dismCheckHealth', pattern: /component store is corrupt/i, state: 'corrupt', restartMayBeRequired: false },
+  { engine: 'dismScanHealth', pattern: /no component store corruption detected/i, state: 'healthy', restartMayBeRequired: false },
+  { engine: 'dismScanHealth', pattern: /component store corruption detected/i, state: 'corrupt', restartMayBeRequired: false },
+  { engine: 'dismRestoreHealth', pattern: /the restore operation completed successfully/i, state: 'restore-succeeded', restartMayBeRequired: true },
+  { engine: 'dismRestoreHealth', pattern: /corruption could not be repaired/i, state: 'restore-incomplete', restartMayBeRequired: false },
+  { engine: 'sfcVerifyOnly', pattern: /did not find any integrity violations/i, state: 'intact', restartMayBeRequired: false },
+  { engine: 'sfcVerifyOnly', pattern: /found integrity violations/i, state: 'violations-found', restartMayBeRequired: false },
+  { engine: 'sfcScanNow', pattern: /did not find any integrity violations/i, state: 'intact', restartMayBeRequired: false },
+  { engine: 'sfcScanNow', pattern: /found integrity violations|could not perform the requested operation/i, state: 'repair-incomplete', restartMayBeRequired: false }
+]);
+
+function summarizeOutput(stdout, limit = 1200) {
+  const text = String(stdout || '').split(String.fromCharCode(0)).join('').trim();
+  if (!text) return null;
+  const lines = text.split(/\r?\n/).map(line => line.trimEnd()).filter(line => line.trim() !== '');
+  return { lineCount: lines.length, head: lines.slice(0, 4).join('\n'), tail: lines.slice(-6).join('\n'), truncated: lines.length > 10, length: text.length > limit ? limit : text.length };
+}
+
+function classifyOutcome(engine, stdout) {
+  for (const rule of OUTCOME_PATTERNS) if (rule.engine === engine && rule.pattern.test(String(stdout || ''))) return { state: rule.state, source: 'Microsoft documented output text' };
+  return { state: 'undetermined', source: 'no documented outcome text matched' };
+}
 
 function freezeOperationSpec(spec) {
   return Object.freeze({
@@ -70,11 +112,18 @@ function publicRepairMetadata(engine, spec, dryRun, exitCode = null) {
 }
 async function defaultElevatedExecutor({ executable, args }) {
   const argumentList = `@(${args.map(quotePowerShell).join(',')})`;
-  const script = `$ErrorActionPreference='Stop'; $p=Start-Process -FilePath ${quotePowerShell(executable)} -ArgumentList ${argumentList} -Verb RunAs -Wait -PassThru; [pscustomobject]@{exitCode=$p.ExitCode} | ConvertTo-Json -Compress`;
+  // Output is captured to a temp transcript so stdout/stderr survive elevation.
+  const transcript = path.join(os.tmpdir(), `knoux-elevated-${crypto.randomUUID()}.log`);
+  const script = `$ErrorActionPreference='Stop'; $out=${quotePowerShell(transcript)}; $p=Start-Process -FilePath ${quotePowerShell(executable)} -ArgumentList ${argumentList} -Verb RunAs -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError ($out + '.err'); [pscustomobject]@{exitCode=$p.ExitCode;transcript=$out} | ConvertTo-Json -Compress`;
   const encoded = Buffer.from(script, 'utf16le').toString('base64');
-  const { stdout, stderr } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], { windowsHide: true, timeout: 60 * 60 * 1000, maxBuffer: 1024 * 1024 });
+  const { stdout, stderr } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], { windowsHide: true, timeout: 60 * 60 * 1000, maxBuffer: 4 * 1024 * 1024 });
   const parsed = JSON.parse(stdout.trim() || '{}');
-  return { exitCode: Number(parsed.exitCode), stderr: stderr.trim() };
+  let captured = ''; let capturedErr = '';
+  try { captured = await fsp.readFile(transcript, 'utf8'); } catch {}
+  try { capturedErr = await fsp.readFile(`${transcript}.err`, 'utf8'); } catch {}
+  await fsp.rm(transcript, { force: true }).catch(() => {});
+  await fsp.rm(`${transcript}.err`, { force: true }).catch(() => {});
+  return { exitCode: Number(parsed.exitCode), stdout: captured, stderr: [stderr.trim(), capturedErr].filter(Boolean).join('\n').trim() };
 }
 
 function createPrivilegedRunner({ platform = process.platform, windowsDirectory = process.env.WINDIR || 'C:\\Windows', elevatedExecutor = defaultElevatedExecutor } = {}) {
@@ -94,13 +143,35 @@ function createPrivilegedRunner({ platform = process.platform, windowsDirectory 
     const capability = await probe(engine);
     if (!capability.available) throw new Error(capability.reason);
     const metadata = publicRepairMetadata(engine, spec, dryRun);
-    if (dryRun) return { summary: { ...metadata, dryRun: true }, items: [{ operation: engine, status: 'planned' }], restartRequired: spec.restartRequired };
+    const logLocations = [...(LOG_LOCATIONS[engine] || [])];
+    if (dryRun) return { summary: { ...metadata, dryRun: true, logLocations, verification: { status: 'unverified', method: 'dry-run: no state was changed', logLocations } }, items: [{ operation: engine, status: 'planned', commandIdentity: engine }], restartRequired: spec.restartRequired };
+    const startedAt = new Date().toISOString();
+    const startedMs = Date.now();
     const result = await elevatedExecutor({ executable: resolveExecutable(spec, windowsDirectory), args: [...spec.args] });
+    const finishedAt = new Date().toISOString();
+    const durationMs = Date.now() - startedMs;
     const exitCode = Number(result.exitCode);
+    const outcome = classifyOutcome(engine, result.stdout);
+    const verification = verificationKit.exitCodeOnlyVerification(engine, exitCode, spec);
+    verification.finalState = outcome.state;
+    verification.finalStateSource = outcome.source;
+    // A documented restart requirement means the final state is not observable yet.
+    const restartState = verificationKit.mutationRestartState({ ...verification, status: 'verified' }, spec);
     return {
-      summary: { ...publicRepairMetadata(engine, spec, false, exitCode), dryRun: false },
-      items: [{ operation: engine, status: exitCode === 0 ? 'completed' : 'failed', exitCode }],
-      warnings: result.stderr ? [result.stderr] : [],
+      summary: {
+        ...publicRepairMetadata(engine, spec, false, exitCode), dryRun: false,
+        // The allowlisted engine name IS the command identity in this architecture.
+        // The literal executable/argument list is deliberately never surfaced.
+        commandIdentity: engine, startedAt, finishedAt, durationMs,
+        adminState: 'elevated', stdoutSummary: summarizeOutput(result.stdout), stderrSummary: summarizeOutput(result.stderr),
+        logLocations, finalState: outcome.state, finalStateSource: outcome.source, restartState, verification
+      },
+      items: [{ operation: engine, status: exitCode === 0 ? (outcome.state === 'undetermined' ? 'completed-unverified-state' : 'completed') : 'failed', exitCode, finalState: outcome.state, finalStateSource: outcome.source, commandIdentity: engine, durationMs, logLocations }],
+      warnings: [
+        ...(result.stderr ? [summarizeOutput(result.stderr)?.head || 'The elevated operation reported output on stderr.'] : []),
+        ...(outcome.state === 'undetermined' ? [`Windows reported no documented outcome text for this operation; the final state could not be classified from output.`] : []),
+        ...(verificationKit.mutationRestartState({ ...verification, status: 'verified' }, spec) === 'pending-restart' ? ['The documented behaviour of this operation requires a restart before the final state can be observed.'] : [])
+      ],
       restartRequired: spec.restartRequired
     };
   }

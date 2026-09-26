@@ -13,6 +13,9 @@ const { OPERATION_SPECS, createPrivilegedRunner } = require('./privileged-runner
 const { createAutomationStore } = require('./automation.cjs');
 const { createStartupManager } = require('./startup-manager.cjs');
 const advancedLocal = require('./advanced-local-services.cjs');
+const windowsProviders = require('./windows-providers.cjs');
+const windowsFs = require('./windows-fs-metadata.cjs');
+const verificationKit = require('./verification.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
@@ -41,7 +44,19 @@ async function getSettings() { const value = await settingsStore.get(); settings
 function publishSettings(value) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:settings-changed', value); }
 async function updateSettings(patch) { const value = await settingsStore.update(patch); settingsCache = value; applyRuntimeSettings(value); publishSettings(value); return value; }
 async function history() { return await readJson('history.json', []); }
-function addHistory(entry) { const task = historyMutationQueue.catch(() => {}).then(async () => { const records = await history(); records.unshift(entry); await writeJson('history.json', records.slice(0, 200)); }); historyMutationQueue = task; return task; }
+/** Enforces the documented history.retentionDays / automaticCleanup settings. */
+async function pruneHistory(records) {
+  const { history: policy } = await getSettings();
+  const capped = records.slice(0, 200);
+  if (!policy.automaticCleanup) return capped;
+  const cutoff = Date.now() - Math.max(1, policy.retentionDays) * 86400000;
+  const kept = capped.filter(record => {
+    const finished = new Date(record?.finishedAt || 0).getTime();
+    return !Number.isFinite(finished) || finished >= cutoff;
+  });
+  return kept.length === capped.length ? kept : kept;
+}
+function addHistory(entry) { const task = historyMutationQueue.catch(() => {}).then(async () => { const records = await history(); records.unshift(entry); await writeJson('history.json', await pruneHistory(records)); }); historyMutationQueue = task; return task; }
 function emit(event) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:operation-event', event); }
 function phase(operationId, toolId, phaseName, message, more = {}) {
   const context = operations.get(operationId); const updatedAt = new Date().toISOString();
@@ -100,42 +115,126 @@ function normalisePath(input) { const resolved = path.resolve(input); if (resolv
 function allowedDirectory(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) throw new Error('Selected folder is unavailable.'); return resolved; }
 function allowedFile(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) throw new Error('Selected file is unavailable.'); return resolved; }
 function isCancelled(context) { if (context.cancelled) { const error = new Error('Operation cancelled by the user.'); error.code = 'CANCELLED'; throw error; } }
+const readReparseTagProvider = windowsFs.createReparseTagReader();
+const classifyEntry = windowsFs.createEntryClassifier({ readReparseTag: targetPath => readReparseTagProvider(targetPath) });
+async function reparsePointPolicy() { return (await getSettings()).scanning.reparsePointPolicy; }
+/** Metadata-only projection. Inventory paths never open file content through this. */
+function fileRecord(file) { return { path: file.path, size: file.size, modifiedAt: file.modifiedAt, createdAt: file.createdAt, fileIdentity: file.fileIdentity, linkCount: file.linkCount, hardlinked: file.hardlinked, entryKind: file.entryKind, reparseTag: file.reparseTag, reparseName: file.reparseName, placeholderState: file.placeholderState, placeholderStateAvailable: file.placeholderStateAvailable, hydrationRisk: file.hydrationRisk, allocatedSizeAvailable: file.allocatedSizeAvailable }; }
+function traversalWarnings(context, totals) { if (totals.reparsePointsSkipped) context.warnings.push(`${totals.reparsePointsSkipped} reparse point(s) were not followed, to avoid leaving the scanned location or hydrating cloud content.`); if (totals.cloudPlaceholders) context.warnings.push(`${totals.cloudPlaceholders} cloud placeholder(s) were identified from metadata and were not read.`); if (totals.hardlinkedFiles) context.warnings.push(`${totals.hardlinkedFiles} file(s) have multiple hard links and are not counted as reclaimable duplicate storage.`); }
+/**
+ * Windows-aware traversal. Reparse points (symlinks, junctions, mount points,
+ * cloud placeholders) are never followed unless the user's reparse-point policy
+ * allows it, the tag is known and non-cloud, and the target is same-volume.
+ */
 async function walk(root, context, options = {}) {
-  const files = []; const folders = []; const queue = [root]; const limit = options.limit || 50000; let inspected = 0;
+  const files = []; const folders = []; const links = []; const queue = [root]; const limit = options.limit || 50000;
+  const policy = options.reparsePointPolicy || await reparsePointPolicy(); let inspected = 0;
+  const totals = { foldersVisited: 0, filesVisited: 0, reparsePointsSkipped: 0, reparsePointsTraversed: 0, accessDenied: 0, hardlinkedFiles: 0, cloudPlaceholders: 0, allocatedSizeAvailable: false };
   while (queue.length) {
-    isCancelled(context); const folder = queue.shift(); folders.push(folder); let entries;
-    try { entries = await fsp.readdir(folder, { withFileTypes: true }); } catch (error) { context.warnings.push(`${folder}: ${error.code || 'unavailable'}`); continue; }
+    isCancelled(context); const folder = queue.shift(); totals.foldersVisited += 1; folders.push(folder); let entries;
+    try { entries = await fsp.readdir(folder, { withFileTypes: true }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${folder}: ${error.code || 'unavailable'}`); continue; }
     for (const entry of entries) {
-      isCancelled(context); if (++inspected > limit) { context.warnings.push(`Scan stopped at the ${limit.toLocaleString()} item safety limit.`); return { files, folders, partial: true }; }
+      isCancelled(context); if (++inspected > limit) { context.warnings.push(`Scan stopped at the ${limit.toLocaleString()} item safety limit.`); return { files, folders, links, totals, partial: true }; }
       const full = path.join(folder, entry.name); let stat;
-      try { stat = await fsp.lstat(full); } catch { continue; }
-      if (stat.isSymbolicLink() || stat.isSocket() || stat.isFIFO()) continue;
-      if (entry.isDirectory()) queue.push(full); else if (entry.isFile()) files.push({ path: full, size: stat.size, modifiedAt: stat.mtime.toISOString(), createdAt: stat.birthtime.toISOString() });
+      try { stat = await fsp.lstat(full); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
+      let classified;
+      try { classified = await classifyEntry(full, stat, { root, reparsePointPolicy: policy }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
+      if (classified.entryKind === 'reparse') {
+        const mayEnter = windowsFs.mayTraverseLink(classified, { reparsePolicy: policy, root });
+        classified.traversed = mayEnter;
+        classified.skippedReason = mayEnter ? null : (classified.skippedReason || 'reparse-not-traversed');
+        links.push(classified);
+        if (windowsFs.CLOUD_TAGS.has(classified.reparseName)) totals.cloudPlaceholders += 1;
+        if (!mayEnter) { totals.reparsePointsSkipped += 1; continue; }
+        totals.reparsePointsTraversed += 1;
+        if (stat.isDirectory()) { queue.push(full); continue; }
+        totals.filesVisited += 1; files.push({ ...classified, modifiedAt: new Date(stat.mtimeMs).toISOString(), createdAt: new Date(stat.birthtimeMs || stat.mtimeMs).toISOString() }); continue;
+      }
+      if (stat.isDirectory()) { queue.push(full); continue; }
+      if (!stat.isFile()) continue;
+      totals.filesVisited += 1; if (classified.hardlinked) totals.hardlinkedFiles += 1;
+      files.push({ ...classified, modifiedAt: new Date(stat.mtimeMs).toISOString(), createdAt: new Date(stat.birthtimeMs || stat.mtimeMs).toISOString() });
       if (inspected % 100 === 0) context.progress(inspected, Math.max(inspected + queue.length, inspected), `Inspected ${inspected.toLocaleString()} filesystem items`);
     }
   }
-  return { files, folders, partial: false };
+  return { files, folders, links, totals, partial: false };
 }
-function bytes(value) { return Number.isFinite(value) ? value : 0; }
-async function powershellJson(script, timeout = 30000) { const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], { windowsHide: true, timeout, maxBuffer: 10 * 1024 * 1024 }); const text = stdout.trim(); if (!text) return []; try { return JSON.parse(text); } catch { return []; } }
-async function diskOverview() { const raw = await powershellJson("Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object DeviceID,VolumeName,FileSystem,Size,FreeSpace | ConvertTo-Json -Depth 3"); return Array.isArray(raw) ? raw : [raw]; }
-async function servicesInventory() { const script = "$items=Get-CimInstance Win32_Service | ForEach-Object { $p=Get-ItemProperty -LiteralPath ('HKLM:\\SYSTEM\\CurrentControlSet\\Services\\'+$_.Name) -ErrorAction SilentlyContinue; [pscustomobject]@{name=$_.Name;displayName=$_.DisplayName;description=$_.Description;status=$_.State;startupType=$_.StartMode;delayedAuto=([bool]$p.DelayedAutoStart);binaryPath=$_.PathName;account=$_.StartName;dependencies=$_.Dependencies} }; $items | Sort-Object displayName | ConvertTo-Json -Depth 5"; const raw = await powershellJson(script, 45000); const list = (Array.isArray(raw) ? raw : [raw]).filter(Boolean); return list.map(item => { const serviceName = String(item.name || ''); const controllable = /^[A-Za-z0-9_.-]{1,256}$/.test(serviceName); return { ...item, protected: controllable ? privilegedRunner.isProtectedService(serviceName) : true, controllable }; }); }
-async function systemHealth() { const memoryTotal = os.totalmem(), memoryFree = os.freemem(); const disks = await diskOverview(); const primary = disks.find(d => String(d.DeviceID).toUpperCase() === 'C:') || disks[0] || {}; const power = await powershellJson("Get-CimInstance Win32_Battery | Select-Object EstimatedChargeRemaining,BatteryStatus | ConvertTo-Json -Depth 2").catch(() => []); return { platform: process.platform, release: os.release(), hostname: os.hostname(), cpuModel: os.cpus()[0]?.model || 'Unavailable', cpuCores: os.cpus().length, memoryTotalBytes: memoryTotal, memoryFreeBytes: memoryFree, memoryUsedPercent: Math.round((1 - memoryFree / memoryTotal) * 100), uptimeSeconds: Math.round(os.uptime()), systemDrive: primary.DeviceID || null, systemDriveFreeBytes: bytes(primary.FreeSpace), systemDriveTotalBytes: bytes(primary.Size), battery: Array.isArray(power) ? null : power };
-}
+function expectedStartupType(action) { return ({ automatic: 'automatic', delayedAutomatic: 'automatic', manual: 'manual', disabled: 'disabled' })[action] ?? null; }
+function expectedServiceState(action) { return ({ start: 'Running', stop: 'Stopped', restart: 'Running' })[action] ?? null; }
+async function diskOverview() { return windowsProviders.collectLogicalDisks(); }
+async function servicesInventory() { const list = await windowsProviders.collectServices(); return list.map(item => { const guarded = privilegedRunner.isProtectedService(item.name) || !item.controllable; return { ...item, protected: guarded, controllable: !guarded }; }); }
+async function systemHealth() { return windowsProviders.collectSystemHealth(); }
 async function scanLargeFiles(root, context, threshold, limit) {
   const data = await walk(root, context, { limit });
+  traversalWarnings(context, data.totals);
   const intelligence = advancedLocal.buildStorageIntelligence(data.files, root);
-  const largest = data.files.filter(file => file.size >= threshold).sort((a, b) => b.size - a.size).slice(0, 500).map(file => ({ ...file, type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
-  return { items: largest, summary: { folder: root, filesScanned: data.files.length, matchingFiles: largest.length, thresholdBytes: threshold, totalMatchingBytes: largest.reduce((sum, item) => sum + item.size, 0), totalScannedBytes: intelligence.totalBytes, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders }, partial: data.partial };
+  const largest = data.files.filter(file => file.size >= threshold).sort((a, b) => b.size - a.size).slice(0, 500).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
+  return { items: largest, summary: { folder: root, filesScanned: data.files.length, matchingFiles: largest.length, thresholdBytes: threshold, totalMatchingBytes: largest.reduce((sum, item) => sum + item.size, 0), totalScannedBytes: intelligence.totalBytes, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
 }
 function downloadCategory(filePath) { const ext = path.extname(filePath).toLowerCase(); if (['.jpg','.jpeg','.png','.gif','.webp','.heic','.svg'].includes(ext)) return 'Images'; if (['.mp4','.mkv','.mov','.avi','.webm'].includes(ext)) return 'Videos'; if (['.mp3','.wav','.flac','.aac','.m4a'].includes(ext)) return 'Audio'; if (['.pdf','.doc','.docx','.xls','.xlsx','.ppt','.pptx','.txt'].includes(ext)) return 'Documents'; if (['.zip','.rar','.7z','.tar','.gz'].includes(ext)) return 'Archives'; if (['.exe','.msi','.msix','.appx'].includes(ext)) return 'Installers'; if (['.js','.ts','.tsx','.py','.java','.cs','.cpp','.json','.html','.css'].includes(ext)) return 'Development'; return 'Other'; }
-async function downloadOrganizationPlan(context, limit, sourceFolder) { const source = sourceFolder ? allowedDirectory(sourceFolder) : app.getPath('downloads'); const data = await walk(source, context, { limit }); const plans = data.files.filter(file => path.dirname(file.path) === source).map(file => ({ source: file.path, category: downloadCategory(file.path), destination: path.join(source, downloadCategory(file.path), path.basename(file.path)), size: file.size })); return { source, plans, partial: data.partial }; }
+/** Preflight: report destination collisions, reparse entries and cross-volume moves before anything moves. */
+async function downloadOrganizationPlan(context, limit, sourceFolder) {
+  const source = sourceFolder ? allowedDirectory(sourceFolder) : app.getPath('downloads');
+  const data = await walk(source, context, { limit });
+  traversalWarnings(context, data.totals);
+  const rootFiles = data.files.filter(file => path.dirname(file.path) === source);
+  const plans = []; const collisions = []; const skipped = [];
+  for (const file of rootFiles) {
+    const category = downloadCategory(file.path);
+    const destination = path.join(source, category, path.basename(file.path));
+    if (windowsFs.CLOUD_TAGS.has(file.reparseName)) { skipped.push({ source: file.path, reason: 'cloud-placeholder', evidence: { reparseTag: file.reparseTag, reparseName: file.reparseName } }); continue; }
+    if (file.entryKind === 'reparse') { skipped.push({ source: file.path, reason: file.skippedReason || 'reparse-point', evidence: { reparseTag: file.reparseTag, reparseName: file.reparseName, linkTarget: file.linkTarget } }); continue; }
+    if (!windowsFs.sameVolume(source, destination)) { skipped.push({ source: file.path, reason: 'cross-volume-move', evidence: { sourceVolume: file.volume, destinationVolume: windowsFs.volumeKey(destination) } }); continue; }
+    if (fs.existsSync(destination)) { collisions.push({ source: file.path, destination }); continue; }
+    plans.push({ source: file.path, category, destination, size: file.size, fileIdentity: file.fileIdentity, hardlinked: file.hardlinked });
+  }
+  return { source, plans, collisions, skipped, totals: data.totals, partial: data.partial };
+}
 async function scanDuplicates(root, context, minimumSize, limit) {
-  const data = await walk(root, context, { limit }); const sizeGroups = new Map(); data.files.filter(file => file.size >= minimumSize).forEach(file => { const group = sizeGroups.get(file.size) || []; group.push(file); sizeGroups.set(file.size, group); }); const candidates = [...sizeGroups.values()].filter(group => group.length > 1).flat(); const hashes = new Map();
-  for (let index = 0; index < candidates.length; index++) { isCancelled(context); const file = candidates[index]; const hash = crypto.createHash('sha256'); await new Promise((resolve, reject) => { const stream = fs.createReadStream(file.path); stream.on('error', reject); stream.on('data', chunk => hash.update(chunk)); stream.on('end', resolve); }); const key = `${file.size}:${hash.digest('hex')}`; const group = hashes.get(key) || []; group.push(file); hashes.set(key, group); context.progress(index + 1, candidates.length || 1, `Verified ${index + 1} duplicate candidates with SHA-256`); }
-  const exactGroups = [...hashes.entries()].filter(([, group]) => group.length > 1).map(([key, group]) => ({ hash: key.split(':')[1], size: group[0].size, count: group.length, reclaimableBytes: group[0].size * (group.length - 1), files: group }));
+  const data = await walk(root, context, { limit });
+  traversalWarnings(context, data.totals);
+  const sizeGroups = new Map();
+  data.files.filter(file => file.size >= minimumSize).forEach(file => { const group = sizeGroups.get(file.size) || []; group.push(file); sizeGroups.set(file.size, group); });
+  const candidates = [...sizeGroups.values()].filter(group => group.length > 1).flat();
+  const hashable = candidates.filter(file => file.entryKind === 'file' && !windowsFs.CLOUD_TAGS.has(file.reparseName));
+  const skippedForHydration = candidates.filter(file => windowsFs.CLOUD_TAGS.has(file.reparseName) || file.entryKind !== 'file');
+  if (skippedForHydration.length) context.warnings.push(`${skippedForHydration.length} duplicate candidate(s) were not content-verified because they are cloud placeholders or links; hashing them would have hydrated remote content.`);
+  const hashes = new Map();
+  const changedDuringRead = [];
+  for (let index = 0; index < hashable.length; index++) {
+    isCancelled(context); const file = hashable[index];
+    const before = windowsFs.identitySnapshot(await fsp.lstat(file.path));
+    const hash = crypto.createHash('sha256');
+    try {
+      await new Promise((resolve, reject) => { const stream = fs.createReadStream(file.path); stream.on('error', reject); stream.on('data', chunk => hash.update(chunk)); stream.on('end', resolve); });
+    } catch (error) { changedDuringRead.push({ path: file.path, reason: error.code || 'read-failed' }); continue; }
+    const after = windowsFs.identitySnapshot(await fsp.lstat(file.path).catch(() => null));
+    if (windowsFs.identityChanged(before, after)) { changedDuringRead.push({ path: file.path, reason: 'changed-during-read' }); continue; }
+    const key = `${file.size}:${hash.digest('hex')}`;
+    const group = hashes.get(key) || []; group.push(file); hashes.set(key, group);
+    context.progress(index + 1, hashable.length || 1, `Verified ${index + 1} duplicate candidates with SHA-256`);
+  }
+  const exactGroups = [...hashes.entries()].filter(([, group]) => group.length > 1).map(([key, group]) => ({
+    hash: key.split(':')[1], size: group[0].size, count: group.length,
+    // Hard links share one physical file: extra names free no bytes.
+    reclaimableBytes: windowsFs.reclaimableBytesForGroup(group),
+    singlePhysicalFile: windowsFs.groupIsSinglePhysicalFile(group),
+    physicalDuplicates: windowsFs.physicalDuplicateGroups(group).length,
+    files: group.map(file => fileRecord(file))
+  }));
   const enriched = advancedLocal.enrichDuplicateGroups(exactGroups);
-  return { items: enriched.items, summary: { folder: root, filesScanned: data.files.length, candidateFiles: candidates.length, ...enriched.summary, exactHashAlgorithm: 'sha256', automaticDeletion: false }, partial: data.partial };
+  if (changedDuringRead.length) context.warnings.push(`${changedDuringRead.length} file(s) changed while being hashed and were excluded from duplicate results.`);
+  return {
+    items: enriched.items,
+    summary: {
+      folder: root, filesScanned: data.files.length, candidateFiles: candidates.length,
+      contentVerifiedFiles: hashable.length, skippedForHydration: skippedForHydration.length, changedDuringRead: changedDuringRead.length,
+      ...enriched.summary, exactHashAlgorithm: 'sha256', automaticDeletion: false,
+      hardlinkPolicy: 'Files sharing a Windows file identity are one physical file and are not counted as reclaimable duplicate storage.',
+      traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) }
+    },
+    partial: data.partial || changedDuringRead.length > 0
+  };
 }
 async function tempCleanupCandidates(context, limit) {
   const smokeFixture = app.isPackaged && smokeArgument('knoux-temp-cleanup-smoke-fixture');
@@ -152,23 +251,95 @@ async function moveWithFallback(source, destination) {
 }
 async function runTool(context, tool, inputs) {
   const home = app.getPath('home'); const folder = allowedDirectory(inputs.folder || home); const limit = inputs.limit || 50000;
-  if (OPERATION_SPECS[tool.engine]) { const output = await privilegedRunner.run(tool.engine, { dryRun: inputs.dryRun }); if (!inputs.dryRun && output.summary.exitCode !== 0) throw new Error(`Privileged operation exited with code ${output.summary.exitCode}.`); return output; }
-  if (tool.engine === 'servicesInventory') { const list = await servicesInventory(); const search = String(inputs.search || '').toLocaleLowerCase(); const filtered = search ? list.filter(item => `${item.name} ${item.displayName} ${item.description || ''}`.toLocaleLowerCase().includes(search)) : list; return { items: filtered.slice(0, inputs.limit || 2000), summary: { services: filtered.length, protectedServices: filtered.filter(item => item.protected).length } }; }
-  if (tool.engine === 'serviceControl') { const list = await servicesInventory(); const service = list.find(item => item.name.toLocaleLowerCase() === inputs.serviceName.toLocaleLowerCase()); if (!service) throw new Error('Windows service was not found.'); let journalId = null; const startupAction = ['automatic', 'delayedAutomatic', 'manual', 'disabled'].includes(inputs.action); if (startupAction && !inputs.dryRun) { journalId = crypto.randomUUID(); const oldAction = service.delayedAuto ? 'delayedAutomatic' : service.startupType === 'Auto' ? 'automatic' : service.startupType === 'Disabled' ? 'disabled' : 'manual'; await writeJson(`undo-service-${journalId}.json`, { journalId, serviceName: service.name, oldAction, createdAt: new Date().toISOString() }); } const output = await privilegedRunner.runService({ serviceName: inputs.serviceName, action: inputs.action, dryRun: inputs.dryRun }); return { ...output, undoMetadata: journalId ? { journalId, action: 'service-startup' } : null, summary: { ...output.summary, previousStatus: service.status, previousStartupType: service.startupType, journalId } }; }
-  if (tool.engine === 'serviceStartupUndo') { const journal = await readJson(`undo-service-${inputs.journalId}.json`, null); if (!journal?.serviceName || !journal?.oldAction) throw new Error('Service startup undo journal is unavailable.'); const output = await privilegedRunner.runService({ serviceName: journal.serviceName, action: journal.oldAction, dryRun: inputs.dryRun }); return { ...output, summary: { ...output.summary, journalId: inputs.journalId, restoredStartupAction: journal.oldAction } }; }
+  if (OPERATION_SPECS[tool.engine]) { const output = await privilegedRunner.run(tool.engine, { dryRun: inputs.dryRun }); if (!inputs.dryRun && output.summary.exitCode !== 0) throw new Error(`Privileged operation exited with code ${output.summary.exitCode}.`); if (!inputs.dryRun) context.warnings.push(...(output.summary.verification?.limitation ? [output.summary.verification.limitation] : [])); return output; }
+  if (tool.engine === 'servicesInventory') { const list = await servicesInventory(); const search = String(inputs.search || '').toLocaleLowerCase(); const filtered = search ? list.filter(item => `${item.name} ${item.displayName} ${item.description || ''}`.toLocaleLowerCase().includes(search)) : list; return { items: filtered.slice(0, inputs.limit || 2000), summary: { services: filtered.length, protectedServices: filtered.filter(item => item.protected).length, delayedAutomatic: filtered.filter(item => item.delayedAuto).length, running: filtered.filter(item => item.running).length, provider: 'Win32_Service' } }; }
+  if (tool.engine === 'serviceControl') {
+    const list = await servicesInventory(); const service = list.find(item => item.name.toLocaleLowerCase() === inputs.serviceName.toLocaleLowerCase()); if (!service) throw new Error('Windows service was not found.');
+    if (service.protected) throw new Error('This Windows service is protected and cannot be changed by SmartOrganizer.');
+    if (service.dependencies?.length && ['stop', 'restart', 'disabled'].includes(inputs.action)) context.warnings.push(`Service depends on: ${service.dependencies.join(', ')}. Stopping or disabling it may affect those components.`);
+    const startupAction = ['automatic', 'delayedAutomatic', 'manual', 'disabled'].includes(inputs.action);
+    const startedAt = new Date().toISOString();
+    let journalId = null;
+    if (startupAction && !inputs.dryRun) { journalId = crypto.randomUUID(); const oldAction = service.delayedAuto ? 'delayedAutomatic' : service.startupType === 'automatic' ? 'automatic' : service.startupType === 'disabled' ? 'disabled' : 'manual'; await writeJson(`undo-service-${journalId}.json`, { journalId, serviceName: service.name, oldAction, previousStatus: service.state, createdAt: startedAt }); }
+    const output = await privilegedRunner.runService({ serviceName: inputs.serviceName, action: inputs.action, dryRun: inputs.dryRun });
+    const finishedAt = new Date().toISOString();
+    let proof = null;
+    if (!inputs.dryRun) {
+      // REQUERY the Service Control Manager and compare against the request.
+      const observed = (await servicesInventory().catch(() => null))?.find(item => item.name.toLowerCase() === service.name.toLowerCase()) || null;
+      proof = verificationKit.verification([
+        verificationKit.check('service-present', true, Boolean(observed), Boolean(observed)),
+        verificationKit.check('startup-type', expectedStartupType(inputs.action), observed?.startupType ?? null, startupAction ? observed?.startupType === expectedStartupType(inputs.action) : true),
+        verificationKit.check('service-state', expectedServiceState(inputs.action), observed?.state ?? null, ['start', 'stop', 'restart'].includes(inputs.action) ? observed?.state === expectedServiceState(inputs.action) : true)
+      ], { requerySource: 'Win32_Service' });
+      if (proof.status !== 'verified') context.warnings.push(`Post-change re-query reported "${proof.status}". The requested service state could not be proven from Windows.`);
+    }
+    return { ...output, undoMetadata: journalId ? { journalId, action: 'service-startup' } : null, summary: { ...output.summary, previousStatus: service.state, previousStartupType: service.startupType, journalId, startedAt, finishedAt, verification: proof ?? { status: 'unverified', method: 'dry-run: no state was changed' } }, partial: Boolean(proof && proof.status !== 'verified') };
+  }
+  if (tool.engine === 'serviceStartupUndo') {
+    const journal = await readJson(`undo-service-${inputs.journalId}.json`, null); if (!journal?.serviceName || !journal?.oldAction) throw new Error('Service startup undo journal is unavailable.');
+    const startedAt = new Date().toISOString();
+    const output = await privilegedRunner.runService({ serviceName: journal.serviceName, action: journal.oldAction, dryRun: inputs.dryRun });
+    const finishedAt = new Date().toISOString();
+    let proof = null;
+    if (!inputs.dryRun) {
+      const observed = (await servicesInventory().catch(() => null))?.find(item => item.name.toLowerCase() === journal.serviceName.toLowerCase()) || null;
+      proof = verificationKit.verification([
+        verificationKit.check('service-present', true, Boolean(observed), Boolean(observed)),
+        verificationKit.check('startup-type-restored', expectedStartupType(journal.oldAction), observed?.startupType ?? null, observed?.startupType === expectedStartupType(journal.oldAction))
+      ], { requerySource: 'Win32_Service' });
+      if (proof.status !== 'verified') context.warnings.push(`Post-undo re-query reported "${proof.status}". The journaled startup type could not be proven.`);
+    }
+    return { ...output, summary: { ...output.summary, journalId: inputs.journalId, restoredStartupAction: journal.oldAction, startedAt, finishedAt, verification: proof ?? { status: 'unverified', method: 'dry-run: no state was changed' } }, partial: Boolean(proof && proof.status !== 'verified') };
+  }
   if (tool.engine === 'systemHealth') return { summary: await systemHealth(), items: [] };
-  if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length } }; }
+  if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).catch(() => []); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, physicalDisks: physical, physicalDiskCount: physical.length, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' } }; }
   if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
   if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scanning.minimumDuplicateBytes, limit);
-  if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { limit }); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, 1000), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length }, partial: data.partial }; }
+  if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { limit }); traversalWarnings(context, data.totals); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, 1000), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length, traversal: data.totals }, partial: data.partial }; }
   if (tool.engine === 'downloadsInventory') {
-    const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { limit }); const intelligence = advancedLocal.buildStorageIntelligence(data.files, downloads); const privacy = advancedLocal.privacyExposure(data.files);
-    const items = data.files.sort((a,b) => b.size-a.size).slice(0, 200).map(file => ({ ...file, type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
-    return { items, summary: { folder: downloads, files: data.files.length, totalBytes: intelligence.totalBytes, extensionGroups: intelligence.extensionGroups, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, privacyExposureCount: privacy.summary.exposureCount, privacyExposureBytes: privacy.summary.exposureBytes, privacyMetadataOnly: true, privacyContentsInspected: false, privacyFindings: privacy.items.slice(0, 50) }, partial: data.partial };
+    const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { limit }); traversalWarnings(context, data.totals); const intelligence = advancedLocal.buildStorageIntelligence(data.files, downloads); const privacy = advancedLocal.privacyExposure(data.files);
+    const items = [...data.files].sort((a,b) => b.size-a.size).slice(0, 200).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
+    return { items, summary: { folder: downloads, files: data.files.length, totalBytes: intelligence.totalBytes, extensionGroups: intelligence.extensionGroups, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, privacyExposureCount: privacy.summary.exposureCount, privacyExposureBytes: privacy.summary.exposureBytes, privacyMetadataOnly: true, privacyContentsInspected: false, privacyFindings: privacy.items.slice(0, 50), metadataOnly: true, contentsInspected: false, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
   }
-  if (tool.engine === 'organizePreview') { const plan = await downloadOrganizationPlan(context, limit, inputs.folder); return { items: plan.plans.slice(0, 1000), summary: { sourceFolder: plan.source, plannedMoves: plan.plans.length, previewOnly: true }, partial: plan.partial }; }
-  if (tool.engine === 'organizeApply') { if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving files.'); const plan = await downloadOrganizationPlan(context, limit, inputs.folder); const journal = []; for (let index = 0; index < plan.plans.length; index++) { isCancelled(context); const item = plan.plans[index]; if (fs.existsSync(item.destination)) { context.warnings.push(`Skipped name conflict: ${item.source}`); continue; } await fsp.mkdir(path.dirname(item.destination), { recursive: true }); await fsp.rename(item.source, item.destination); journal.push({ source: item.source, destination: item.destination }); context.progress(index + 1, plan.plans.length || 1, `Moved ${index + 1} files`); } const journalId = crypto.randomUUID(); await writeJson(`undo-${journalId}.json`, { journalId, createdAt: new Date().toISOString(), action: 'organize-downloads', moves: journal }); return { items: journal.slice(0, 1000), summary: { journalId, movedFiles: journal.length, skippedFiles: plan.plans.length - journal.length }, partial: plan.partial, undoMetadata: { journalId, action: 'organize-downloads' } }; }
-  if (tool.engine === 'organizeUndo') { const journalId = z.string().uuid().parse(inputs.journalId); const journal = await readJson(`undo-${journalId}.json`, null); if (!journal || !Array.isArray(journal.moves)) throw new Error('Undo journal is unavailable.'); const restored = []; for (let index = journal.moves.length - 1; index >= 0; index--) { isCancelled(context); const item = journal.moves[index]; if (fs.existsSync(item.destination) && !fs.existsSync(item.source)) { await fsp.mkdir(path.dirname(item.source), { recursive: true }); await fsp.rename(item.destination, item.source); restored.push(item); } context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`); } return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length } }; }
+  if (tool.engine === 'organizePreview') { const plan = await downloadOrganizationPlan(context, limit, inputs.folder); if (plan.collisions.length) context.warnings.push(`${plan.collisions.length} planned move(s) were withheld because the destination name already exists.`); return { items: [...plan.plans, ...plan.collisions.map(item => ({ ...item, blocked: 'destination-exists' })), ...plan.skipped].slice(0, 1000), summary: { sourceFolder: plan.source, plannedMoves: plan.plans.length, blockedByCollision: plan.collisions.length, skipped: plan.skipped.length, skippedReasons: plan.skipped.map(item => item.reason), previewOnly: true, traversal: plan.totals }, partial: plan.partial }; }
+  if (tool.engine === 'organizeApply') {
+    if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving files.');
+    const plan = await downloadOrganizationPlan(context, limit, inputs.folder);
+    const journal = []; const verifications = [];
+    for (let index = 0; index < plan.plans.length; index++) {
+      isCancelled(context); const item = plan.plans[index];
+      if (fs.existsSync(item.destination)) { context.warnings.push(`Skipped name conflict: ${item.source}`); verifications.push(verificationKit.verification([verificationKit.check('destination-absent', true, false, false)], { skipped: 'destination-exists' })); continue; }
+      try {
+        await fsp.mkdir(path.dirname(item.destination), { recursive: true });
+        await moveWithFallback(item.source, item.destination);
+        journal.push({ source: item.source, destination: item.destination, size: item.size, fileIdentity: item.fileIdentity });
+        verifications.push(await verificationKit.verifyMove({ source: item.source, destination: item.destination, expectedIdentity: item.fileIdentity }));
+      } catch (error) { context.warnings.push(`${item.source}: ${error.code || error.message || 'unavailable'}`); verifications.push(verificationKit.verification([verificationKit.check('move-completed', true, false, false)], { error: String(error.code || error.message || 'unavailable') })); }
+      context.progress(index + 1, plan.plans.length || 1, `Moved ${index + 1} files`);
+    }
+    const journalId = crypto.randomUUID();
+    await writeJson(`undo-${journalId}.json`, { journalId, createdAt: new Date().toISOString(), action: 'organize-downloads', moves: journal });
+    const aggregate = verificationKit.aggregateVerifications(verifications);
+    if (aggregate.status !== 'verified') context.warnings.push(`Post-move verification reported "${aggregate.status}". The requested state could not be proven for every file.`);
+    return { items: journal.slice(0, 1000), summary: { journalId, movedFiles: journal.length, skippedFiles: plan.plans.length - journal.length, verification: aggregate }, partial: plan.partial || aggregate.status !== 'verified', undoMetadata: { journalId, action: 'organize-downloads' }, restartRequired: false };
+  }
+  if (tool.engine === 'organizeUndo') {
+    const journalId = z.string().uuid().parse(inputs.journalId); const journal = await readJson(`undo-${journalId}.json`, null); if (!journal || !Array.isArray(journal.moves)) throw new Error('Undo journal is unavailable.');
+    const restored = []; const conflicts = []; const verifications = [];
+    for (let index = journal.moves.length - 1; index >= 0; index--) {
+      isCancelled(context); const item = journal.moves[index];
+      if (fs.existsSync(item.source)) { conflicts.push({ path: item.source, reason: 'original-already-exists' }); verifications.push(verificationKit.verification([verificationKit.check('original-absent', true, false, false)], { conflict: 'original-already-exists' })); context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`); continue; }
+      if (!fs.existsSync(item.destination)) { conflicts.push({ path: item.destination, reason: 'organized-file-missing' }); verifications.push(verificationKit.verification([verificationKit.check('organized-file-present', true, false, false)], { conflict: 'organized-file-missing' })); continue; }
+      try { await fsp.mkdir(path.dirname(item.source), { recursive: true }); await moveWithFallback(item.destination, item.source); restored.push(item); verifications.push(await verificationKit.verifyRestore({ original: item.source, relocated: item.destination, expectedSize: item.size ?? null })); }
+      catch (error) { conflicts.push({ path: item.source, reason: String(error.code || error.message || 'unavailable') }); verifications.push(verificationKit.verification([verificationKit.check('restore-completed', true, false, false)], { error: String(error.code || error.message || 'unavailable') })); }
+      context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`);
+    }
+    const aggregate = verificationKit.aggregateVerifications(verifications);
+    if (conflicts.length) context.warnings.push(`${conflicts.length} file(s) were not restored because the original location or the organized file was unavailable. Nothing was overwritten.`);
+    if (aggregate.status !== 'verified') context.warnings.push(`Post-restore verification reported "${aggregate.status}".`);
+    return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, conflicts: conflicts.slice(0, 100), verification: aggregate }, partial: aggregate.status !== 'verified', restartRequired: false };
+  }
   if (tool.engine === 'tempPreview') { const candidate = await tempCleanupCandidates(context, limit); return { items: candidate.selected.sort((a,b) => b.size-a.size).slice(0, 500), summary: { folder: candidate.temp, eligibleFiles: candidate.selected.length, eligibleBytes: candidate.selected.reduce((sum, item) => sum + item.size, 0), readOnlyPreview: true }, partial: candidate.data.partial }; }
   if (tool.engine === 'tempCleanupApply') {
     if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving temporary files.');
@@ -187,35 +358,154 @@ async function runTool(context, tool, inputs) {
     for (let index = journal.moves.length - 1; index >= 0; index--) { isCancelled(context); const item = journal.moves[index]; try { if (fs.existsSync(item.quarantine) && !fs.existsSync(item.source)) { await fsp.mkdir(path.dirname(item.source), { recursive: true }); await moveWithFallback(item.quarantine, item.source); restored.push(item); } } catch (error) { context.warnings.push(`${item.source}: ${error.code || error.message || 'unavailable'}`); } context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} temporary files`); }
     return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, recoverable: true } };
   }
-  if (tool.engine === 'startupDisable') return await startupManager.disable({ valueName: inputs.valueName, dryRun: inputs.dryRun });
-  if (tool.engine === 'startupRestore') return await startupManager.restore({ journalId: inputs.journalId, dryRun: inputs.dryRun });
-  if (tool.engine === 'startupItems') { const script = "$run=@(); $paths=@('HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run','HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'); foreach($p in $paths){if(Test-Path $p){$x=Get-ItemProperty $p; $x.PSObject.Properties | Where-Object {$_.Name -notmatch '^PS'} | ForEach-Object {$run += [pscustomobject]@{name=$_.Name;command=[string]$_.Value;source=$p;enabled=$true}}}}; $run | ConvertTo-Json -Depth 3"; const items = await powershellJson(script); return { items: Array.isArray(items) ? items : [items], summary: { entries: Array.isArray(items) ? items.length : 1 } }; }
+  if (tool.engine === 'startupDisable') { const result = await startupManager.disable({ valueName: inputs.valueName, dryRun: inputs.dryRun }); if (!inputs.dryRun) { const observed = await startupManager.query(inputs.valueName); const proof = verificationKit.verifyRegistryValue(false, observed); result.summary.verification = proof; result.partial = proof.status !== 'verified'; if (proof.status !== 'verified') context.warnings.push('The startup entry was still present after the change; the requested state could not be proven.'); } return result; }
+  if (tool.engine === 'startupRestore') { const result = await startupManager.restore({ journalId: inputs.journalId, dryRun: inputs.dryRun }); if (!inputs.dryRun) { const journal = await readJson(`undo-startup-${inputs.journalId}.json`, null); const observed = await startupManager.query(journal?.valueName); const proof = verificationKit.verifyRegistryValue(true, observed); result.summary.verification = proof; result.partial = proof.status !== 'verified'; if (proof.status !== 'verified') context.warnings.push('The startup entry was not restored to the journaled value; the requested state could not be proven.'); } return result; }
+  if (tool.engine === 'startupItems') { const items = await windowsProviders.collectStartupItems(); return { items, summary: { entries: items.length, managedSources: items.filter(item => item.managedBySmartOrganizer).length, readOnlySources: items.filter(item => !item.managedBySmartOrganizer).length, sources: [...new Set(items.map(item => item.source))], writeScope: 'current-user Run key only', provider: 'Win32_StartupCommand' } }; }
   if (tool.engine === 'installedApps') {
-    const script = "$roots=@('HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall'); $items=@(); $sourceFailures=0; $entryFailures=0; foreach($root in $roots){ if(-not (Test-Path -LiteralPath $root)){ $sourceFailures++; continue }; $keys=Get-ChildItem -LiteralPath $root -ErrorAction SilentlyContinue; foreach($key in @($keys)){ try { $x=Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction Stop; if($x.DisplayName){ $items += [pscustomobject]@{name=[string]$x.DisplayName;version=[string]$x.DisplayVersion;publisher=[string]$x.Publisher;installLocation=[string]$x.InstallLocation;uninstallString=[string]$x.UninstallString} } } catch { $entryFailures++ } } }; $sorted=@($items | Sort-Object name -Unique); [pscustomobject]@{items=$sorted;sourceFailures=$sourceFailures;entryFailures=$entryFailures} | ConvertTo-Json -Depth 4";
-    const payload = await powershellJson(script, 45000); const list = (Array.isArray(payload?.items) ? payload.items : payload?.items ? [payload.items] : []).filter(Boolean); const sourceFailures = Number(payload?.sourceFailures) || 0; const entryFailures = Number(payload?.entryFailures) || 0; const hygiene = advancedLocal.analyzeInstalledApps(list); const unavailable = sourceFailures + entryFailures;
-    return { items: list.map(item => ({ ...item, installLocationRecorded: Boolean(String(item.installLocation || '').trim()), uninstallCommandRecorded: Boolean(String(item.uninstallString || '').trim()) })), summary: { ...hygiene, registryReadOnly: true, registrySourcesAttempted: 3, registrySourceFailures: sourceFailures, registryEntryFailures: entryFailures }, warnings: unavailable ? ['Some installed-application registry entries were unavailable; the inventory is partial.'] : [], partial: unavailable > 0 };
+    const [registryPayload, appx] = await Promise.all([
+      windowsProviders.collectUninstallApps({ timeout: 60000 }),
+      windowsProviders.collectAppxApps({ timeout: 60000 }).catch(() => [])
+    ]);
+    const rawItems = registryPayload?.items ?? [];
+    const list = windowsProviders.normalizeUninstallApp(rawItems);
+    const sourceFailures = Number(registryPayload?.sourceFailures) || 0;
+    const entryFailures = Number(registryPayload?.entryFailures) || 0;
+    const packages = Array.isArray(appx) ? appx : windowsProviders.asArray(appx);
+    const seen = new Set();
+    const merged = [];
+    for (const app of [...list, ...packages]) {
+      const key = `${String(app.name || '').toLowerCase()}\u0000${String(app.version || '').toLowerCase()}\u0000${app.packageIdentity || app.evidence?.keyName || ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push({ ...app, installLocationRecorded: Boolean(app.installLocation), uninstallCommandRecorded: Boolean(app.uninstallCapability) });
+    }
+    merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    const hygiene = advancedLocal.analyzeInstalledApps(merged);
+    const unavailable = sourceFailures + entryFailures;
+    return {
+      items: merged,
+      summary: {
+        ...hygiene,
+        registryReadOnly: true, registrySourcesAttempted: windowsProviders.UNINSTALL_ROOTS.length, registrySourceFailures: sourceFailures, registryEntryFailures: entryFailures,
+        uninstallRegistryEntries: list.length, packageEntries: packages.length,
+        architectureKnown: merged.filter(app => app.architecture).length,
+        installDateKnown: merged.filter(app => app.installDate).length,
+        estimatedSizeKnown: merged.filter(app => app.estimatedSizeBytes != null).length,
+        providers: ['UninstallRegistry', 'Get-AppxPackage'],
+        winGetUsed: false,
+        win32ProductUsed: false
+      },
+      warnings: unavailable ? ['Some installed-application registry entries were unavailable; the inventory is partial.'] : [],
+      partial: unavailable > 0
+    };
   }
-  if (tool.engine === 'networkDiagnostics') { const interfaces = Object.entries(os.networkInterfaces()).flatMap(([name, records]) => (records || []).filter(record => !record.internal).map(record => ({ name, address: record.address, family: record.family, mac: record.mac, netmask: record.netmask }))); const dns = await powershellJson("Get-DnsClientServerAddress -AddressFamily IPv4 | Select-Object InterfaceAlias,ServerAddresses | ConvertTo-Json -Depth 3").catch(() => []); return { items: interfaces, summary: { activeAddresses: interfaces.length, dnsConfigured: Array.isArray(dns) ? dns.length : 1 } }; }
-  if (tool.engine === 'hardwareInventory') { const script = "$cpu=Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,MaxClockSpeed; $gpu=Get-CimInstance Win32_VideoController | Select-Object Name,AdapterRAM,DriverVersion; $bios=Get-CimInstance Win32_BIOS | Select-Object Manufacturer,SMBIOSBIOSVersion,ReleaseDate; [pscustomobject]@{cpu=$cpu;gpu=$gpu;bios=$bios} | ConvertTo-Json -Depth 5"; const result = await powershellJson(script); return { items: [result], summary: { cpu: result.cpu?.Name || null, gpuCount: Array.isArray(result.gpu) ? result.gpu.length : result.gpu ? 1 : 0 } }; }
-  if (tool.engine === 'eventWarnings') { const script = "Get-WinEvent -FilterHashtable @{LogName='System';Level=2,3;StartTime=(Get-Date).AddDays(-7)} -MaxEvents 50 -ErrorAction SilentlyContinue | Select-Object TimeCreated,Id,ProviderName,LevelDisplayName,Message | ConvertTo-Json -Depth 3"; const entries = await powershellJson(script, 45000); const list = (Array.isArray(entries) ? entries : [entries]).filter(Boolean); const clustered = advancedLocal.clusterEventWarnings(list); return { items: clustered.items, summary: { ...clustered.summary, periodDays: 7, groupedForTriage: true } }; }
-  if (tool.engine === 'processInventory') { const entries = await powershellJson("Get-Process | Select-Object ProcessName,Id,CPU,WS,Path,StartTime | Sort-Object WS -Descending | ConvertTo-Json -Depth 3", 45000); const list = (Array.isArray(entries) ? entries : [entries]).filter(Boolean); return { items: list.slice(0, 500), summary: { processes: list.length, readOnly: true } }; }
-  if (tool.engine === 'batteryStatus') { const entries = await powershellJson("Get-CimInstance Win32_Battery | Select-Object Name,EstimatedChargeRemaining,BatteryStatus,DesignCapacity,FullChargeCapacity,EstimatedRunTime | ConvertTo-Json -Depth 3"); const list = (Array.isArray(entries) ? entries : [entries]).filter(Boolean); return { items: list, summary: { batteryPresent: list.length > 0, batteries: list.length, unavailable: list.length === 0 } }; }
-  if (tool.engine === 'fileHash') { const file = allowedFile(String(inputs.filePath || '')); const algorithm = inputs.algorithm === 'sha512' ? 'sha512' : 'sha256'; const hash = crypto.createHash(algorithm); await new Promise((resolve, reject) => { const stream = fs.createReadStream(file); stream.on('error', reject); stream.on('data', chunk => hash.update(chunk)); stream.on('end', resolve); }); return { items: [{ path: file, algorithm, digest: hash.digest('hex') }], summary: { algorithm, file } }; }
+  if (tool.engine === 'networkDiagnostics') {
+    const network = await windowsProviders.collectNetwork({ timeout: 60000 });
+    const nodeInterfaces = Object.entries(os.networkInterfaces()).flatMap(([name, records]) => (records || []).filter(record => !record.internal).map(record => ({ name, address: record.address, family: record.family, mac: record.mac, netmask: record.netmask })));
+    return {
+      items: network.items,
+      summary: {
+        adapters: network.items.length, activeAddresses: nodeInterfaces.length,
+        adaptersUp: network.items.filter(item => /Up$/.test(String(item.status || ''))).length,
+        adaptersWithGateway: network.items.filter(item => item.defaultGateway).length,
+        ipv4Addresses: network.items.reduce((sum, item) => sum + item.ipv4.length, 0),
+        ipv6Addresses: network.items.reduce((sum, item) => sum + item.ipv6.length, 0),
+        dnsConfigured: network.items.reduce((sum, item) => sum + item.dnsServers.length, 0),
+        defaultRoutes: network.items.reduce((sum, item) => sum + item.defaultRoutes.length, 0),
+        nodeInterfaces, provider: 'Get-NetAdapter + Get-NetIPAddress + Get-NetIPInterface + Get-DnsClientServerAddress + Get-NetRoute',
+        diagnosticsOnly: true, repairPerformed: false
+      }
+    };
+  }
+  if (tool.engine === 'hardwareInventory') {
+    const hardware = await windowsProviders.collectHardware({ timeout: 60000 });
+    return {
+      items: [hardware],
+      summary: {
+        cpu: hardware.cpu[0]?.name ?? null, cpuCores: hardware.cpu[0]?.cores ?? null, cpuLogicalProcessors: hardware.cpu[0]?.logicalProcessors ?? null,
+        gpuCount: hardware.gpu.length, memoryModuleCount: hardware.memoryModules.length, memoryCapacityBytes: hardware.memoryModules.reduce((sum, item) => sum + (item.capacityBytes || 0), 0) || null,
+        bios: hardware.bios[0] ? { manufacturer: hardware.bios[0].manufacturer, version: hardware.bios[0].version, releaseDate: hardware.bios[0].releaseDate } : null,
+        physicalDisks: hardware.physicalDisks, monitors: hardware.monitors, audioDevices: hardware.audio, usbControllers: hardware.usbControllers,
+        problemDevices: hardware.problemDevices, problemDeviceCount: hardware.problemDevices.length,
+        temperatures: hardware.temperatures,
+        driverInstallationPerformed: false,
+        providers: ['Win32_Processor', 'Win32_VideoController', 'Win32_BIOS', 'Win32_PhysicalMemory', 'MSFT_PhysicalDisk', 'Win32_DesktopMonitor', 'Win32_SoundDevice', 'Win32_USBController', 'Win32_PnPEntity']
+      }
+    };
+  }
+  if (tool.engine === 'eventWarnings') {
+    const events = await windowsProviders.collectEvents({ timeout: 60000 });
+    const clustered = advancedLocal.clusterEventWarnings(events.map(event => ({ ...event, ProviderName: event.provider, Id: event.eventId, LevelDisplayName: event.levelName, TimeCreated: event.timeCreated, Message: event.message })));
+    return {
+      items: clustered.items.map(item => ({ ...item, frequency: item.count, latestOccurrence: item.latestAt, clusterKey: `${item.provider}/${item.id}/${item.level}`, evidence: { source: 'Windows System event log', boundedQuery: true, periodDays: 7, levelFilter: [1, 2, 3], maxEvents: 200 } })),
+      summary: { ...clustered.summary, periodDays: 7, groupedForTriage: true, levelFilter: [1, 2, 3], maxEvents: 200, boundedQuery: true, provider: 'Get-WinEvent (System log)', nativeEventLogApi: false, nativeEventLogApiNote: 'EvtQuery/EvtSubscribe would require a native addon; the bounded documented PowerShell query is used instead.' }
+    };
+  }
+  if (tool.engine === 'processInventory') {
+    const processes = await windowsProviders.collectProcesses({ timeout: 60000 });
+    const ordered = [...processes].sort((a, b) => (b.workingSetBytes || 0) - (a.workingSetBytes || 0));
+    const signatureBudget = Math.min(40, ordered.length);
+    const signatures = await windowsProviders.collectProcessSignatures(ordered.slice(0, signatureBudget).map(item => item.executablePath), { limit: signatureBudget });
+    const byPath = new Map(signatures.map(entry => [String(entry.path || '').toLowerCase(), entry]));
+    const items = ordered.slice(0, 500).map(entry => {
+      const signature = byPath.get(String(entry.executablePath || '').toLowerCase());
+      return { ...entry, signatureStatus: signature?.signatureStatus ?? null, signatureAvailable: signature?.signatureAvailable ?? false, signatureSubject: signature?.signatureSubject ?? null };
+    });
+    return { items, summary: { processes: ordered.length, readOnly: true, signatureChecked: items.filter(item => item.signatureAvailable).length, signatureBudget, signatureBudgetExhausted: ordered.length > signatureBudget, terminationPerformed: false, provider: 'Win32_Process + Get-AuthenticodeSignature' } };
+  }
+  if (tool.engine === 'batteryStatus') {
+    const batteries = await windowsProviders.collectBatteries({ timeout: 45000 });
+    return { items: batteries, summary: { batteryPresent: batteries.length > 0, batteries: batteries.length, unavailable: batteries.length === 0, temperatureAvailable: false, cycleCountAvailable: false, unavailableReason: batteries.length === 0 ? 'Windows reported no battery device.' : null, provider: 'Win32_Battery + root/WMI BatteryStatus' } };
+  }
+  if (tool.engine === 'fileHash') {
+    const file = allowedFile(String(inputs.filePath || ''));
+    const algorithm = inputs.algorithm === 'sha512' ? 'sha512' : 'sha256';
+    const before = windowsFs.identitySnapshot(await fsp.lstat(file));
+    const hash = crypto.createHash(algorithm);
+    await new Promise((resolve, reject) => { const stream = fs.createReadStream(file); stream.on('error', reject); stream.on('data', chunk => hash.update(chunk)); stream.on('end', resolve); });
+    const after = windowsFs.identitySnapshot(await fsp.lstat(file).catch(() => null));
+    const changedDuringRead = windowsFs.identityChanged(before, after);
+    if (changedDuringRead) context.warnings.push('The file changed while it was being hashed; the digest may not describe a single consistent version.');
+    return { items: [{ path: file, algorithm, digest: hash.digest('hex'), fileIdentity: before.fileIdentity, sizeAtRead: before.size, modifiedAtRead: new Date(before.modifiedMs).toISOString(), changedDuringRead }], summary: { algorithm, file, changedDuringRead, fileIdentity: before.fileIdentity }, partial: changedDuringRead };
+  }
   if (tool.engine === 'smartScan') {
     const health = await systemHealth(); context.progress(1, 7, 'Measured system health');
     const disk = await diskOverview(); context.progress(2, 7, 'Read storage volumes and pressure');
-    const downloadsFolder = app.getPath('downloads'); const download = await scanLargeFiles(downloadsFolder, context, 100 * 1024 * 1024, 15000); context.progress(3, 7, 'Built Downloads storage intelligence');
-    const downloadData = await walk(downloadsFolder, context, { limit: 15000 }); const privacy = advancedLocal.privacyExposure(downloadData.files); context.progress(4, 7, 'Reviewed sensitive filenames using metadata only');
-    const duplicate = await scanDuplicates(downloadsFolder, context, Math.max((await getSettings()).scanning.minimumDuplicateBytes, 1024), 10000); context.progress(5, 7, 'Verified exact duplicate groups with SHA-256');
+    // One traversal of Downloads feeds large-file, privacy and duplicate analysis.
+    const downloadsFolder = app.getPath('downloads');
+    const downloadsData = await walk(downloadsFolder, context, { limit: 15000 });
+    const downloadIntelligence = advancedLocal.buildStorageIntelligence(downloadsData.files, downloadsFolder);
+    const largeDownloads = [...downloadsData.files].filter(file => file.size >= 100 * 1024 * 1024).sort((a, b) => b.size - a.size);
+    context.progress(3, 7, 'Built Downloads storage intelligence from one traversal');
+    const privacy = advancedLocal.privacyExposure(downloadsData.files); context.progress(4, 7, 'Reviewed sensitive filenames using metadata only');
+    const duplicate = await scanDuplicates(downloadsFolder, context, Math.max((await getSettings()).scanning.minimumDuplicateBytes, 1024), 10000);
+    context.progress(5, 7, 'Verified exact duplicate groups with SHA-256');
     const temp = await runTool(context, toolDefinitions.find(t => t.engine === 'tempPreview'), {}); context.progress(6, 7, 'Measured recoverable temporary-file footprint');
     const score = advancedLocal.buildSmartScore({ health, disks: disk, duplicateSummary: duplicate.summary, privacySummary: privacy.summary, tempEligibleBytes: temp.summary.eligibleBytes }); context.progress(7, 7, 'Completed local multi-signal Smart Scan');
     const findings = [];
-    for (const volume of advancedLocal.diskPressure(disk).filter(item => item.pressure !== 'healthy')) findings.push({ severity: ['critical', 'high'].includes(volume.pressure) ? 'warning' : 'info', key: 'diskPressure', drive: volume.DeviceID, freePercent: volume.freePercent, pressure: volume.pressure });
-    if (download.summary.matchingFiles) findings.push({ severity: 'info', key: 'largeDownloads', value: download.summary.matchingFiles, bytes: download.summary.totalMatchingBytes });
-    if (duplicate.summary.duplicateGroups) findings.push({ severity: 'info', key: 'exactDuplicates', groups: duplicate.summary.duplicateGroups, reclaimableBytes: duplicate.summary.reclaimableBytes });
-    if (privacy.summary.exposureCount) findings.push({ severity: 'warning', key: 'privacyMetadataReview', value: privacy.summary.exposureCount, contentsInspected: false });
-    if (temp.summary.eligibleFiles) findings.push({ severity: 'info', key: 'tempReview', value: temp.summary.eligibleFiles, bytes: temp.summary.eligibleBytes });
-    return { items: findings, summary: { smartScore: score.score, scoreReasons: score.reasons, health, volumes: advancedLocal.diskPressure(disk), storageIntelligence: { typeGroups: download.summary.typeGroups, ageBuckets: download.summary.ageBuckets, topFolders: download.summary.topFolders }, largeDownloads: download.summary.matchingFiles || 0, exactDuplicateGroups: duplicate.summary.duplicateGroups || 0, duplicateReclaimableBytes: duplicate.summary.reclaimableBytes || 0, privacyExposureCount: privacy.summary.exposureCount || 0, privacyMetadataOnly: true, privacyContentsInspected: false, tempEligibleBytes: temp.summary.eligibleBytes || 0 } };
+    for (const volume of advancedLocal.diskPressure(disk).filter(item => item.pressure !== 'healthy')) findings.push({ severity: ['critical', 'high'].includes(volume.pressure) ? 'warning' : 'info', key: 'diskPressure', drive: volume.deviceId, freePercent: volume.freePercent, pressure: volume.pressure, source: 'Win32_LogicalDisk', evidence: `Volume ${volume.deviceId} has ${volume.freePercent}% free`, confidence: volume.freePercent == null ? 'low' : 'high' });
+    if (largeDownloads.length) findings.push({ severity: 'info', key: 'largeDownloads', value: largeDownloads.length, bytes: largeDownloads.reduce((sum, file) => sum + file.size, 0), source: 'Downloads traversal', evidence: `${largeDownloads.length} file(s) at or above 100 MB`, confidence: 'high' });
+    if (duplicate.summary.duplicateGroups) findings.push({ severity: 'info', key: 'exactDuplicates', groups: duplicate.summary.duplicateGroups, reclaimableBytes: duplicate.summary.reclaimableBytes, source: 'SHA-256 content verification', evidence: duplicate.summary.hardlinkPolicy, confidence: 'high' });
+    if (privacy.summary.exposureCount) findings.push({ severity: 'warning', key: 'privacyMetadataReview', value: privacy.summary.exposureCount, contentsInspected: false, source: 'Filename metadata only', evidence: 'File contents were not read', confidence: 'medium' });
+    if (temp.summary.eligibleFiles) findings.push({ severity: 'info', key: 'tempReview', value: temp.summary.eligibleFiles, bytes: temp.summary.eligibleBytes, source: 'Temporary directory traversal', evidence: `${temp.summary.eligibleFiles} file(s) older than the configured minimum age`, confidence: 'high' });
+    if (downloadsData.totals.cloudPlaceholders) findings.push({ severity: 'info', key: 'cloudPlaceholders', value: downloadsData.totals.cloudPlaceholders, source: 'Reparse-point metadata', evidence: 'Cloud placeholders were identified and not hydrated', confidence: 'high' });
+    if (downloadsData.totals.hardlinkedFiles) findings.push({ severity: 'info', key: 'hardlinkedFiles', value: downloadsData.totals.hardlinkedFiles, source: 'Windows file identity', evidence: 'Multiple names for one physical file are not reclaimable duplicates', confidence: 'high' });
+    return {
+      items: findings,
+      summary: {
+        smartScore: score.score, scoreReasons: score.reasons, scoreMethod: 'backend local multi-signal calculation; the renderer only displays it', health,
+        volumes: advancedLocal.diskPressure(disk),
+        storageIntelligence: { typeGroups: downloadIntelligence.typeGroups, ageBuckets: downloadIntelligence.ageBuckets, topFolders: downloadIntelligence.topFolders },
+        largeDownloads: largeDownloads.length || 0,
+        exactDuplicateGroups: duplicate.summary.duplicateGroups || 0,
+        duplicateReclaimableBytes: duplicate.summary.reclaimableBytes || 0,
+        hardlinkPolicy: duplicate.summary.hardlinkPolicy,
+        privacyExposureCount: privacy.summary.exposureCount || 0,
+        privacyMetadataOnly: true, privacyContentsInspected: false,
+        tempEligibleBytes: temp.summary.eligibleBytes || 0,
+        traversal: { ...downloadsData.totals, traversals: 1, previousTraversals: 3 }
+      }
+    };
   }
   throw new Error('Registered tool handler is unavailable.');
 }

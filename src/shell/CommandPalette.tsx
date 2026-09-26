@@ -4,6 +4,7 @@ import { buildToolRecord, normalizeQuery, scoreRecord, type SearchRecord } from 
 import { pageGroups } from '../lib/pages';
 import { paletteTargetForTool } from '../lib/guards';
 import { toolIcon } from '../lib/icons';
+import { useFocusTrap } from '../lib/a11y';
 import { useStore } from '../state/store';
 
 export default function CommandPalette() {
@@ -11,6 +12,11 @@ export default function CommandPalette() {
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { ref: paletteRef, dialogProps } = useFocusTrap<HTMLDivElement>({
+    active: paletteOpen,
+    onEscape: () => setPaletteOpen(false),
+    labelledBy: 'palette-title'
+  });
 
   useEffect(() => {
     if (paletteOpen) {
@@ -82,7 +88,8 @@ export default function CommandPalette() {
 
   return (
     <div className="palette-backdrop" onClick={() => setPaletteOpen(false)}>
-      <div className="palette" role="dialog" aria-modal="true" aria-label={t('palette.title')} onClick={e => e.stopPropagation()}>
+      <div ref={paletteRef} className="palette" {...dialogProps} onClick={e => e.stopPropagation()}>
+        <h2 className="visually-hidden" id="palette-title">{t('palette.title')}</h2>
         <div className="palette-input">
           <Search size={17} />
           <input
@@ -92,16 +99,23 @@ export default function CommandPalette() {
             onKeyDown={onKeyDown}
             placeholder={t('palette.placeholder')}
             aria-label={t('palette.placeholder')}
+            aria-controls="palette-results"
+            aria-expanded
+            role="combobox"
+            aria-autocomplete="list"
+            autoComplete="off"
           />
           <kbd>esc</kbd>
         </div>
-        <div className="palette-results" role="listbox">
+        <div className="palette-results" id="palette-results" role="listbox" aria-label={t('palette.title')}>
           {entries.length === 0 && <p className="palette-empty">{t('palette.empty')}</p>}
           {entries.map(({ record }, index) => {
             if (record.kind === 'page') {
-              const label = record.id.replace('page:', '');
+              // Never surface the internal page id; show the localized name.
+              const pageDef = pageGroups.flatMap(group => group.pages).find(item => `page:${item.id}` === record.id);
+              const label = pageDef ? t(pageDef.nameKey) : record.id.replace('page:', '');
               return (
-                <button key={record.id} role="option" aria-selected={index === cursor}
+                <button key={record.id} type="button" role="option" aria-selected={index === cursor}
                   className={index === cursor ? 'palette-item active' : 'palette-item'}
                   onClick={() => choose(record)} onMouseEnter={() => setCursor(index)}>
                   <span className="palette-kind">{t('palette.pages')}</span>
@@ -114,22 +128,22 @@ export default function CommandPalette() {
             if (!tool) return null;
             const Icon = toolIcon(tool.icon);
             return (
-              <button key={record.id} role="option" aria-selected={index === cursor}
+              <button key={record.id} type="button" role="option" aria-selected={index === cursor}
                 className={index === cursor ? 'palette-item active' : 'palette-item'}
                 onClick={() => choose(record)} onMouseEnter={() => setCursor(index)}>
-                <Icon size={16} />
+                <Icon size={16} aria-hidden="true" />
                 <span className="palette-main"><strong>{t(tool.nameKey)}</strong><small>{t(tool.descriptionKey)}</small></span>
                 <span className="palette-meta">
-                  <span className="pill">{tool.category}</span>
-                  {tool.requiresAdmin && <span className="pill danger"><ShieldAlert size={11} /> {t('common.adminRequired')}</span>}
-                  {!tool.availability.available && <span className="pill muted">{t('common.unavailable')}</span>}
+                  <span className="pill pill-muted">{tool.category}</span>
+                  {tool.requiresAdmin && <span className="pill pill-admin"><ShieldAlert size={11} aria-hidden="true" /> {t('common.adminRequired')}</span>}
+                  {!tool.availability.available && <span className="pill pill-muted">{t('common.unavailable')}</span>}
                 </span>
                 <span className="palette-hint">{t('palette.runHint')}</span>
               </button>
             );
           })}
           {entries.length > 0 && (
-            <p className="palette-foot"><Wrench size={12} /> {t('palette.tools')} · {entries.length}</p>
+            <p className="palette-foot"><Wrench size={12} aria-hidden="true" /> {t('palette.tools')} · {entries.length}</p>
           )}
         </div>
       </div>

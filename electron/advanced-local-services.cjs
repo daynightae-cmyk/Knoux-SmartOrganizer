@@ -224,11 +224,21 @@ function analyzeInstalledApps(apps) {
 function diskPressure(disks) {
   const safe = Array.isArray(disks) ? disks.filter(Boolean) : [];
   return safe.map(disk => {
-    const total = Number(disk.Size) || 0;
-    const free = Number(disk.FreeSpace) || 0;
+    // Accepts both the normalized provider shape and the raw CIM shape.
+    const total = Number(disk.sizeBytes ?? disk.Size) || 0;
+    const free = Number(disk.freeBytes ?? disk.FreeSpace) || 0;
+    const deviceId = disk.deviceId ?? disk.DeviceID ?? null;
     const freePercent = total > 0 ? Math.round((free / total) * 1000) / 10 : null;
     const pressure = freePercent === null ? 'unknown' : freePercent < 5 ? 'critical' : freePercent < 10 ? 'high' : freePercent < 20 ? 'medium' : 'healthy';
-    return { ...disk, freePercent, usedBytes: Math.max(0, total - free), pressure };
+    return {
+      ...disk,
+      deviceId, DeviceID: deviceId,
+      sizeBytes: total, freeBytes: free,
+      freePercent,
+      usedBytes: total > 0 ? Math.max(0, total - free) : null,
+      pressure,
+      pressureBasis: freePercent === null ? 'volume size unavailable' : `Win32_LogicalDisk capacity/free space (${freePercent}% free)`
+    };
   });
 }
 

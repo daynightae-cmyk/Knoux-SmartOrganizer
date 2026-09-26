@@ -9,7 +9,7 @@ const { OPERATION_SPECS, createPrivilegedRunner } = require('../electron/privile
   OPERATION_SPECS: Record<string, Readonly<{ executable: string; args: readonly string[]; restartRequired: boolean }>>;
   createPrivilegedRunner: (options: { platform?: string; windowsDirectory?: string; elevatedExecutor?: (input: { executable: string; args: string[] }) => Promise<{ exitCode: number; stderr: string }> }) => {
     probe: (engine: string) => Promise<{ available: boolean; capability: string; reason?: string }>;
-    run: (engine: string, input?: Record<string, unknown>) => Promise<{ summary: Record<string, unknown>; items: Array<Record<string, unknown>>; warnings?: string[] }>;
+    run: (engine: string, input?: Record<string, unknown>) => Promise<{ summary: Record<string, unknown>; items: Array<Record<string, unknown>>; warnings?: string[]; restartRequired?: boolean }>;
   };
 };
 
@@ -70,7 +70,8 @@ describe('privileged operation allowlist', () => {
     const result = await runner.run('dismCheckHealth', { dryRun: true });
     expect(elevatedExecutor).not.toHaveBeenCalled();
     expect(result.summary).toEqual(expect.objectContaining({ operation: 'dismCheckHealth', execution: 'dry-run', allowlisted: true, adminRequired: true, dryRun: true, restartRequired: false }));
-    expect(result.items).toEqual([{ operation: 'dismCheckHealth', status: 'planned' }]);
+    expect(result.items).toEqual([{ operation: 'dismCheckHealth', status: 'planned', commandIdentity: 'dismCheckHealth' }]);
+    expect(result.summary).toEqual(expect.objectContaining({ verification: expect.objectContaining({ status: 'unverified', method: expect.stringContaining('dry-run') }) }));
     expect(JSON.stringify(result)).not.toMatch(/dism\.exe|Cleanup-Image|System32|arguments|executable/i);
   });
 
@@ -96,7 +97,50 @@ describe('privileged operation allowlist', () => {
     const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 87, stderr: 'invalid parameter' }) });
     const result = await runner.run('flushDns');
     expect(result.summary).toEqual(expect.objectContaining({ exitCode: 87, succeeded: false }));
-    expect(result.items).toEqual([{ operation: 'flushDns', status: 'failed', exitCode: 87 }]);
-    expect(result.warnings).toEqual(['invalid parameter']);
+    expect(result.items).toEqual([expect.objectContaining({ operation: 'flushDns', status: 'failed', exitCode: 87, finalState: 'undetermined' })]);
+    expect(result.warnings).toContain('invalid parameter');
+  });
+
+  it('never reports a repair as verified from the exit code alone', async () => {
+    const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: 'The operation completed successfully.', stderr: '' }) });
+    const result = await runner.run('dismCheckHealth');
+    const verification = result.summary.verification as Record<string, unknown>;
+    expect(verification.status).not.toBe('verified');
+    expect(verification.method).toBe('exit-code-only');
+    expect(String(verification.limitation)).toMatch(/no documented post-condition re-query/i);
+    expect(result.summary).toEqual(expect.objectContaining({ startedAt: expect.any(String), finishedAt: expect.any(String), durationMs: expect.any(Number), adminState: 'elevated' }));
+  });
+
+  it('classifies documented Microsoft outcomes and reports undetermined otherwise', async () => {
+    const healthy = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: 'No component store corruption detected.', stderr: '' }) });
+    await expect(healthy.run('dismCheckHealth')).resolves.toEqual(expect.objectContaining({
+      summary: expect.objectContaining({ finalState: 'healthy', finalStateSource: 'Microsoft documented output text' })
+    }));
+    const opaque = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: ' unexpected output', stderr: '' }) });
+    const result = await opaque.run('dismCheckHealth');
+    expect(result.summary).toEqual(expect.objectContaining({ finalState: 'undetermined' }));
+    expect((result.warnings || []).join(' ')).toMatch(/no documented outcome text/i);
+  });
+
+  it('does not claim a final state before a documented restart when the operation requires one', async () => {
+    const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: 'The restore operation completed successfully.', stderr: '' }) });
+    const result = await runner.run('dismRestoreHealth');
+    expect(result.summary).toEqual(expect.objectContaining({ restartRequired: true, restartState: 'pending-restart' }));
+    expect((result.warnings || []).join(' ')).toMatch(/requires a restart/i);
+    expect(result.restartRequired).toBe(true);
+  });
+
+  it('records documented Windows log locations without leaking an expanded filesystem path', async () => {
+    const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: '', stderr: '' }) });
+    const result = await runner.run('dismRestoreHealth');
+    const logLocations = result.summary.logLocations as string[];
+    expect(logLocations).toContain('%windir%\\Logs\\DISM\\dism.log');
+    expect(logLocations.join(' ')).not.toContain(windowsDirectory);
+  });
+
+  it('exposes an unclassified status when Windows reports no documented outcome text', async () => {
+    const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor: async () => ({ exitCode: 0, stdout: 'done', stderr: '' }) });
+    const result = await runner.run('flushDns');
+    expect(result.items).toEqual([expect.objectContaining({ status: 'completed-unverified-state' })]);
   });
 });

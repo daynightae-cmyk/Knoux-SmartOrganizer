@@ -549,7 +549,84 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'result.key.file': { ar: 'الملف', en: 'File' },
   'result.key.durationMs': { ar: 'المدة', en: 'Duration' },
   'result.key.partial': { ar: 'نتيجة جزئية', en: 'Partial result' },
-  'result.key.restartRequired': { ar: 'يُستحسن إعادة التشغيل', en: 'Restart recommended' }
+  'result.key.restartRequired': { ar: 'يُستحسن إعادة التشغيل', en: 'Restart recommended' },
+
+  // Verification evidence (mutation contract: re-query then prove)
+  'operation.verification': { ar: 'التحقق بعد التنفيذ', en: 'Post-change verification' },
+  'verification.verified': { ar: 'مُتحقَّق', en: 'Verified' },
+  'verification.unverified': { ar: 'غير مُتحقَّق', en: 'Unverified' },
+  'verification.failed': { ar: 'فشل التحقق', en: 'Verification failed' },
+  'verification.check': { ar: 'الفحص', en: 'Check' },
+  'verification.expected': { ar: 'المتوقع', en: 'Expected' },
+  'verification.observed': { ar: 'الملاحَظ', en: 'Observed' },
+  'verification.result': { ar: 'النتيجة', en: 'Result' },
+  'verification.pass': { ar: 'مطابق', en: 'Match' },
+  'verification.fail': { ar: 'غير مطابق', en: 'Mismatch' },
+  'operation.startedAt': { ar: 'وقت البدء', en: 'Started' },
+  'operation.duration': { ar: 'المدة', en: 'Duration' },
+  'operation.finalState': { ar: 'الحالة النهائية', en: 'Final state' },
+  'operation.finalStateSource': { ar: 'مصدر الحالة', en: 'State source' },
+  'operation.restartState': { ar: 'حالة إعادة التشغيل', en: 'Restart state' },
+  'operation.adminState': { ar: 'حالة الصلاحيات', en: 'Elevation' },
+  'operation.logLocations': { ar: 'مواقع السجلات', en: 'Log locations' },
+  'operation.outputSummary': { ar: 'ملخص المخرجات', en: 'Output summary' },
+
+  // Windows filesystem truth
+  'files.identity': { ar: 'هوية الملف', en: 'File identity' },
+  'files.hardlinked': { ar: 'ارتباط صلب', en: 'Hard link' },
+  'files.singlePhysicalFile': { ar: 'ملف مادي واحد', en: 'One physical file' },
+  'files.placeholder': { ar: 'نوع العنصر', en: 'Entry kind' },
+  'files.cloudPlaceholder': { ar: 'عنصر سحابي', en: 'Cloud placeholder' },
+  'files.reparseSkipped': { ar: 'نقطة إعادة توجيه لم تُتبع', en: 'reparse points not followed' },
+  'files.accessDenied': { ar: 'تعذّر الوصول', en: 'unreadable entries' },
+
+  // Application inventory truth
+  'apps.architecture': { ar: 'المعمارية', en: 'Architecture' },
+  'apps.source': { ar: 'المصدر', en: 'Source' },
+  'apps.providers': { ar: 'المزوّدون', en: 'Providers' },
+  'apps.counts': { ar: 'السجل / الحزم', en: 'registry / packages' },
+
+  // Startup read coverage
+  'startup.writeScope': { ar: 'نطاق الكتابة', en: 'Write scope' },
+  'startup.managed': { ar: 'قابل للتعديل', en: 'Writable' },
+
+  // Services truth
+  'services.delayedAuto': { ar: 'تأخير التشغيل', en: 'Delayed auto' },
+
+  // Network truth
+  'network.adapter': { ar: 'المحوّل', en: 'Adapter' },
+  'network.gateway': { ar: 'البوابة', en: 'Gateway' },
+  'network.dhcp': { ar: 'DHCP', en: 'DHCP' },
+  'network.linkSpeed': { ar: 'سرعة الاتصال', en: 'Link speed' },
+  'network.diagnosticsOnly': { ar: 'تشخيص فقط — لم يُنفَّذ أي إصلاح', en: 'Diagnostics only — no repair was performed' },
+
+  // Hardware truth
+  'hardware.physicalDisk': { ar: 'القرص الفعلي', en: 'Physical disk' },
+  'hardware.mediaType': { ar: 'نوع الوسائط', en: 'Media type' },
+  'hardware.health': { ar: 'الحالة', en: 'Health' },
+  'hardware.temperature': { ar: 'الحرارة', en: 'Temperature' },
+  'hardware.temperatureReason': { ar: 'سبب عدم توفر الحرارة', en: 'Why temperature is unavailable' },
+  'hardware.problemDevices': { ar: 'أجهزة بها مشكلات', en: 'Devices with problems' },
+  'hardware.problemCode': { ar: 'رمز المشكلة', en: 'Problem code' },
+  'hardware.powerOnline': { ar: 'مزوّد الطاقة', en: 'Power online' },
+  'hardware.cycleCount': { ar: 'عدد الدورات', en: 'Cycle count' },
+  'hardware.cores': { ar: 'الأنوية', en: 'Cores' },
+  'hardware.memoryModules': { ar: 'وحدات الذاكرة', en: 'Memory modules' },
+
+  // Event and process truth
+  'system.boundedQuery': { ar: 'استعلام محدود بسجل النظام', en: 'Bounded System event log query' },
+  'system.maxEvents': { ar: 'أقصى أحداث', en: 'Max events' },
+  'system.signatureChecked': { ar: 'التوقيعات المفحوصة', en: 'Signatures checked' },
+  'system.signatureBudget': { ar: 'بلغ الحد الأقصى لفحص التوقيعات', en: 'Signature check budget reached' },
+  'system.signature': { ar: 'التوقيع', en: 'Signature' },
+
+  // Shared semantic states
+  'common.partial': { ar: 'جزئي', en: 'Partial' },
+  'common.notChecked': { ar: 'لم يُفحص', en: 'Not checked' },
+  'common.readOnly': { ar: 'للقراءة فقط', en: 'Read only' },
+  'common.days': { ar: 'أيام', en: 'days' },
+  'common.period': { ar: 'الفترة', en: 'Period' },
+  'shell.skipToContent': { ar: 'تخطَّ إلى المحتوى', en: 'Skip to main content' }
 };
 for (const [key, value] of Object.entries(shellCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 

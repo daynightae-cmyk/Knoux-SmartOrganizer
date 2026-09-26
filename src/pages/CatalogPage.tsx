@@ -4,7 +4,7 @@ import { searchFilterTools } from '../lib/guards';
 import { useStore } from '../state/store';
 import { ToolCard } from '../components/tools/ToolCards';
 import { ToolRunner } from '../components/tools/ToolRunner';
-import { AppTables, FileTables, HardwareTables, NetworkTables, ServiceTables, StartupTables, StorageTables, SystemTables } from './renderers';
+import { VerificationPanel, AppTables, FileTables, HardwareTables, NetworkTables, OperationEvidence, ServiceTables, StartupTables, StorageTables, SystemTables } from './renderers';
 
 export default function CatalogPage({ page }: { page: string }) {
   const { tools, selectedId, setSelectedId, result, folder, file, t } = useStore();
@@ -36,6 +36,8 @@ export default function CatalogPage({ page }: { page: string }) {
           <>
             {activeResult && (
               <div className="category-tables">
+                <OperationEvidence result={activeResult} />
+                <VerificationPanel result={activeResult} />
                 <StorageTables result={activeResult} />
                 <FileTables result={activeResult} />
                 <StartupTables result={activeResult} />
