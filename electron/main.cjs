@@ -19,6 +19,11 @@ const verificationKit = require('./verification.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
+// Upper bound on filesystem entries a single scan will examine. This is a safety
+// bound on work, never a result count: tool `limit` inputs slice what is returned.
+const SCAN_BUDGET = 50000;
+// Distinct executables verified for Authenticode status per process-inventory run.
+const SIGNATURE_BUDGET = 40;
 let historyMutationQueue = Promise.resolve();
 let mainWindow = null;
 let tray = null;
@@ -122,19 +127,33 @@ async function reparsePointPolicy() { return (await getSettings()).scanning.repa
 function fileRecord(file) { return { path: file.path, size: file.size, modifiedAt: file.modifiedAt, createdAt: file.createdAt, fileIdentity: file.fileIdentity, linkCount: file.linkCount, hardlinked: file.hardlinked, entryKind: file.entryKind, reparseTag: file.reparseTag, reparseName: file.reparseName, placeholderState: file.placeholderState, placeholderStateAvailable: file.placeholderStateAvailable, hydrationRisk: file.hydrationRisk, allocatedSizeAvailable: file.allocatedSizeAvailable }; }
 function traversalWarnings(context, totals) { if (totals.reparsePointsSkipped) context.warnings.push(`${totals.reparsePointsSkipped} reparse point(s) were not followed, to avoid leaving the scanned location or hydrating cloud content.`); if (totals.cloudPlaceholders) context.warnings.push(`${totals.cloudPlaceholders} cloud placeholder(s) were identified from metadata and were not read.`); if (totals.hardlinkedFiles) context.warnings.push(`${totals.hardlinkedFiles} file(s) have multiple hard links and are not counted as reclaimable duplicate storage.`); }
 /**
+ * States which independent Windows sources did not answer, so a partial result
+ * says what succeeded and what failed instead of silently looking complete.
+ */
+function unavailableWarnings(unavailable, label) {
+  return (unavailable || []).map(entry => `The ${label} "${entry.provider}" did not answer (${entry.reason}${entry.timeoutMs ? `, budget ${Math.round(entry.timeoutMs / 1000)}s` : ''}); its values are absent from this result.`);
+}
+
+/**
  * Windows-aware traversal. Reparse points (symlinks, junctions, mount points,
  * cloud placeholders) are never followed unless the user's reparse-point policy
  * allows it, the tag is known and non-cloud, and the target is same-volume.
+ *
+ * `scanBudget` bounds the *work* (entries examined) and is deliberately separate
+ * from any caller-supplied result `limit`. Conflating them was a real defect:
+ * asking for the top 8 large files examined 8 entries, so large-files,
+ * duplicate-files and empty-folders could never return anything at low limits.
  */
 async function walk(root, context, options = {}) {
-  const files = []; const folders = []; const links = []; const queue = [root]; const limit = options.limit || 50000;
+  const files = []; const folders = []; const links = []; const queue = [root]; const scanBudget = options.scanBudget || options.limit || 50000;
   const policy = options.reparsePointPolicy || await reparsePointPolicy(); let inspected = 0;
   const totals = { foldersVisited: 0, filesVisited: 0, reparsePointsSkipped: 0, reparsePointsTraversed: 0, accessDenied: 0, hardlinkedFiles: 0, cloudPlaceholders: 0, allocatedSizeAvailable: false };
   while (queue.length) {
     isCancelled(context); const folder = queue.shift(); totals.foldersVisited += 1; folders.push(folder); let entries;
     try { entries = await fsp.readdir(folder, { withFileTypes: true }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${folder}: ${error.code || 'unavailable'}`); continue; }
     for (const entry of entries) {
-      isCancelled(context); if (++inspected > limit) { context.warnings.push(`Scan stopped at the ${limit.toLocaleString()} item safety limit.`); return { files, folders, links, totals, partial: true }; }
+      isCancelled(context); if (++inspected > scanBudget) { context.warnings.push(`Scan stopped after examining ${scanBudget.toLocaleString()} filesystem items; results are partial.`); return { files, folders, links, totals, partial: true }; }
+
       const full = path.join(folder, entry.name); let stat;
       try { stat = await fsp.lstat(full); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
       let classified;
@@ -165,17 +184,18 @@ async function diskOverview() { return windowsProviders.collectLogicalDisks(); }
 async function servicesInventory() { const list = await windowsProviders.collectServices(); return list.map(item => { const guarded = privilegedRunner.isProtectedService(item.name) || !item.controllable; return { ...item, protected: guarded, controllable: !guarded }; }); }
 async function systemHealth() { return windowsProviders.collectSystemHealth(); }
 async function scanLargeFiles(root, context, threshold, limit) {
-  const data = await walk(root, context, { limit });
+  // `limit` slices the returned results; the walk gets its own scan budget.
+  const data = await walk(root, context, { scanBudget: SCAN_BUDGET });
   traversalWarnings(context, data.totals);
   const intelligence = advancedLocal.buildStorageIntelligence(data.files, root);
-  const largest = data.files.filter(file => file.size >= threshold).sort((a, b) => b.size - a.size).slice(0, 500).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
+  const largest = data.files.filter(file => file.size >= threshold).sort((a, b) => b.size - a.size).slice(0, limit).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
   return { items: largest, summary: { folder: root, filesScanned: data.files.length, matchingFiles: largest.length, thresholdBytes: threshold, totalMatchingBytes: largest.reduce((sum, item) => sum + item.size, 0), totalScannedBytes: intelligence.totalBytes, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
 }
 function downloadCategory(filePath) { const ext = path.extname(filePath).toLowerCase(); if (['.jpg','.jpeg','.png','.gif','.webp','.heic','.svg'].includes(ext)) return 'Images'; if (['.mp4','.mkv','.mov','.avi','.webm'].includes(ext)) return 'Videos'; if (['.mp3','.wav','.flac','.aac','.m4a'].includes(ext)) return 'Audio'; if (['.pdf','.doc','.docx','.xls','.xlsx','.ppt','.pptx','.txt'].includes(ext)) return 'Documents'; if (['.zip','.rar','.7z','.tar','.gz'].includes(ext)) return 'Archives'; if (['.exe','.msi','.msix','.appx'].includes(ext)) return 'Installers'; if (['.js','.ts','.tsx','.py','.java','.cs','.cpp','.json','.html','.css'].includes(ext)) return 'Development'; return 'Other'; }
 /** Preflight: report destination collisions, reparse entries and cross-volume moves before anything moves. */
 async function downloadOrganizationPlan(context, limit, sourceFolder) {
   const source = sourceFolder ? allowedDirectory(sourceFolder) : app.getPath('downloads');
-  const data = await walk(source, context, { limit });
+  const data = await walk(source, context, { scanBudget: SCAN_BUDGET });
   traversalWarnings(context, data.totals);
   const rootFiles = data.files.filter(file => path.dirname(file.path) === source);
   const plans = []; const collisions = []; const skipped = [];
@@ -191,7 +211,9 @@ async function downloadOrganizationPlan(context, limit, sourceFolder) {
   return { source, plans, collisions, skipped, totals: data.totals, partial: data.partial };
 }
 async function scanDuplicates(root, context, minimumSize, limit) {
-  const data = await walk(root, context, { limit });
+  // Duplicate detection needs the whole size grouping, so the walk is bounded by
+  // the scan budget and only the reported group count honours `limit`.
+  const data = await walk(root, context, { scanBudget: SCAN_BUDGET });
   traversalWarnings(context, data.totals);
   const sizeGroups = new Map();
   data.files.filter(file => file.size >= minimumSize).forEach(file => { const group = sizeGroups.get(file.size) || []; group.push(file); sizeGroups.set(file.size, group); });
@@ -225,7 +247,7 @@ async function scanDuplicates(root, context, minimumSize, limit) {
   const enriched = advancedLocal.enrichDuplicateGroups(exactGroups);
   if (changedDuringRead.length) context.warnings.push(`${changedDuringRead.length} file(s) changed while being hashed and were excluded from duplicate results.`);
   return {
-    items: enriched.items,
+    items: enriched.items.slice(0, limit),
     summary: {
       folder: root, filesScanned: data.files.length, candidateFiles: candidates.length,
       contentVerifiedFiles: hashable.length, skippedForHydration: skippedForHydration.length, changedDuringRead: changedDuringRead.length,
@@ -236,11 +258,11 @@ async function scanDuplicates(root, context, minimumSize, limit) {
     partial: data.partial || changedDuringRead.length > 0
   };
 }
-async function tempCleanupCandidates(context, limit) {
+async function tempCleanupCandidates(context) {
   const smokeFixture = app.isPackaged && smokeArgument('knoux-temp-cleanup-smoke-fixture');
   const temp = smokeFixture ? requireTemporaryPath(smokeFixture, 'Packaged cleanup fixture') : (process.env.TEMP || os.tmpdir());
   if (smokeFixture) allowedDirectory(temp);
-  const data = await walk(temp, context, { limit: Math.min(limit, 25000) });
+  const data = await walk(temp, context, { scanBudget: Math.min(SCAN_BUDGET, 25000) });
   const oldest = Date.now() - (await getSettings()).cleanup.minimumFileAgeDays * 86400000;
   const selected = data.files.filter(file => new Date(file.modifiedAt).getTime() < oldest);
   return { temp, data, selected };
@@ -296,9 +318,9 @@ async function runTool(context, tool, inputs) {
   if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).catch(() => []); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, physicalDisks: physical, physicalDiskCount: physical.length, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' } }; }
   if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
   if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scanning.minimumDuplicateBytes, limit);
-  if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { limit }); traversalWarnings(context, data.totals); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, 1000), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length, traversal: data.totals }, partial: data.partial }; }
+  if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { scanBudget: SCAN_BUDGET }); traversalWarnings(context, data.totals); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, limit), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length, traversal: data.totals }, partial: data.partial }; }
   if (tool.engine === 'downloadsInventory') {
-    const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { limit }); traversalWarnings(context, data.totals); const intelligence = advancedLocal.buildStorageIntelligence(data.files, downloads); const privacy = advancedLocal.privacyExposure(data.files);
+    const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { scanBudget: SCAN_BUDGET }); traversalWarnings(context, data.totals); const intelligence = advancedLocal.buildStorageIntelligence(data.files, downloads); const privacy = advancedLocal.privacyExposure(data.files);
     const items = [...data.files].sort((a,b) => b.size-a.size).slice(0, 200).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
     return { items, summary: { folder: downloads, files: data.files.length, totalBytes: intelligence.totalBytes, extensionGroups: intelligence.extensionGroups, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, privacyExposureCount: privacy.summary.exposureCount, privacyExposureBytes: privacy.summary.exposureBytes, privacyMetadataOnly: true, privacyContentsInspected: false, privacyFindings: privacy.items.slice(0, 50), metadataOnly: true, contentsInspected: false, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
   }
@@ -340,10 +362,10 @@ async function runTool(context, tool, inputs) {
     if (aggregate.status !== 'verified') context.warnings.push(`Post-restore verification reported "${aggregate.status}".`);
     return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, conflicts: conflicts.slice(0, 100), verification: aggregate }, partial: aggregate.status !== 'verified', restartRequired: false };
   }
-  if (tool.engine === 'tempPreview') { const candidate = await tempCleanupCandidates(context, limit); return { items: candidate.selected.sort((a,b) => b.size-a.size).slice(0, 500), summary: { folder: candidate.temp, eligibleFiles: candidate.selected.length, eligibleBytes: candidate.selected.reduce((sum, item) => sum + item.size, 0), readOnlyPreview: true }, partial: candidate.data.partial }; }
+  if (tool.engine === 'tempPreview') { const candidate = await tempCleanupCandidates(context); return { items: candidate.selected.sort((a,b) => b.size-a.size).slice(0, 500), summary: { folder: candidate.temp, eligibleFiles: candidate.selected.length, eligibleBytes: candidate.selected.reduce((sum, item) => sum + item.size, 0), readOnlyPreview: true }, partial: candidate.data.partial }; }
   if (tool.engine === 'tempCleanupApply') {
     if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving temporary files.');
-    const candidate = await tempCleanupCandidates(context, limit); const journalId = crypto.randomUUID(); const quarantine = appDataPath(path.join('cleanup-quarantine', journalId)); const moves = [];
+    const candidate = await tempCleanupCandidates(context); const journalId = crypto.randomUUID(); const quarantine = appDataPath(path.join('cleanup-quarantine', journalId)); const moves = [];
     await fsp.mkdir(quarantine, { recursive: true });
     for (let index = 0; index < candidate.selected.length; index++) {
       isCancelled(context); const item = candidate.selected[index]; const target = path.join(quarantine, `${crypto.createHash('sha256').update(item.path).digest('hex').slice(0, 16)}-${path.basename(item.path)}`);
@@ -363,8 +385,8 @@ async function runTool(context, tool, inputs) {
   if (tool.engine === 'startupItems') { const items = await windowsProviders.collectStartupItems(); return { items, summary: { entries: items.length, managedSources: items.filter(item => item.managedBySmartOrganizer).length, readOnlySources: items.filter(item => !item.managedBySmartOrganizer).length, sources: [...new Set(items.map(item => item.source))], writeScope: 'current-user Run key only', provider: 'Win32_StartupCommand' } }; }
   if (tool.engine === 'installedApps') {
     const [registryPayload, appx] = await Promise.all([
-      windowsProviders.collectUninstallApps({ timeout: 60000 }),
-      windowsProviders.collectAppxApps({ timeout: 60000 }).catch(() => [])
+      windowsProviders.collectUninstallApps(),
+      windowsProviders.collectAppxApps().catch(() => [])
     ]);
     const rawItems = registryPayload?.items ?? [];
     const list = windowsProviders.normalizeUninstallApp(rawItems);
@@ -400,7 +422,9 @@ async function runTool(context, tool, inputs) {
     };
   }
   if (tool.engine === 'networkDiagnostics') {
-    const network = await windowsProviders.collectNetwork({ timeout: 60000 });
+    // Each Net* source keeps its own measured budget; one slow source must not
+    // discard the adapters, addresses, DNS or routes that did answer.
+    const network = await windowsProviders.collectNetwork();
     const nodeInterfaces = Object.entries(os.networkInterfaces()).flatMap(([name, records]) => (records || []).filter(record => !record.internal).map(record => ({ name, address: record.address, family: record.family, mac: record.mac, netmask: record.netmask })));
     return {
       items: network.items,
@@ -413,12 +437,15 @@ async function runTool(context, tool, inputs) {
         dnsConfigured: network.items.reduce((sum, item) => sum + item.dnsServers.length, 0),
         defaultRoutes: network.items.reduce((sum, item) => sum + item.defaultRoutes.length, 0),
         nodeInterfaces, provider: 'Get-NetAdapter + Get-NetIPAddress + Get-NetIPInterface + Get-DnsClientServerAddress + Get-NetRoute',
-        diagnosticsOnly: true, repairPerformed: false
-      }
+        diagnosticsOnly: true, repairPerformed: false,
+        unavailableSources: network.unavailable
+      },
+      warnings: unavailableWarnings(network.unavailable, 'network source'),
+      partial: network.partial
     };
   }
   if (tool.engine === 'hardwareInventory') {
-    const hardware = await windowsProviders.collectHardware({ timeout: 60000 });
+    const hardware = await windowsProviders.collectHardware();
     return {
       items: [hardware],
       summary: {
@@ -429,32 +456,59 @@ async function runTool(context, tool, inputs) {
         problemDevices: hardware.problemDevices, problemDeviceCount: hardware.problemDevices.length,
         temperatures: hardware.temperatures,
         driverInstallationPerformed: false,
+        unavailableSources: hardware.unavailable,
         providers: ['Win32_Processor', 'Win32_VideoController', 'Win32_BIOS', 'Win32_PhysicalMemory', 'MSFT_PhysicalDisk', 'Win32_DesktopMonitor', 'Win32_SoundDevice', 'Win32_USBController', 'Win32_PnPEntity']
-      }
+      },
+      warnings: unavailableWarnings(hardware.unavailable, 'hardware source'),
+      partial: hardware.partial
     };
   }
   if (tool.engine === 'eventWarnings') {
-    const events = await windowsProviders.collectEvents({ timeout: 60000 });
+    const events = await windowsProviders.collectEvents();
     const clustered = advancedLocal.clusterEventWarnings(events.map(event => ({ ...event, ProviderName: event.provider, Id: event.eventId, LevelDisplayName: event.levelName, TimeCreated: event.timeCreated, Message: event.message })));
     return {
-      items: clustered.items.map(item => ({ ...item, frequency: item.count, latestOccurrence: item.latestAt, clusterKey: `${item.provider}/${item.id}/${item.level}`, evidence: { source: 'Windows System event log', boundedQuery: true, periodDays: 7, levelFilter: [1, 2, 3], maxEvents: 200 } })),
+      items: clustered.items.map(item => ({
+        provider: item.provider,
+        eventId: item.id,
+        id: item.id,
+        level: item.level,
+        levelName: item.levelName ?? item.level,
+        frequency: item.count,
+        count: item.count,
+        latestOccurrence: item.latestAt,
+        latestAt: item.latestAt,
+        clusterKey: `${item.provider}/${item.id}/${item.level}`,
+        evidence: { source: 'Windows System event log', boundedQuery: true, periodDays: 7, levelFilter: [1, 2, 3], maxEvents: 200, sample: item.sample ?? null }
+      })),
       summary: { ...clustered.summary, periodDays: 7, groupedForTriage: true, levelFilter: [1, 2, 3], maxEvents: 200, boundedQuery: true, provider: 'Get-WinEvent (System log)', nativeEventLogApi: false, nativeEventLogApiNote: 'EvtQuery/EvtSubscribe would require a native addon; the bounded documented PowerShell query is used instead.' }
     };
   }
   if (tool.engine === 'processInventory') {
-    const processes = await windowsProviders.collectProcesses({ timeout: 60000 });
+    const processes = await windowsProviders.collectProcesses();
     const ordered = [...processes].sort((a, b) => (b.workingSetBytes || 0) - (a.workingSetBytes || 0));
-    const signatureBudget = Math.min(40, ordered.length);
-    const signatures = await windowsProviders.collectProcessSignatures(ordered.slice(0, signatureBudget).map(item => item.executablePath), { limit: signatureBudget });
+    // Verify each distinct executable once. Signing checks are per-file and many
+    // processes share one image, so verifying per process repeated the same cost.
+    const candidates = [];
+    const seenPaths = new Set();
+    for (const item of ordered) {
+      const key = String(item.executablePath || '').toLowerCase();
+      if (!key || seenPaths.has(key)) continue;
+      seenPaths.add(key); candidates.push(item);
+      if (candidates.length >= SIGNATURE_BUDGET) break;
+    }
+    const signatureBudget = candidates.length;
+    const signatures = await windowsProviders.collectProcessSignatures(candidates.map(item => item.executablePath), { limit: SIGNATURE_BUDGET });
     const byPath = new Map(signatures.map(entry => [String(entry.path || '').toLowerCase(), entry]));
+    const notChecked = signatures.filter(entry => !entry.signatureAvailable).length;
+    if (notChecked) context.warnings.push(`${notChecked} of ${signatureBudget} executable signature check(s) did not complete; those processes are reported without a signature verdict.`);
     const items = ordered.slice(0, 500).map(entry => {
       const signature = byPath.get(String(entry.executablePath || '').toLowerCase());
-      return { ...entry, signatureStatus: signature?.signatureStatus ?? null, signatureAvailable: signature?.signatureAvailable ?? false, signatureSubject: signature?.signatureSubject ?? null };
+      return { ...entry, signatureStatus: signature?.signatureStatus ?? null, signatureAvailable: signature?.signatureAvailable ?? false, signatureSubject: signature?.signatureSubject ?? null, signatureMessage: signature?.signatureMessage ?? null };
     });
-    return { items, summary: { processes: ordered.length, readOnly: true, signatureChecked: items.filter(item => item.signatureAvailable).length, signatureBudget, signatureBudgetExhausted: ordered.length > signatureBudget, terminationPerformed: false, provider: 'Win32_Process + Get-AuthenticodeSignature' } };
+    return { items, partial: notChecked > 0, summary: { processes: ordered.length, readOnly: true, signatureChecked: items.filter(item => item.signatureAvailable).length, signatureBudget, distinctExecutables: seenPaths.size, signatureBudgetExhausted: seenPaths.size > SIGNATURE_BUDGET, signatureChecksFailed: notChecked, terminationPerformed: false, provider: 'Win32_Process + Get-AuthenticodeSignature' } };
   }
   if (tool.engine === 'batteryStatus') {
-    const batteries = await windowsProviders.collectBatteries({ timeout: 45000 });
+    const batteries = await windowsProviders.collectBatteries();
     return { items: batteries, summary: { batteryPresent: batteries.length > 0, batteries: batteries.length, unavailable: batteries.length === 0, temperatureAvailable: false, cycleCountAvailable: false, unavailableReason: batteries.length === 0 ? 'Windows reported no battery device.' : null, provider: 'Win32_Battery + root/WMI BatteryStatus' } };
   }
   if (tool.engine === 'fileHash') {
@@ -473,7 +527,7 @@ async function runTool(context, tool, inputs) {
     const disk = await diskOverview(); context.progress(2, 7, 'Read storage volumes and pressure');
     // One traversal of Downloads feeds large-file, privacy and duplicate analysis.
     const downloadsFolder = app.getPath('downloads');
-    const downloadsData = await walk(downloadsFolder, context, { limit: 15000 });
+    const downloadsData = await walk(downloadsFolder, context, { scanBudget: 15000 });
     const downloadIntelligence = advancedLocal.buildStorageIntelligence(downloadsData.files, downloadsFolder);
     const largeDownloads = [...downloadsData.files].filter(file => file.size >= 100 * 1024 * 1024).sort((a, b) => b.size - a.size);
     context.progress(3, 7, 'Built Downloads storage intelligence from one traversal');

@@ -10,6 +10,8 @@ const { OPERATION_SPECS, createPrivilegedRunner } = require('../electron/privile
   createPrivilegedRunner: (options: { platform?: string; windowsDirectory?: string; elevatedExecutor?: (input: { executable: string; args: string[] }) => Promise<{ exitCode: number; stderr: string }> }) => {
     probe: (engine: string) => Promise<{ available: boolean; capability: string; reason?: string }>;
     run: (engine: string, input?: Record<string, unknown>) => Promise<{ summary: Record<string, unknown>; items: Array<Record<string, unknown>>; warnings?: string[]; restartRequired?: boolean }>;
+    runService: (input: { serviceName: string; action: string; dryRun?: boolean }) => Promise<Record<string, unknown>>;
+    isProtectedService: (serviceName: string) => boolean;
   };
 };
 
@@ -47,6 +49,19 @@ describe('privileged operation allowlist', () => {
     const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory, elevatedExecutor });
     await expect(runner.run('rendererCommand', { dryRun: false })).rejects.toThrow('not allowlisted');
     expect(elevatedExecutor).not.toHaveBeenCalled();
+  });
+
+  it('never throws while classifying a service name it could never control', async () => {
+    const runner = createPrivilegedRunner({ platform: 'win32', windowsDirectory });
+    // The read-side inventory must survive names sc.exe could not address.
+    expect(runner.isProtectedService('A name with spaces/and+chars')).toBe(true);
+    expect(runner.isProtectedService('')).toBe(true);
+    // A documented protected service stays protected.
+    expect(runner.isProtectedService('Dhcp')).toBe(true);
+    // An ordinary service that sc.exe can address is not protected.
+    expect(runner.isProtectedService('w32time')).toBe(false);
+    // The mutation boundary still refuses them.
+    await expect(runner.runService({ serviceName: 'A name with spaces', action: 'start' })).rejects.toThrow('Invalid Windows service name');
   });
 
   it('reports non-Windows as unavailable without exposing a filesystem path', async () => {

@@ -6,6 +6,29 @@ const require = createRequire(import.meta.url);
 // that accepts an untyped Windows payload and returns a normalized record.
 const providers = require('../electron/windows-providers.cjs') as Record<string, (...args: unknown[]) => unknown>;
 
+interface ProviderUnavailable {
+  code: string;
+  provider: string;
+  reason: string;
+  timeoutMs: number | null;
+}
+
+interface ProviderErrorCtor {
+  new (provider: string, reason: string, options?: { timeoutMs?: number | null }): ProviderUnavailable;
+}
+
+/** The CommonJS module also exports a constructible error class and constants. */
+const providerModule = providers as unknown as {
+  ProviderUnavailableError: ProviderErrorCtor;
+  providerTimeout: (provider: string, fallback?: number) => number;
+  powershellJson: (script: string, options?: Record<string, unknown>) => Promise<unknown>;
+  collectSources: (sources: Array<{ key: string; options: { provider: string } }>, options?: { runner?: (script: string, options: { provider: string }) => Promise<unknown> }) => Promise<{ payload: Record<string, unknown>; partial: boolean; unavailable: ProviderUnavailable[] }>;
+  collectHardware: (options?: { execFile?: (file: string, args: string[], options: unknown) => Promise<{ stdout: string }> }) => Promise<{ cpu: Array<{ name: string; cores: number | null }>; bios: Array<{ manufacturer: string }>; memoryModules: unknown[]; partial: boolean }>;
+  collectSystemHealth: (options?: { execFile?: (file: string, args: string[], options: unknown) => Promise<{ stdout: string }> }) => Promise<{ osCaption: string; osVersion: string; osBuild: string }>;
+  UNINSTALL_ROOTS: string[];
+  ENUMS: Record<string, Record<string, string>>;
+};
+
 describe('windows provider normalizers', () => {
   it('normalizes a logical disk and computes used bytes', () => {
     const [disk] = providers.normalizeLogicalDisk([{ DeviceID: 'C:', VolumeName: 'System', FileSystem: 'NTFS', Size: 1000, FreeSpace: 250, VolumeSerialNumber: '1234' }]) as Array<Record<string, unknown>>;
@@ -126,12 +149,14 @@ describe('windows provider normalizers', () => {
       interfaces: [{ InterfaceAlias: 'Ethernet', InterfaceIndex: 12, Dhcp: 'Enabled', ConnectionState: 'Connected', NlMtu: 1500, AutomaticMetric: true }],
       defaultRoutes: [{ InterfaceAlias: 'Ethernet', InterfaceIndex: 12, DestinationPrefix: '0.0.0.0/0', NextHop: '192.168.1.1', RouteMetric: 25 }]
     }) as { items: Array<Record<string, unknown>> };
-    const adapter = network.items[0];
+    const adapter = network.items[0] as Record<string, unknown> & { ipv4: Array<Record<string, unknown>>; ipv6: Array<Record<string, unknown>>; dnsServers: string[]; defaultRoutes: Array<Record<string, unknown>>; dhcp: unknown; connectionState: unknown; defaultGateway: unknown; linkSpeed: unknown };
     expect(adapter.status).toBe('Up');
     expect(adapter.ipv4).toHaveLength(1);
+    expect(adapter.ipv4[0]).toEqual(expect.objectContaining({ address: '192.168.1.5', state: 'Preferred' }));
     expect(adapter.dnsServers).toEqual(['1.1.1.1']);
-    expect(adapter.defaultGateway).toBe('192.168.1.1');
     expect(adapter.dhcp).toBe('Enabled');
+    expect(adapter.connectionState).toBe('Connected');
+    expect(adapter.defaultGateway).toBe('192.168.1.1');
     expect(adapter.linkSpeed).toBe('1 Gbps');
     expect(adapter.defaultRoutes).toHaveLength(1);
   });
@@ -203,10 +228,276 @@ describe('windows provider normalizers', () => {
     expect(health.cpuLoadAvailable).toBe(false);
   });
 
+  it('decodes the PowerShell \\/Date(...)\\/ serialisation instead of losing the value', () => {
+    const bootMs = Date.now() - 3_600_000;
+    // PowerShell emits "\/Date(1690000000000)\/"; after JSON.parse the escapes are
+    // resolved, so the provider receives "/Date(1690000000000)/".
+    const health = providers.normalizeSystemHealth({
+      os: { TotalVisibleMemorySize: 1024, FreePhysicalMemory: 512 },
+      cpu: [{}],
+      disks: [],
+      battery: [],
+      lastBootUpTime: `/Date(${bootMs})/`
+    }) as Record<string, unknown> & { uptimeSource: string };
+    expect(health.lastBootUpTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(health.uptimeSeconds).toBeGreaterThan(3500);
+    expect(health.uptimeSource).toBe('Win32_OperatingSystem.LastBootUpTime');
+  });
+
+  it('falls back to the Node uptime source and says so when Windows omits the boot time', () => {
+    const health = providers.normalizeSystemHealth({ os: { TotalVisibleMemorySize: 1024, FreePhysicalMemory: 512 }, cpu: [{}], disks: [], battery: [] }) as Record<string, unknown> & { uptimeSource: string; uptimeSeconds: number };
+    expect(health.lastBootUpTime).toBeNull();
+    expect(health.uptimeSource).toMatch(/fallback/i);
+    expect(health.uptimeSeconds).toBeGreaterThan(0);
+  });
+
+  it('reports an unparseable date as unavailable rather than an invalid Date', () => {
+    const health = providers.normalizeSystemHealth({ os: { TotalVisibleMemorySize: 1, FreePhysicalMemory: 1 }, cpu: [{}], disks: [], battery: [], lastBootUpTime: 'not-a-date' }) as Record<string, unknown>;
+    expect(health.lastBootUpTime).toBeNull();
+  });
+
+  it('never throws on a service name that cannot be controlled', () => {
+    // The read-side classification must survive names sc.exe could never address.
+    expect(providers.normalizeService([{ Name: 'A name with spaces/and+chars', State: 'Stopped' }])).toHaveLength(1);
+    expect(providers.normalizeService([{ Name: '', State: 'Stopped' }])).toHaveLength(1);
+  });
+
+  it('maps Windows enum integers to documented names instead of leaking 0 or 11', () => {
+    const network = providers.normalizeNetwork({
+      adapters: [{ Name: 'Wi-Fi', Status: 'Up', InterfaceIndex: 11, LinkSpeed: '433 Mbps' }],
+      addresses: [{ InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, IPAddress: '192.168.0.5', PrefixLength: 24, AddressFamily: 2, AddressState: 1, PrefixOrigin: 'Dhcp' }],
+      dnsServers: [{ InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, ServerAddresses: ['1.1.1.1'] }],
+      interfaces: [{ InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, Dhcp: 1, ConnectionState: 1, NlMtu: 1500, AutomaticMetric: true }],
+      defaultRoutes: [{ InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, DestinationPrefix: '0.0.0.0/0', NextHop: '192.168.0.1', RouteMetric: 281 }]
+    }) as { items: Array<Record<string, unknown>> };
+    const adapter = network.items[0] as Record<string, unknown> & { ipv4: Array<Record<string, unknown>> };
+    expect(adapter.ipv4).toHaveLength(1);
+    expect(adapter.ipv4[0]).toEqual(expect.objectContaining({ address: '192.168.0.5', state: 'Preferred' }));
+    expect(adapter.dhcp).toBe('Enabled');
+    expect(adapter.connectionState).toBe('Connected');
+    expect(adapter.defaultGateway).toBe('192.168.0.1');
+  });
+
+  it('drops non-preferred addresses instead of counting them as active', () => {
+    const network = providers.normalizeNetwork({
+      adapters: [{ Name: 'Wi-Fi', Status: 'Up', InterfaceIndex: 11 }],
+      addresses: [
+        { InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, IPAddress: '10.0.0.2', AddressFamily: 2, AddressState: 0 },
+        { InterfaceAlias: 'Wi-Fi', InterfaceIndex: 11, IPAddress: '10.0.0.3', AddressFamily: 2, AddressState: 1 }
+      ],
+      dnsServers: [], interfaces: [], defaultRoutes: []
+    }) as { items: Array<Record<string, unknown>> };
+    const adapter = network.items[0] as Record<string, unknown> & { ipv4: Array<Record<string, unknown>> };
+    expect(adapter.ipv4).toHaveLength(1);
+    expect(adapter.ipv4[0]).toEqual(expect.objectContaining({ address: '10.0.0.3' }));
+  });
+
+  it('maps AppX and processor architecture enums instead of showing the raw integer', () => {
+    const [app] = providers.normalizeAppxApp([{ Name: 'A', PackageFullName: 'A_1_x64__8we', Architecture: 11 }]) as Array<Record<string, unknown>>;
+    expect(app.architecture).toBe('x64');
+    const hardware = providers.normalizeHardware({ cpu: [{ Name: 'CPU', Architecture: 9 }] }) as { cpu: Array<Record<string, unknown>> };
+    expect(hardware.cpu[0].architecture).toBe('x64');
+  });
+
+  it('reports one canonical architecture spelling so string and enum sources cannot collide', () => {
+    const apps = providers.normalizeAppxApp([
+      { Name: 'FromString', PackageFullName: 'FromString_1_x64__a', Architecture: 'X64' },
+      { Name: 'FromEnum', PackageFullName: 'FromEnum_1_x64__b', Architecture: 11 },
+      { Name: 'FromName', PackageFullName: 'FromName_1_x86__c', Architecture: 'x86' },
+      { Name: 'FromEnum86', PackageFullName: 'FromEnum86_1_x86__d', Architecture: 0 }
+    ]) as Array<{ architecture: string }>;
+    expect(apps.map(app => app.architecture)).toEqual(['x64', 'x64', 'x86', 'x86']);
+    expect(new Set(apps.map(app => app.architecture)).size).toBe(2);
+  });
+
+  it('derives AppX architecture from the package identity when the field is absent', () => {
+    // Get-AppxPackage reported no Architecture for Store-signed packages whose
+    // identity still records it as the third underscore-delimited segment.
+    const [devToys] = providers.normalizeAppxApp([{ Name: 'DevToys', PackageFullName: '64360VelerSoftware.DevToys_1.0.14.0_x64__j80j2txgjg9dj', SignatureKind: '3' }]) as Array<{ architecture: string }>;
+    expect(devToys.architecture).toBe('x64');
+    const [neutral] = providers.normalizeAppxApp([{ Name: 'Picker', PackageFullName: 'Microsoft.Windows.FilePicker_10.0.19041.4239_neutral_neutral_cw5n1h2txyewy' }]) as Array<{ architecture: string }>;
+    expect(neutral.architecture).toBe('neutral');
+  });
+
+  it('names the IPv4 prefix and suffix origins instead of leaking enum integers', () => {
+    const network = providers.normalizeNetwork({
+      adapters: [{ Name: 'Ethernet', InterfaceIndex: 7, ConnectionState: 1, Dhcp: 1 }],
+      addresses: [{ InterfaceAlias: 'Ethernet', InterfaceIndex: 7, IPAddress: '169.254.1.2', PrefixLength: 16, PrefixOrigin: 2, SuffixOrigin: 4, AddressState: 1, AddressFamily: 2 }]
+    }) as { items: Array<{ ipv4: Array<{ prefixOrigin: string; suffixOrigin: string }> }> };
+    expect(network.items[0].ipv4[0].prefixOrigin).toBe('Dhcp');
+    expect(network.items[0].ipv4[0].suffixOrigin).toBe('WellKnown');
+  });
+
+  it('recognises the current-user Run key reported as HKU by Win32_StartupCommand', () => {
+    const [item] = providers.normalizeStartup([{ Name: 'X', Command: 'x.exe', Location: 'HKU\\S-1-5-21-1-2-3-1001\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run' }]) as Array<Record<string, unknown>>;
+    expect(item.source).toBe('registry-run-user');
+    expect(item.managedBySmartOrganizer).toBe(true);
+  });
+
+  it('prefers the performance counter for CPU load and keeps the Win32 value separately', () => {
+    const health = providers.normalizeSystemHealth({
+      os: { TotalVisibleMemorySize: 1024, FreePhysicalMemory: 512 },
+      cpu: [{ LoadPercentage: 100, Name: 'CPU' }],
+      perf: [{ PercentProcessorTime: 7 }],
+      disks: [], battery: []
+    }) as Record<string, unknown> & { cpuLoadSource: string };
+    expect(health.cpuLoadPercent).toBe(7);
+    expect(health.cpuLoadSource).toMatch(/PerfFormattedData/);
+    expect(health.cpuLoadWin32Percent).toBe(100);
+  });
+
+  it('falls back to the Win32 load value when the counter is unavailable', () => {
+    const health = providers.normalizeSystemHealth({ os: { TotalVisibleMemorySize: 1, FreePhysicalMemory: 1 }, cpu: [{ LoadPercentage: 42 }], perf: null, disks: [], battery: [] }) as Record<string, unknown> & { cpuLoadSource: string };
+    expect(health.cpuLoadPercent).toBe(42);
+    expect(health.cpuLoadSource).toBe('Win32_Processor.LoadPercentage');
+  });
+
+  it('reports CPU load as unavailable when neither source answers', () => {
+    const health = providers.normalizeSystemHealth({ os: { TotalVisibleMemorySize: 1, FreePhysicalMemory: 1 }, cpu: [{}], disks: [], battery: [] }) as Record<string, unknown>;
+    expect(health.cpuLoadPercent).toBeNull();
+    expect(health.cpuLoadAvailable).toBe(false);
+    expect(health.cpuLoadSource).toBe('unavailable');
+  });
+
   it('never uses Win32_Product or WinGet as installation truth', () => {
     const source = JSON.stringify(providers.UNINSTALL_ROOTS);
     expect(source).not.toMatch(/Win32_Product/i);
     expect(source).toMatch(/WOW6432Node/);
     expect(providers.UNINSTALL_ROOTS).toHaveLength(3);
+  });
+});
+
+describe('provider failure isolation and budgets', () => {
+  it('gives the measured slow providers a budget larger than their observed runtime', () => {
+    // Get-NetIPAddress was measured at ~90s on the QA machine; a shared 60s
+    // budget is what made network-diagnostics fail outright.
+    expect(providerModule.providerTimeout('Get-NetIPAddress')).toBeGreaterThanOrEqual(150000);
+    expect(providerModule.providerTimeout('Get-NetAdapter')).toBeGreaterThanOrEqual(120000);
+    expect(providerModule.providerTimeout('uninstall-registry')).toBeGreaterThanOrEqual(120000);
+    expect(providerModule.providerTimeout('Win32_StartupCommand')).toBeGreaterThanOrEqual(90000);
+  });
+
+  it('keeps cheap providers on a tight budget', () => {
+    expect(providerModule.providerTimeout('Win32_LogicalDisk')).toBeLessThanOrEqual(30000);
+    expect(providerModule.providerTimeout('Win32_OperatingSystem')).toBeLessThanOrEqual(45000);
+    expect(providerModule.providerTimeout('Win32_Processor')).toBeLessThanOrEqual(45000);
+  });
+
+  it('falls back to the default budget for an unknown provider instead of guessing', () => {
+    expect(providerModule.providerTimeout('Not-A-Real-Provider')).toBe(60000);
+  });
+
+  it('never forwards the PowerShell command line to the renderer on failure', async () => {
+    const secretish = 'Get-ItemProperty -LiteralPath HKLM:\\Secret | ConvertTo-Json';
+    const failing = async () => { const error = Object.assign(new Error(`Command failed: powershell.exe -Command ${secretish}`), { code: 'ENOENT' }); throw error; };
+    await expect(providerModule.powershellJson(secretish, { provider: 'Win32_Service', execFile: failing })).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE', provider: 'Win32_Service', reason: 'powershell-not-found' });
+    await expect(providerModule.powershellJson(secretish, { provider: 'Win32_Service', execFile: failing })).rejects.toThrow(/Win32_Service/);
+    const message = await providerModule.powershellJson(secretish, { provider: 'Win32_Service', execFile: failing }).catch((error: Error) => error.message);
+    expect(message).not.toMatch(/Get-ItemProperty/);
+    expect(message).not.toMatch(/HKLM/);
+  });
+
+  it('classifies a killed provider as timed out rather than as a failed query', async () => {
+    const timingOut = async () => { throw Object.assign(new Error('Command failed: powershell.exe -Command <script>'), { killed: true }); };
+    await expect(providerModule.powershellJson('x', { provider: 'Get-NetRoute', timeout: 1000, execFile: timingOut })).rejects.toMatchObject({ reason: 'timed-out', timeoutMs: 1000 });
+  });
+
+  it('reports an unreadable provider response instead of silently returning nothing', async () => {
+    const garbage = async () => ({ stdout: 'not json at all' });
+    await expect(providerModule.powershellJson('x', { provider: 'Win32_BIOS', execFile: garbage })).rejects.toMatchObject({ reason: 'unreadable-response' });
+  });
+
+  it('keeps every source that answered when one independent source fails', async () => {
+    const sources = [
+      { key: 'adapters', options: { provider: 'Get-NetAdapter' } },
+      { key: 'addresses', options: { provider: 'Get-NetIPAddress' } },
+      { key: 'defaultRoutes', options: { provider: 'Get-NetRoute' } }
+    ];
+    const runner = async (_script: string, opts: { provider: string }) => {
+      if (opts.provider === 'Get-NetIPAddress') throw new providerModule.ProviderUnavailableError('Get-NetIPAddress', 'timed-out', { timeoutMs: 150000 });
+      if (opts.provider === 'Get-NetRoute') return [{ DestinationPrefix: '0.0.0.0/0', NextHop: '192.168.1.1' }];
+      return [{ Name: 'Ethernet', InterfaceIndex: 12, Status: 'Up' }];
+    };
+    const collected = await providerModule.collectSources(sources, { runner });
+    expect(collected.partial).toBe(true);
+    expect(collected.payload.adapters).toHaveLength(1);
+    expect(collected.payload.defaultRoutes).toHaveLength(1);
+    expect(collected.unavailable).toEqual([{ code: 'PROVIDER_UNAVAILABLE', provider: 'Get-NetIPAddress', reason: 'timed-out', timeoutMs: 150000 }]);
+  });
+
+  it('is not partial when every source answered', async () => {
+    const sources = [{ key: 'a', options: { provider: 'Win32_Processor' } }, { key: 'b', options: { provider: 'Win32_BIOS' } }];
+    const collected = await providerModule.collectSources(sources, { runner: async () => ({ Name: 'x' }) });
+    expect(collected.partial).toBe(false);
+    expect(collected.unavailable).toEqual([]);
+  });
+
+  it('keeps a single-object result under its own source key instead of spreading it', async () => {
+    // ConvertTo-Json emits a bare object, not an array, when a query returns one
+    // row. Spreading it onto the payload silently dropped CPU/GPU/BIOS sources.
+    const sources = [
+      { key: 'cpu', options: { provider: 'Win32_Processor' } },
+      { key: 'memory', options: { provider: 'Win32_PhysicalMemory' } }
+    ];
+    const runner = async (_script: string, opts: { provider: string }) => opts.provider === 'Win32_Processor'
+      ? { Name: 'Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz', NumberOfCores: 4 }
+      : [{ Manufacturer: 'Hynix/Hyundai', Capacity: 8589934592 }];
+    const collected = await providerModule.collectSources(sources, { runner });
+    expect(collected.payload.cpu).toEqual({ Name: 'Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz', NumberOfCores: 4 });
+    expect(collected.payload.memory).toEqual([{ Manufacturer: 'Hynix/Hyundai', Capacity: 8589934592 }]);
+    expect(collected.payload).not.toHaveProperty('Name');
+    expect(collected.partial).toBe(false);
+  });
+
+  it('surfaces a single-object CPU and BIOS row through the hardware normalizer', async () => {
+    // execFile receives (file, args, options); the script is the last argument.
+    const byClass: Record<string, unknown> = {
+      Win32_Processor: { Name: 'Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz', NumberOfCores: 4, NumberOfLogicalProcessors: 4, MaxClockSpeed: 3201, Architecture: 9 },
+      Win32_BIOS: { Manufacturer: 'LENOVO', SMBIOSBIOSVersion: 'FEKT83AUS', ReleaseDate: '/Date(1400630400000)/' },
+      Win32_PhysicalMemory: [{ Manufacturer: 'Hynix/Hyundai', Capacity: 8589934592 }]
+    };
+    const hardware = await providerModule.collectHardware({
+      execFile: async (_file: string, args: string[]) => {
+        const script = args[args.length - 1] as string;
+        const key = Object.keys(byClass).find((name) => script.includes(name)) as string | undefined;
+        return { stdout: JSON.stringify(key ? byClass[key] : []) };
+      }
+    });
+    expect(hardware.cpu).toHaveLength(1);
+    expect(hardware.cpu[0].name).toBe('Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz');
+    expect(hardware.cpu[0].cores).toBe(4);
+    expect(hardware.bios).toHaveLength(1);
+    expect(hardware.bios[0].manufacturer).toBe('LENOVO');
+    expect(hardware.memoryModules).toHaveLength(1);
+    expect(hardware.partial).toBe(false);
+  });
+
+  it('reports the Windows edition from a single-object Win32_OperatingSystem row', async () => {
+    const health = await providerModule.collectSystemHealth({
+      execFile: async () => ({ stdout: JSON.stringify({ os: { Caption: 'Microsoft Windows 10 Pro', Version: '10.0.19045', BuildNumber: '19045' }, cpu: [], perf: null, disks: [], battery: [] }) })
+    });
+    expect(health.osCaption).toBe('Microsoft Windows 10 Pro');
+  });
+
+  it('separates IPv4 from IPv6 and prefers only preferred addresses', () => {
+    const network = providers.normalizeNetwork({
+      adapters: [{ Name: 'Ethernet', InterfaceDescription: 'Intel', Status: 'Up', InterfaceIndex: 12, LinkSpeed: '1 Gbps' }],
+      addresses: [
+        { InterfaceAlias: 'Ethernet', AddressFamily: 2, IPAddress: '192.168.1.20', AddressState: 1, PrefixLength: 24 },
+        { InterfaceAlias: 'Ethernet', AddressFamily: 2, IPAddress: '169.254.1.1', AddressState: 2, PrefixLength: 16 },
+        { InterfaceAlias: 'Ethernet', AddressFamily: 23, IPAddress: 'fe80::1', AddressState: 1, PrefixLength: 64 }
+      ],
+      dns: [{ InterfaceAlias: 'Ethernet', ServerAddresses: ['1.1.1.1'] }],
+      interfaces: [{ InterfaceAlias: 'Ethernet', Dhcp: 'Enabled', ConnectionState: 'Connected', NlMtu: 1500 }],
+      defaultRoutes: [{ InterfaceAlias: 'Ethernet', DestinationPrefix: '0.0.0.0/0', NextHop: '192.168.1.1', RouteMetric: 35 }]
+    }) as { items: Array<Record<string, unknown>> };
+    const [adapter] = network.items;
+    expect(adapter.dhcp).toBe('Enabled');
+    expect(adapter.connectionState).toBe('Connected');
+    expect((adapter.ipv4 as unknown[])).toHaveLength(1);
+    expect((adapter.ipv6 as unknown[])).toHaveLength(1);
+    expect(adapter.ipv4Configured).toBe(2);
+    expect(adapter.dnsServers).toEqual(['1.1.1.1']);
+    expect(adapter.defaultGateway).toBe('192.168.1.1');
   });
 });

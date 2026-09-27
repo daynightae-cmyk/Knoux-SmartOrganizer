@@ -182,7 +182,18 @@ function createPrivilegedRunner({ platform = process.platform, windowsDirectory 
       ? { available: true, capability: 'windows-service-control' }
       : { available: false, reason: 'Required Windows component is unavailable.', capability: 'windows-service-control' };
   }
-  function isProtectedService(serviceName) { return PROTECTED_SERVICES.has(validateServiceName(serviceName)); }
+  /**
+   * Read-side classification only. This must never throw: the Windows service
+   * inventory contains names that are not valid for `sc.exe` control, and a
+   * single such name must not fail the whole read. A name that cannot be
+   * controlled is reported as protected; the strict `validateServiceName`
+   * check still runs at the mutation boundary in `runService`.
+   */
+  function isProtectedService(serviceName) {
+    if (typeof serviceName !== 'string' || serviceName.length === 0) return true;
+    if (!/^[A-Za-z0-9_.-]{1,256}$/.test(serviceName)) return true;
+    return PROTECTED_SERVICES.has(serviceName);
+  }
   async function runService(input) {
     assertExactKeys(input, ['serviceName', 'action', 'dryRun'], 'Service control');
     const name = validateServiceName(input.serviceName); const templates = SERVICE_ACTIONS[input.action]; const dryRun = input.dryRun === true;
