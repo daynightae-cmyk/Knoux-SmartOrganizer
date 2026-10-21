@@ -28,10 +28,7 @@ export default function CommandPalette() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPaletteOpen(!paletteOpen);
-      } else if (e.key === 'Escape' && paletteOpen) {
+      if (e.key === 'Escape' && paletteOpen) {
         setPaletteOpen(false);
       }
     };

@@ -1,10 +1,14 @@
 import { Activity, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer } from 'lucide-react';
+import { motion } from 'motion/react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
 import { filterToolsByPage } from '../lib/guards';
 import { toolIcon } from '../lib/icons';
 import { pageGroups } from '../lib/pages';
 import { useStore } from '../state/store';
 import { SectionTitle, StatCard } from '../components/common';
+
+const sectionMotion = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: .34, ease: [0.22, 1, 0.36, 1] as const } } };
+const cardMotion = { hidden: { opacity: 0, y: 10, scale: .98 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: .28, ease: [0.22, 1, 0.36, 1] as const } } };
 
 export default function HomePage() {
   const { tools, health, history, settings, t, locale, runById, setPage, openTool } = useStore();
@@ -22,7 +26,7 @@ export default function HomePage() {
 
   return (
     <div className={`home-workspace workspace-density-${workspace.cardDensity}`}>
-      <section className="hero" aria-label={t('home.today')}>
+      <motion.section className="hero" aria-label={t('home.today')} variants={sectionMotion} initial="hidden" animate="show">
         <div>
           <span className="local-badge"><LockKeyhole size={14} />{t('common.local')}</span>
           <h2>{t('home.today')}</h2>
@@ -41,59 +45,59 @@ export default function HomePage() {
           <StatCard label={t('home.uptime')} value={typeof health?.uptimeSeconds === 'number' ? uptime(health.uptimeSeconds as number, locale) : '—'} detail={t('home.ready')} icon={<Timer size={18} />} />
           <StatCard label={t('home.cpu')} value={health?.cpuCores != null ? String(health.cpuCores) : '—'} detail={String(health?.cpuModel || t('common.loading')).slice(0, 42)} icon={<Cpu size={18} />} />
         </div>}
-      </section>
+      </motion.section>
 
-      {workspace.showWorkspaces && <section className="section">
+      {workspace.showWorkspaces && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
         <SectionTitle title={t('home.workspaces')} subtitle={t('home.offline')} action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}</button>} />
         <div className="workspace-grid">
           {pageGroups.filter(g => g.id !== 'system').flatMap(g => g.pages).filter(p => p.id !== 'home').slice(0, 8).map(item => {
             const count = filterToolsByPage(tools, item.id).length;
             return (
-              <button key={item.id} className="workspace-card" onClick={() => setPage(item.id)}>
+              <motion.button key={item.id} className="workspace-card" variants={cardMotion} onClick={() => setPage(item.id)}>
                 <span className="workspace-icon" aria-hidden="true"><item.icon size={18} /></span>
                 <strong>{t(item.nameKey)}</strong>
                 <small>{formatCount(count, locale)} {t('home.entries')}</small>
-              </button>
+              </motion.button>
             );
           })}
         </div>
-      </section>}
+      </motion.section>}
 
-      {workspace.showRecent && <section className="section">
+      {workspace.showRecent && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
         <SectionTitle title={t('home.recent')} action={<button className="text-button" onClick={() => setPage('history')}>{t('home.viewAll')}</button>} />
         {recent.length === 0 ? (
           <p className="muted">{t('home.noRecentOps')}</p>
         ) : (
           <div className="history-list compact">
             {recent.map(record => (
-              <article key={record.operationId} className="history-card">
+              <motion.article key={record.operationId} className="history-card" variants={cardMotion}>
                 <div>
                   <span className={record.success ? 'status success' : 'status error'}>{record.success ? t('history.success') : t('history.error')}</span>
                   <strong dir="ltr">{record.toolId}</strong>
                   <small>{formatDateTime(record.finishedAt, locale)}</small>
                 </div>
                 <span className="muted small" dir="ltr">{formatCount(record.items.length, locale)}</span>
-              </article>
+              </motion.article>
             ))}
           </div>
         )}
-      </section>}
+      </motion.section>}
 
-      {workspace.showQuickTools && <section className="section">
+      {workspace.showQuickTools && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
         <SectionTitle title={t('tools.title')} subtitle={t('home.offline')} />
         <div className="quick-grid">
           {tools.slice(0, 6).map(tool => {
             const Icon = toolIcon(tool.icon);
             return (
-              <button key={tool.id} className="quick-card" disabled={!tool.availability.available} onClick={() => openTool(tool)}>
+              <motion.button key={tool.id} className="quick-card" variants={cardMotion} disabled={!tool.availability.available} onClick={() => openTool(tool)}>
                 <Icon size={18} />
                 <span><strong>{t(tool.nameKey)}</strong><small>{t(tool.descriptionKey)}</small></span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
         <p className="muted small"><Activity size={12} /> {formatCount(tools.length, locale)} {t('home.entries')}</p>
-      </section>}
+      </motion.section>}
     </div>
   );
 }
