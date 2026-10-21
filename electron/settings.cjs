@@ -21,7 +21,8 @@ const settingsSchema = z.object({
   appearance: z.object({
     theme: z.enum(['dark', 'light', 'system', 'high-contrast']), accent: z.enum(['violet', 'blue', 'green', 'amber', 'cyberpunk', 'neon', 'minimalist']),
     density: z.enum(['comfortable', 'compact']), fontScale: z.number().min(0.8).max(1.5),
-    reduceMotion: z.boolean(), transparency: z.boolean(), animations: z.boolean()
+    reduceMotion: z.boolean(), transparency: z.boolean(), animations: z.boolean(),
+    workspace: z.object({ showMetrics: z.boolean(), showWorkspaces: z.boolean(), showRecent: z.boolean(), showQuickTools: z.boolean(), cardDensity: z.enum(['comfortable', 'compact']), soundEffects: z.boolean() }).strict()
   }).strict(),
   localization: z.object({
     locale: z.enum(['ar', 'en']), region: z.string().regex(/^[A-Z]{2}$/), numberFormat: z.literal('locale'),
@@ -64,7 +65,7 @@ function merge(base, patch) {
   return result;
 }
 function migrate(input) {
-  if (input?.settingsVersion === 2) return input;
+  if (input?.settingsVersion === 2) return merge(clone(defaults), input);
   if (input?.settingsVersion === 1) {
     return merge(clone(defaults), {
       general: {

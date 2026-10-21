@@ -16,7 +16,15 @@
     "fontScale": 1,
     "reduceMotion": false,
     "transparency": true,
-    "animations": true
+    "animations": true,
+    "workspace": {
+      "showMetrics": true,
+      "showWorkspaces": true,
+      "showRecent": true,
+      "showQuickTools": true,
+      "cardDensity": "comfortable",
+      "soundEffects": true
+    }
   },
   "localization": {
     "locale": "ar",

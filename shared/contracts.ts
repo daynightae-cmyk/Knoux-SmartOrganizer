@@ -113,6 +113,14 @@ export interface AppSettings {
     reduceMotion: boolean;
     transparency: boolean;
     animations: boolean;
+    workspace: {
+      showMetrics: boolean;
+      showWorkspaces: boolean;
+      showRecent: boolean;
+      showQuickTools: boolean;
+      cardDensity: 'comfortable' | 'compact';
+      soundEffects: boolean;
+    };
   };
   localization: {
     locale: Locale;

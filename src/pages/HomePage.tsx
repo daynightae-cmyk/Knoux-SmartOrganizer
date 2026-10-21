@@ -7,7 +7,8 @@ import { useStore } from '../state/store';
 import { SectionTitle, StatCard } from '../components/common';
 
 export default function HomePage() {
-  const { tools, health, history, t, locale, runById, setPage, openTool } = useStore();
+  const { tools, health, history, settings, t, locale, runById, setPage, openTool } = useStore();
+  const workspace = settings?.appearance.workspace ?? { showMetrics: true, showWorkspaces: true, showRecent: true, showQuickTools: true, cardDensity: 'comfortable' as const, soundEffects: true };
 
   const diskTotal = Number(health?.systemDriveTotalBytes);
   const diskFree = Number(health?.systemDriveFreeBytes);
@@ -20,7 +21,7 @@ export default function HomePage() {
   const startScan = () => { void runById('smart-scan'); };
 
   return (
-    <>
+    <div className={`home-workspace workspace-density-${workspace.cardDensity}`}>
       <section className="hero" aria-label={t('home.today')}>
         <div>
           <span className="local-badge"><LockKeyhole size={14} />{t('common.local')}</span>
@@ -34,15 +35,15 @@ export default function HomePage() {
             {lastScan ? `${t('smartScan.lastRun')}: ${formatDateTime(lastScan.finishedAt, locale)}` : t('smartScan.neverRun')}
           </p>
         </div>
-        <div className="hero-side">
+        {workspace.showMetrics && <div className="hero-side">
           <StatCard label={t('home.memory')} value={memPercent == null ? '—' : `${memPercent}%`} detail={health ? `${t('home.freeSpace')}: ${formatBytes(health.memoryFreeBytes, locale)}` : t('common.loading')} icon={<MemoryStick size={18} />} />
           <StatCard label={t('home.storage')} value={diskFree != null && Number.isFinite(diskFree) ? formatBytes(diskFree, locale) : '—'} detail={diskPercent == null ? t('common.loading') : `${t('common.used')} ${diskPercent}%`} icon={<HardDrive size={18} />} />
           <StatCard label={t('home.uptime')} value={typeof health?.uptimeSeconds === 'number' ? uptime(health.uptimeSeconds as number, locale) : '—'} detail={t('home.ready')} icon={<Timer size={18} />} />
           <StatCard label={t('home.cpu')} value={health?.cpuCores != null ? String(health.cpuCores) : '—'} detail={String(health?.cpuModel || t('common.loading')).slice(0, 42)} icon={<Cpu size={18} />} />
-        </div>
+        </div>}
       </section>
 
-      <section className="section">
+      {workspace.showWorkspaces && <section className="section">
         <SectionTitle title={t('home.workspaces')} subtitle={t('home.offline')} action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}</button>} />
         <div className="workspace-grid">
           {pageGroups.filter(g => g.id !== 'system').flatMap(g => g.pages).filter(p => p.id !== 'home').slice(0, 8).map(item => {
@@ -56,9 +57,9 @@ export default function HomePage() {
             );
           })}
         </div>
-      </section>
+      </section>}
 
-      <section className="section">
+      {workspace.showRecent && <section className="section">
         <SectionTitle title={t('home.recent')} action={<button className="text-button" onClick={() => setPage('history')}>{t('home.viewAll')}</button>} />
         {recent.length === 0 ? (
           <p className="muted">{t('home.noRecentOps')}</p>
@@ -76,9 +77,9 @@ export default function HomePage() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
-      <section className="section">
+      {workspace.showQuickTools && <section className="section">
         <SectionTitle title={t('tools.title')} subtitle={t('home.offline')} />
         <div className="quick-grid">
           {tools.slice(0, 6).map(tool => {
@@ -92,8 +93,8 @@ export default function HomePage() {
           })}
         </div>
         <p className="muted small"><Activity size={12} /> {formatCount(tools.length, locale)} {t('home.entries')}</p>
-      </section>
-    </>
+      </section>}
+    </div>
   );
 }
 

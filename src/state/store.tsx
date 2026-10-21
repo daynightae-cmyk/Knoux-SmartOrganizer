@@ -6,6 +6,7 @@ import { canRunTool, isActivePhase } from '../lib/guards';
 import type { PageId } from '../lib/pages';
 import { pageIds } from '../lib/pages';
 import type { ActiveOperation, AppInfo, AutomationSchedule } from './types';
+import { playUiSound } from '../lib/ui-sound';
 
 export type Translate = (key: string) => string;
 
@@ -105,13 +106,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setPage = useCallback((next: PageId) => {
     setPageState(next);
     setQuery('');
-  }, []);
+    if (settings?.appearance.workspace.soundEffects !== false) playUiSound('section');
+  }, [settings]);
 
   const openTool = useCallback((tool: ToolDefinition) => {
     setSelectedId(tool.id);
-    if (tool.category === 'scan') setPageState('scan');
-    else if ((pageIds as Set<string>).has(tool.category)) setPageState(tool.category as PageId);
-  }, []);
+    if (tool.category === 'scan') setPage('scan');
+    else if ((pageIds as Set<string>).has(tool.category)) setPage(tool.category as PageId);
+  }, [setPage]);
 
   const run = useCallback(async (tool: ToolDefinition, override: Record<string, unknown> = {}, silent = false): Promise<ToolResult | null> => {
     if (!canRunTool(tool)) {
@@ -152,10 +154,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [event, flash]);
 
   const update = useCallback(async (patch: Partial<AppSettings>) => {
+    const previousAppearance = settings?.appearance;
     const next = await window.knoux.updateSettings(patch);
     setSettings(next);
+    const themeChanged = previousAppearance && (previousAppearance.theme !== next.appearance.theme || previousAppearance.accent !== next.appearance.accent);
+    if (themeChanged && next.appearance.workspace.soundEffects !== false) playUiSound('theme');
     flash(translate(next.localization.locale, 'settings.saved'));
-  }, [flash]);
+  }, [flash, settings]);
 
   const refreshAutomations = useCallback(async () => {
     setAutomations(await window.knoux.listAutomations());

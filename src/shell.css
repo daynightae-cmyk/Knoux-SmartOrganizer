@@ -100,3 +100,9 @@ html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#
 @media(max-width:1180px){ .palette-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }.settings-section .palette-setting{min-width:0}.settings-section:has(.palette-setting){background:linear-gradient(145deg,var(--surface),#111320);border-color:color-mix(in srgb,var(--accent) 24%,var(--border));}
 @media(max-width:900px){ .palette-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.palette-setting-head{flex-direction:column}.palette-setting-head output{text-align:start} }
 @media(prefers-reduced-motion:reduce){.palette-choice:hover{transform:none}}
+
+/* Workspace control density */
+.home-workspace.workspace-density-compact .workspace-grid,.home-workspace.workspace-density-compact .quick-grid { gap:8px; }
+.home-workspace.workspace-density-compact .workspace-card,.home-workspace.workspace-density-compact .quick-card,.home-workspace.workspace-density-compact .history-card { padding:11px; min-height:0; }
+.home-workspace.workspace-density-compact .quick-card { min-height:112px; }
+.home-workspace.workspace-density-compact .section { margin-top:18px; }
