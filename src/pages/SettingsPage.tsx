@@ -28,7 +28,7 @@ export default function SettingsPage() {
       </SettingsSection>
       <SettingsSection title={t('settings.section.appearance')} resetLabel={t('settings.resetSection')} onReset={() => resetSection('appearance')}>
         <Setting label={t('settings.theme')}><select value={settings.appearance.theme} onChange={e => change('appearance', { ...settings.appearance, theme: e.target.value as AppSettings['appearance']['theme'] })}><option value="system">{t('common.system')}</option><option value="light">{t('common.light')}</option><option value="dark">{t('common.dark')}</option><option value="high-contrast">{t('settings.value.highContrast')}</option></select></Setting>
-        <Setting label={t('settings.accent')}><select value={settings.appearance.accent} onChange={e => change('appearance', { ...settings.appearance, accent: e.target.value as AppSettings['appearance']['accent'] })}>{['violet', 'blue', 'green', 'amber'].map(value => <option key={value} value={value}>{t(`settings.value.${value}`)}</option>)}</select></Setting>
+        <PalettePicker value={settings.appearance.accent} label={t('settings.paletteTitle')} subtitle={t('settings.paletteSubtitle')} onChange={value => change('appearance', { ...settings.appearance, accent: value })} t={t} />
         <Setting label={t('settings.density')}><select value={settings.appearance.density} onChange={e => change('appearance', { ...settings.appearance, density: e.target.value as AppSettings['appearance']['density'] })}><option value="comfortable">{t('common.comfortable')}</option><option value="compact">{t('common.compact')}</option></select></Setting>
         <Setting label={t('settings.fontScale')}><input type="range" min="0.8" max="1.5" step="0.1" value={settings.appearance.fontScale} onChange={e => change('appearance', { ...settings.appearance, fontScale: Number(e.target.value) })} /><output>{Math.round(settings.appearance.fontScale * 100)}%</output></Setting>
         <Toggle label={t('settings.motion')} checked={settings.appearance.reduceMotion} onChange={value => change('appearance', { ...settings.appearance, reduceMotion: value })} />
@@ -131,4 +131,24 @@ function Setting({ label, children }: { label: string; children: ReactNode }) {
 
 function Toggle({ label, checked, disabled = false, onChange }: { label: string; checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void }) {
   return <label className="setting toggle"><span>{label}</span><input type="checkbox" checked={checked} disabled={disabled} onChange={e => onChange(e.target.checked)} /></label>;
+}
+
+type Palette = AppSettings['appearance']['accent'];
+const palettes: Palette[] = ['violet', 'cyberpunk', 'neon', 'minimalist', 'blue', 'green', 'amber'];
+
+function PalettePicker({ value, label, subtitle, onChange, t }: { value: Palette; label: string; subtitle: string; onChange: (value: Palette) => void; t: (key: string) => string }) {
+  return (
+    <div className="palette-setting">
+      <div className="palette-setting-head"><div><strong>{label}</strong><small>{subtitle}</small></div><output>{t(`settings.value.${value}`)}</output></div>
+      <div className="palette-grid" role="radiogroup" aria-label={label}>
+        {palettes.map(palette => (
+          <button key={palette} type="button" className={`palette-choice palette-${palette}${value === palette ? ' selected' : ''}`} onClick={() => onChange(palette)} role="radio" aria-checked={value === palette}>
+            <span className="palette-swatch" aria-hidden="true"><i /><i /><i /><i /></span>
+            <span className="palette-choice-copy"><strong>{t(`settings.value.${palette}`)}</strong><small>{palette === 'minimalist' ? '01 / QUIET' : palette === 'cyberpunk' ? '02 / CIRCUIT' : palette === 'neon' ? '03 / PULSE' : '04 / SIGNATURE'}</small></span>
+            {value === palette && <span className="palette-check" aria-hidden="true">✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }

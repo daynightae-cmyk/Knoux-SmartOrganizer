@@ -107,7 +107,7 @@ export interface AppSettings {
   };
   appearance: {
     theme: 'dark' | 'light' | 'system' | 'high-contrast';
-    accent: 'violet' | 'blue' | 'green' | 'amber';
+    accent: 'violet' | 'blue' | 'green' | 'amber' | 'cyberpunk' | 'neon' | 'minimalist';
     density: 'comfortable' | 'compact';
     fontScale: number;
     reduceMotion: boolean;

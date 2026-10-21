@@ -19,7 +19,7 @@ const settingsSchema = z.object({
     restorePreviousPage: z.boolean(), confirmExitActiveOperations: z.boolean()
   }).strict(),
   appearance: z.object({
-    theme: z.enum(['dark', 'light', 'system', 'high-contrast']), accent: z.enum(['violet', 'blue', 'green', 'amber']),
+    theme: z.enum(['dark', 'light', 'system', 'high-contrast']), accent: z.enum(['violet', 'blue', 'green', 'amber', 'cyberpunk', 'neon', 'minimalist']),
     density: z.enum(['comfortable', 'compact']), fontScale: z.number().min(0.8).max(1.5),
     reduceMotion: z.boolean(), transparency: z.boolean(), animations: z.boolean()
   }).strict(),
