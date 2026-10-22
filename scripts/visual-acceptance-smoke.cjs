@@ -24,7 +24,7 @@ const screenshotDirectory = path.join(evidenceDirectory, 'visual-acceptance');
 // The harness reloads the packaged application six times and captures the real
 // window each time. Each reload boots the app and measures system health, so
 // the budget has to cover real work rather than a fixed guess.
-const SMOKE_TIMEOUT_MS = Number(process.env.KNOUX_SMOKE_TIMEOUT_MS || 900000);
+const SMOKE_TIMEOUT_MS = Number(process.env.KNOUX_SMOKE_TIMEOUT_MS || 1800000);
 
 function run(exe, args, logPath) {
   return new Promise((resolve, reject) => {

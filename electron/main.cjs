@@ -251,6 +251,7 @@ async function buildDiagnostics() {
 function argumentValue(name) { const prefix = `--${name}=`; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 function smokeArgument(name) { const value = argumentValue(name); return value ? path.resolve(value) : null; }
 const cancelSmokeHoldMs = Math.min(Math.max(Number(argumentValue('knoux-cancel-hold-ms')) || 0, 0), 10000);
+if (argumentValue('knoux-visual-smoke-output')) { app.commandLine.appendSwitch('disable-backgrounding-occluded-windows'); app.commandLine.appendSwitch('disable-renderer-backgrounding'); }
 function automationArgument() { const prefix = '--automation-run='; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 /**
  * Runs the Windows Task Scheduler.
@@ -1084,6 +1085,7 @@ async function captureVisualEvidence(outputDirectory) {
   const fsPromises = fsp;
   await fsPromises.mkdir(outputDirectory, { recursive: true });
   const originalBounds = mainWindow.getBounds();
+  const originalAlwaysOnTop = mainWindow.isAlwaysOnTop();
   const originalSettings = await getSettings();
   const scenarios = [
     { name: 'en-home-1366x768', locale: 'en', page: 'home', width: 1366, height: 768 },
@@ -1142,6 +1144,7 @@ async function captureVisualEvidence(outputDirectory) {
     return false;
   };
   try {
+    mainWindow.setAlwaysOnTop(true);
     mainWindow.show();
     mainWindow.focus();
     // Chromium stops producing frames for a window it considers occluded, and
@@ -1238,6 +1241,7 @@ async function captureVisualEvidence(outputDirectory) {
   } finally {
     try { mainWindow.webContents.setBackgroundThrottling(true); } catch {}
     await progress('capture-finished');
+    mainWindow.setAlwaysOnTop(originalAlwaysOnTop);
     mainWindow.setBounds(originalBounds);
     await updateSettings({ localization: originalSettings.localization, window: originalSettings.window });
   }
