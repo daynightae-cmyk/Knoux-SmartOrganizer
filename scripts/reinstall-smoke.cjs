@@ -21,6 +21,7 @@ const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
+const { removeWhenUnlocked, uninstallApplication } = require('./smoke-process-helpers.cjs');
 
 const root = path.resolve(__dirname, '..');
 const setup = path.join(root, 'release', 'KNOuX-SmartOrganizer-Setup-x64.exe');
@@ -56,20 +57,6 @@ async function snapshotUserData(userDataDirectory) {
     files[name] = { exists, sha256: exists ? await sha256(target) : null };
   }
   return files;
-}
-
-async function uninstall(installDirectory) {
-  const uninstallers = (await fs.readdir(installDirectory)).filter(name => /^Uninstall .*\.exe$/i.test(name));
-  if (uninstallers.length !== 1) throw new Error('Expected exactly one NSIS uninstaller.');
-  const exit = await run(path.join(installDirectory, uninstallers[0]), ['/S']);
-  if (exit !== 0) throw new Error(`NSIS uninstaller exited with code ${exit}.`);
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    const removed = await fs.access(installDirectory).then(() => false).catch(() => true);
-    if (removed) return true;
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  const remaining = await fs.readdir(installDirectory).catch(() => []);
-  throw new Error(`Install directory was not removed by the uninstaller. Remaining entries: ${remaining.join(', ') || 'unknown'}.`);
 }
 
 async function install(installDirectory) {
@@ -108,8 +95,9 @@ async function main() {
     result.firstSmokeExit = 0;
     const beforeUninstall = await snapshotUserData(userDataDirectory);
 
-    result.uninstallExit = await uninstall(installDirectory);
-    result.installDirectoryRemoved = true;
+    const firstUninstall = await uninstallApplication(installDirectory, run);
+    result.uninstallExit = firstUninstall.exit;
+    result.installDirectoryRemoved = firstUninstall.removed;
 
     // The application must leave the user's data alone when it is removed.
     const afterUninstall = await snapshotUserData(userDataDirectory);
@@ -135,15 +123,18 @@ async function main() {
     result.reloadedDataValid = { settingsVersion: settings.settingsVersion, historyRecords: history.length, automationStoreVersion: automations.version, automationSchedules: automations.schedules.length };
     result.userDataAfterReinstall = await snapshotUserData(userDataDirectory);
 
-    result.finalUninstallExit = await uninstall(installDirectory);
-    result.finalInstallDirectoryRemoved = true;
+    const finalUninstall = await uninstallApplication(installDirectory, run);
+    result.finalUninstallExit = finalUninstall.exit;
+    result.finalInstallDirectoryRemoved = finalUninstall.removed;
 
     await fs.mkdir(path.dirname(evidencePath), { recursive: true });
     await fs.writeFile(evidencePath, JSON.stringify(result, null, 2), 'utf8');
     console.log('Reinstall smoke PASS: install, run, uninstall, reinstall and run completed with the user data intact.');
   } finally {
-    await fs.rm(installDirectory, { recursive: true, force: true });
-    await fs.rm(userDataDirectory, { recursive: true, force: true });
+    const installLeftover = await removeWhenUnlocked(installDirectory);
+    if (!installLeftover.removed) console.warn(`Reinstall smoke cleanup warning: the disposable install directory could not be fully removed (${installLeftover.error?.code || installLeftover.error?.message || 'unknown'}).`);
+    const dataLeftover = await removeWhenUnlocked(userDataDirectory);
+    if (!dataLeftover.removed) console.warn(`Reinstall smoke cleanup warning: the disposable user-data directory could not be fully removed (${dataLeftover.error?.code || dataLeftover.error?.message || 'unknown'}).`);
     await fs.rm(firstEvidence, { force: true });
     await fs.rm(secondEvidence, { force: true });
   }
