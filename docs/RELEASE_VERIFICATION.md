@@ -110,9 +110,18 @@ Unit coverage in `tests/clipboard-vault.test.ts` (18 cases) additionally proves:
 | Release evidence gate | `node scripts/verify-release.cjs` | PASS |
 | Authenticode truth | `npm run signing:verify` | `UNSIGNED_PRODUCTION_CANDIDATE` — see §5 |
 | Artifact manifest | `npm run artifact:manifest` | PASS |
-| Source CI | `.github/workflows/ci.yml` | PASS on the pushed source |
-| Windows release gate | `.github/workflows/release-closure.yml` | PASS on the pushed source - baseline and final packaged, installer, offline and visual gates |
-| Fresh-runner product verification | `clean-machine-verification` | PASS - silent install, packaged launch, core operations, uninstall and reinstall on `windows-latest` without a checkout or `node_modules`; unsigned state recorded explicitly |
+| Source CI | `.github/workflows/ci.yml` | PASS on the pushed source - run `39831532810` |
+| Windows release gate | `.github/workflows/release-closure.yml` | PASS on the pushed source - run `39831532797`, baseline and final packaged, installer, offline and visual gates |
+| Fresh-runner product verification | `clean-machine-verification` | PASS - run `39831532797` (job `clean-machine-verification`): silent install, packaged launch, core operations, uninstall and reinstall on `windows-latest` without a checkout or `node_modules`; unsigned state recorded explicitly |
+
+The final green runs above were produced from repository SHA
+`6329c6e1e209e58bd86b21e60e0848b2260d49dc`; the packaged application code is
+the same code built into the delivered artifacts from `1a65c23`. An earlier
+release-closure attempt on `1a65c23` hit a one-off Electron
+`PostQueuedCompletionStatus` crash in the baseline packaged smoke; that same
+smoke passed in the `1a65c23` source-CI run and in both jobs of the final run,
+so it is recorded as a non-reproducible runner crash rather than a product
+failure.
 
 ---
 
