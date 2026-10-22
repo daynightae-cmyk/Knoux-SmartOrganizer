@@ -44,10 +44,11 @@ async function main() {
   const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'knoux-visual-'));
   const output = path.join(workDirectory, 'visual.json');
   const applicationLog = path.join(workDirectory, 'application.log');
+  const userDataDirectory = path.join(workDirectory, 'user-data');
   try {
     let code;
     try {
-      code = await run(executable, [`--knoux-visual-smoke-output=${output}`], applicationLog);
+      code = await run(executable, [`--knoux-visual-smoke-output=${output}`, `--user-data-dir=${userDataDirectory}`], applicationLog);
     } catch (error) {
       // The harness records its own progress, so a run that stops tells where
       // it stopped instead of only that it stopped.

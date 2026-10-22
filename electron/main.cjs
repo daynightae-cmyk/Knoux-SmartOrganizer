@@ -1186,7 +1186,7 @@ async function captureVisualEvidence(outputDirectory) {
           const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
           for (let attempt = 0; attempt < 60; attempt += 1) {
             const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false })`).catch(() => null);
-            if (state && state.lang === scenario.locale && state.dir === expectedDirection) break;
+            if (state && state.ready === true && state.lang === scenario.locale && state.dir === expectedDirection) break;
             await settle(200);
           }
           await settle(700);
