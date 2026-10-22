@@ -1108,7 +1108,7 @@ async function captureVisualEvidence(outputDirectory) {
    */
   const captureWindow = async (label) => {
     let lastError = null;
-    for (let attempt = 0; attempt < 25; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       try {
         // The window has to be on screen for the compositor to produce a
         // frame for it.
@@ -1143,80 +1143,99 @@ async function captureVisualEvidence(outputDirectory) {
   try {
     mainWindow.show();
     mainWindow.focus();
+    // Chromium stops producing frames for a window it considers occluded, and
+    // this run must keep painting while the terminal owns the foreground. The
+    // setting is restored below.
+    try { mainWindow.webContents.setBackgroundThrottling(false); } catch {}
     for (const scenario of scenarios) {
-      await progress(`scenario-start ${scenario.name}`);
-      mainWindow.setBounds({ x: originalBounds.x, y: originalBounds.y, width: scenario.width, height: scenario.height });
-      await progress(`bounds-set ${scenario.name}`);
-      // The window resizes on the next layout pass, so the new size is only
-      // real once the window reports it. Reading the bounds too early is how a
-      // capture ends up filed under a size it does not have.
-      for (let attempt = 0; attempt < 40; attempt += 1) {
-        const bounds = mainWindow.getBounds();
-        if (bounds.width === scenario.width && bounds.height === scenario.height) break;
-        await settle(100);
+      let completed = false;
+      let lastError = null;
+      // A reload replaces the compositor surface. If a pass cannot produce a
+      // frame, the surface is recreated once before the scenario is declared
+      // failed, so one stale surface cannot discard the other captures.
+      for (let pass = 1; pass <= 2 && !completed; pass += 1) {
+        await progress(`scenario-start ${scenario.name} pass=${pass}`);
+        try {
+          mainWindow.setBounds({ x: originalBounds.x, y: originalBounds.y, width: scenario.width, height: scenario.height });
+          await progress(`bounds-set ${scenario.name}`);
+          // The window resizes on the next layout pass, so the new size is only
+          // real once the window reports it. Reading the bounds too early is how a
+          // capture ends up filed under a size it does not have.
+          for (let attempt = 0; attempt < 40; attempt += 1) {
+            const bounds = mainWindow.getBounds();
+            if (bounds.width === scenario.width && bounds.height === scenario.height) break;
+            await settle(100);
+          }
+          const scenarioBounds = mainWindow.getBounds();
+          await progress(`bounds-confirmed ${scenario.name} ${scenarioBounds.width}x${scenarioBounds.height} at ${scenarioBounds.x},${scenarioBounds.y} maximized=${mainWindow.isMaximized()} full=${mainWindow.isFullScreen()}`);
+          await updateSettings({
+            localization: { ...originalSettings.localization, locale: scenario.locale },
+            window: { ...originalSettings.window, bounds: scenarioBounds, lastPage: scenario.page }
+          });
+          await progress(`settings-updated ${scenario.name}`);
+          mainWindow.reload();
+          await settle(400);
+          await waitForLoad();
+          // The document metadata is applied by the renderer once its settings have
+          // loaded, so the capture waits for the expected language and direction
+          // instead of a fixed delay.
+          const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
+          for (let attempt = 0; attempt < 60; attempt += 1) {
+            const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false })`).catch(() => null);
+            if (state && state.lang === scenario.locale && state.dir === expectedDirection) break;
+            await settle(200);
+          }
+          await settle(700);
+          // The compositor has to have painted the window before it can produce a
+          // frame, so the capture waits for the first paint after the reload.
+          await new Promise(resolve => {
+            const timer = setTimeout(resolve, 3000);
+            mainWindow.webContents.once('paint', () => { clearTimeout(timer); resolve(); });
+          });
+          await progress(`loaded ${scenario.name}`);
+          const metrics = await mainWindow.webContents.executeJavaScript(`(() => ({
+            lang: document.documentElement.lang,
+            dir: document.documentElement.dir,
+            theme: document.documentElement.dataset.theme,
+            clientWidth: document.documentElement.clientWidth,
+            scrollWidth: document.documentElement.scrollWidth,
+            horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            // The in-flow elements whose content actually escapes their parent.
+            // A bare overflow flag names the symptom; this names the cause. Text
+            // that is deliberately clipped, and decorative layers that are
+            // deliberately oversized, are not defects and are not reported.
+            overflowingElements: Array.from(document.querySelectorAll('*')).filter(node => {
+              const style = getComputedStyle(node);
+              if (style.overflowX === 'hidden' || style.overflowX === 'clip') return false;
+              if (style.position === 'absolute' || style.position === 'fixed') return false;
+              if (style.display === 'none' || style.visibility === 'hidden') return false;
+              if (!node.offsetParent && style.position !== 'fixed') return false;
+              const parent = node.parentElement;
+              if (!parent) return false;
+              const rect = node.getBoundingClientRect();
+              const parentRect = parent.getBoundingClientRect();
+              if (!rect.width || !parentRect.width) return false;
+              return rect.right > parentRect.right + 4 || rect.left < parentRect.left - 4;
+            }).slice(0, 6).map(node => ({ tag: node.tagName.toLowerCase(), className: String(node.className || '').slice(0, 90), width: Math.round(node.getBoundingClientRect().width), parentWidth: Math.round(node.parentElement.getBoundingClientRect().width) })),
+            focusable: document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').length,
+            headings: Array.from(document.querySelectorAll('h1, h2')).slice(0, 6).map(node => (node.textContent || '').trim()).filter(Boolean)
+          }))()`);
+          const image = await captureWindow(scenario.name);
+          await progress(`captured ${scenario.name}`);
+          const file = path.join(outputDirectory, `${scenario.name}.png`);
+          await fsPromises.writeFile(file, image.toPNG());
+          const capturedBounds = mainWindow.getBounds();
+          results.push({ ...scenario, ...metrics, requestedWidth: scenario.width, requestedHeight: scenario.height, capturedWidth: capturedBounds.width, capturedHeight: capturedBounds.height, captureSizeMatches: capturedBounds.width === scenario.width && capturedBounds.height === scenario.height, file: path.basename(file), captured: true });
+          completed = true;
+        } catch (error) {
+          lastError = error;
+          await progress(`scenario-error ${scenario.name} pass=${pass}: ${String(error?.message || error)}`);
+        }
       }
-      const scenarioBounds = mainWindow.getBounds();
-      await progress(`bounds-confirmed ${scenario.name} ${scenarioBounds.width}x${scenarioBounds.height} at ${scenarioBounds.x},${scenarioBounds.y} maximized=${mainWindow.isMaximized()} full=${mainWindow.isFullScreen()}`);
-      await updateSettings({
-        localization: { ...originalSettings.localization, locale: scenario.locale },
-        window: { ...originalSettings.window, bounds: scenarioBounds, lastPage: scenario.page }
-      });
-      await progress(`settings-updated ${scenario.name}`);
-      mainWindow.reload();
-      await settle(400);
-      await waitForLoad();
-      // The document metadata is applied by the renderer once its settings have
-      // loaded, so the capture waits for the expected language and direction
-      // instead of a fixed delay.
-      const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
-      for (let attempt = 0; attempt < 60; attempt += 1) {
-        const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false })`).catch(() => null);
-        if (state && state.lang === scenario.locale && state.dir === expectedDirection) break;
-        await settle(200);
-      }
-      await settle(700);
-      // The compositor has to have painted the window before it can produce a
-      // frame, so the capture waits for the first paint after the reload.
-      await new Promise(resolve => {
-        const timer = setTimeout(resolve, 3000);
-        mainWindow.webContents.once('paint', () => { clearTimeout(timer); resolve(); });
-      });
-      await progress(`loaded ${scenario.name}`);
-      const metrics = await mainWindow.webContents.executeJavaScript(`(() => ({
-        lang: document.documentElement.lang,
-        dir: document.documentElement.dir,
-        theme: document.documentElement.dataset.theme,
-        clientWidth: document.documentElement.clientWidth,
-        scrollWidth: document.documentElement.scrollWidth,
-        horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-        // The in-flow elements whose content actually escapes their parent.
-        // A bare overflow flag names the symptom; this names the cause. Text
-        // that is deliberately clipped, and decorative layers that are
-        // deliberately oversized, are not defects and are not reported.
-        overflowingElements: Array.from(document.querySelectorAll('*')).filter(node => {
-          const style = getComputedStyle(node);
-          if (style.overflowX === 'hidden' || style.overflowX === 'clip') return false;
-          if (style.position === 'absolute' || style.position === 'fixed') return false;
-          if (style.display === 'none' || style.visibility === 'hidden') return false;
-          if (!node.offsetParent && style.position !== 'fixed') return false;
-          const parent = node.parentElement;
-          if (!parent) return false;
-          const rect = node.getBoundingClientRect();
-          const parentRect = parent.getBoundingClientRect();
-          if (!rect.width || !parentRect.width) return false;
-          return rect.right > parentRect.right + 4 || rect.left < parentRect.left - 4;
-        }).slice(0, 6).map(node => ({ tag: node.tagName.toLowerCase(), className: String(node.className || '').slice(0, 90), width: Math.round(node.getBoundingClientRect().width), parentWidth: Math.round(node.parentElement.getBoundingClientRect().width) })),
-        focusable: document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').length,
-        headings: Array.from(document.querySelectorAll('h1, h2')).slice(0, 6).map(node => (node.textContent || '').trim()).filter(Boolean)
-      }))()`);
-      const image = await captureWindow(scenario.name);
-      await progress(`captured ${scenario.name}`);
-      const file = path.join(outputDirectory, `${scenario.name}.png`);
-      await fsPromises.writeFile(file, image.toPNG());
-      const capturedBounds = mainWindow.getBounds();
-      results.push({ ...scenario, ...metrics, requestedWidth: scenario.width, requestedHeight: scenario.height, capturedWidth: capturedBounds.width, capturedHeight: capturedBounds.height, captureSizeMatches: capturedBounds.width === scenario.width && capturedBounds.height === scenario.height, file: path.basename(file), captured: true });
+      if (!completed) results.push({ ...scenario, captured: false, error: String(lastError?.message || lastError) });
     }
   } finally {
+    try { mainWindow.webContents.setBackgroundThrottling(true); } catch {}
     await progress('capture-finished');
     mainWindow.setBounds(originalBounds);
     await updateSettings({ localization: originalSettings.localization, window: originalSettings.window });
