@@ -224,14 +224,15 @@ describe('clipboard vault', () => {
   });
 
   it('captures a file reference and can restore it', async () => {
-    const source = path.join(root, 'note.txt');
-    await writeFile(source, 'note', 'utf8');
+    // The vault handles WINDOWS file references, so the fixture is a Windows
+    // path on every host.
+    const source = 'C:\\Users\\Test\\note.txt';
     const clipboard = fakeClipboard({ uriList: `file:///${source.replace(/\\/g, '/')}` });
     const vault = createClipboardVault({ safeStorage: fakeSafeStorage(), clipboard, storagePath: path.join(root, 'vault.json'), readSettings: async () => settings() });
     await vault.poll();
     const [item] = vault.list();
     expect(item.type).toBe('files');
-    expect(vault.sourceFiles(item.id).length).toBe(1);
+    expect(vault.sourceFiles(item.id)).toEqual([source]);
     vault.copyBack(item.id);
     const drop = clipboard.writes.find(write => write.format === 'FileNameW');
     expect(drop?.buffer?.toString('utf16le')).toContain('note.txt');
@@ -247,9 +248,16 @@ describe('clipboard heuristics', () => {
     expect(looksSensitive('short')).toBe(false);
   });
 
-  it('normalises file:// references into absolute paths', () => {
+  it('normalises file:// references into absolute Windows paths', () => {
     const list = normaliseFileReferences(['file:///C:/Users/Test/note.txt', 'C:\\Users\\Test\\other.txt', 'relative.txt']);
     expect(list).toHaveLength(2);
     expect(list[0]).toContain('note.txt');
+    expect(list[1]).toContain('other.txt');
+  });
+
+  it('keeps a UNC file reference intact', () => {
+    const list = normaliseFileReferences(['file://server/share/report.pdf']);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toContain('report.pdf');
   });
 });

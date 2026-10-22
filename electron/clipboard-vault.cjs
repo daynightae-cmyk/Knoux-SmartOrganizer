@@ -54,6 +54,14 @@ function looksSensitive(text) {
   return classes >= 3;
 }
 
+/**
+ * Normalises the file references Windows puts on the clipboard.
+ *
+ * These are WINDOWS paths, so the check uses Windows rules on every host.
+ * Using the host rules made a `file:///C:/...` reference resolve against the
+ * machine's working directory, which is how a captured file reference
+ * disappeared on a non-Windows runner.
+ */
 function normaliseFileReferences(list) {
   const out = [];
   for (const entry of Array.isArray(list) ? list : []) {
@@ -62,12 +70,14 @@ function normaliseFileReferences(list) {
     if (/^file:\/\//i.test(value)) {
       value = value.slice('file://'.length);
       try { value = decodeURIComponent(value); } catch { /* keep the raw form */ }
-      // file:///C:/dir/file.txt -> C:/dir/file.txt, file://server/share -> UNC
+      // file:///C:/dir/file.txt -> C:/dir/file.txt
+      // file://server/share/file.txt -> \\server\share\file.txt
       if (/^\/[a-z]:/i.test(value)) value = value.slice(1);
-      else if (value.startsWith('/')) value = `\\\\${value.slice(1).replace(/\//g, '\\')}`;
+      else if (value.startsWith('/')) value = value.replace(/\//g, '\\');
+      else value = `\\\\${value.replace(/\//g, '\\')}`;
     }
-    const normalized = value.replace(/\//g, path.sep);
-    if (!path.isAbsolute(normalized)) continue;
+    const normalized = value.replace(/\//g, '\\');
+    if (!path.win32.isAbsolute(normalized)) continue;
     if (out.includes(normalized)) continue;
     out.push(normalized);
     if (out.length >= DEFAULT_MAX_FILES) break;
