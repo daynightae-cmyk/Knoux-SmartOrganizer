@@ -53,16 +53,27 @@ const CLOUD_TAGS = new Set(['cloud-files']);
 /** Reparse tags that may point at a different volume than the scanned root. */
 const CROSS_VOLUME_TAGS = new Set(['mount-point', 'symbolic-link', 'unknown']);
 
+/**
+ * Volume identity of a Windows path.
+ *
+ * These helpers describe WINDOWS paths. They therefore use `path.win32`
+ * explicitly instead of the host platform's path rules, so a check performed on
+ * a Linux CI runner resolves the same path it resolves on Windows. Using the
+ * host rules made `C:\Users\k7\a` resolve against the runner's working
+ * directory, which is how the volume comparison silently became wrong off
+ * Windows.
+ */
 function volumeKey(targetPath) {
-  const resolved = path.resolve(targetPath);
-  const parsed = path.parse(resolved);
+  const resolved = path.win32.resolve(String(targetPath || ''));
+  const parsed = path.win32.parse(resolved);
   return `${parsed.root.toLowerCase()}`;
 }
 
+/** True when `candidate` is `root` itself or lives underneath it. */
 function isInside(root, candidate) {
-  const from = path.resolve(root).toLowerCase();
-  const to = path.resolve(candidate).toLowerCase();
-  return to === from || to.startsWith(from.endsWith(path.sep) ? from : from + path.sep);
+  const from = path.win32.resolve(String(root || '')).toLowerCase();
+  const to = path.win32.resolve(String(candidate || '')).toLowerCase();
+  return to === from || to.startsWith(from.endsWith(path.win32.sep) ? from : from + path.win32.sep);
 }
 
 /** Windows error codes that mean "this entry is not readable", not "scan failed". */
@@ -274,8 +285,9 @@ function tempDirectory() {
 
 function longPathSafe(targetPath) {
   // Windows long paths need the \\?\ prefix for the Win32 layer; Node already
-  // handles this internally, but exposing the resolved form keeps evidence honest.
-  const resolved = path.resolve(targetPath);
+  // handles this internally, but exposing the resolved form keeps evidence
+  // honest. The resolution is Windows-specific on purpose.
+  const resolved = path.win32.resolve(String(targetPath || ''));
   return resolved.length > 260 ? `\\\\?\\${resolved}` : resolved;
 }
 

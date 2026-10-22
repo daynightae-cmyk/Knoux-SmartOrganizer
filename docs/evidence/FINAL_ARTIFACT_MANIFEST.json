@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-10-22T03:00:55.580Z",
+  "gitSha": "27d1665a7fc1195d6228eb6a7a799a6aa3bb41d4",
+  "version": "0.4.0",
+  "signingState": "UNSIGNED_PRODUCTION_CANDIDATE",
+  "toolchain": {
+    "node": "24.21.0",
+    "platform": "win32",
+    "arch": "x64",
+    "electron": "43.4.1",
+    "electronBuilder": "26.15.3"
+  },
+  "artifacts": [
+    {
+      "role": "installer",
+      "file": "release\\KNOuX-SmartOrganizer-Setup-x64.exe",
+      "present": true,
+      "bytes": 115616892,
+      "sha256": "28b9d9240cd22c7e3f6212905605a78b8cb614b033ebc0f61f18459f4d7958e0",
+      "builtAt": "2026-10-22T02:52:23.358Z"
+    },
+    {
+      "role": "installed-executable",
+      "file": "release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+      "present": true,
+      "bytes": 235566592,
+      "sha256": "badff3e8bd02ed88ef143c7c9e34123cc4bfec09f3fbd9ff94124bd378fb942e",
+      "builtAt": "2026-10-22T02:50:08.653Z"
+    }
+  ]
+}

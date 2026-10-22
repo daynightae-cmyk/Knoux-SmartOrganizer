@@ -5,6 +5,9 @@ const { promisify } = require('node:util');
 const execFileAsync = promisify(defaultExecFile);
 const CURRENT_USER_RUN_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run';
 const ALLOWED_VALUE_TYPES = new Set(['REG_SZ', 'REG_EXPAND_SZ']);
+// A local registry read answers in milliseconds. The old 10-second budget was
+// tight enough that a loaded machine could report the Run key as unreadable.
+const REGISTRY_TIMEOUT_MS = 30000;
 
 function validValueName(value) {
   return typeof value === 'string' && value.length >= 1 && value.length <= 255 && !value.includes('\\') && !value.includes('\0');
@@ -47,10 +50,13 @@ function createStartupManager({ execFile = execFileAsync, readJournal, writeJour
    */
   async function readRunKey() {
     try {
-      const { stdout } = await execFile('reg.exe', ['query', CURRENT_USER_RUN_KEY], { windowsHide: true, timeout: 10000, maxBuffer: 1024 * 1024 });
+      const { stdout } = await execFile('reg.exe', ['query', CURRENT_USER_RUN_KEY], { windowsHide: true, timeout: REGISTRY_TIMEOUT_MS, maxBuffer: 1024 * 1024 });
       return String(stdout || '');
-    } catch {
-      throw new Error('Unable to inspect the selected startup entry.');
+    } catch (error) {
+      // The exit code is reported, never the command line or the registry dump.
+      const code = Number(error?.code);
+      const reason = error?.code === 'ENOENT' ? 'reg-exe-not-found' : (Number.isFinite(code) && code > 0 ? `registry-query-exit-${code}` : 'registry-query-failed');
+      throw new Error(`Unable to inspect the selected startup entry (${reason}).`);
     }
   }
 
@@ -69,7 +75,7 @@ function createStartupManager({ execFile = execFileAsync, readJournal, writeJour
       // The journal is written before the delete, so a failed delete still
       // leaves a restore record and the value is never lost.
       await writeJournal(`undo-startup-${journalId}.json`, { journalId, action: 'startup-disable', source: CURRENT_USER_RUN_KEY, ...entry, createdAt: new Date().toISOString() });
-      await execFile('reg.exe', ['delete', CURRENT_USER_RUN_KEY, '/v', valueName, '/f'], { windowsHide: true, timeout: 10000, maxBuffer: 1024 * 1024 });
+      await execFile('reg.exe', ['delete', CURRENT_USER_RUN_KEY, '/v', valueName, '/f'], { windowsHide: true, timeout: REGISTRY_TIMEOUT_MS, maxBuffer: 1024 * 1024 });
     }
     return { items: [{ valueName, state: dryRun ? 'would-disable' : 'disabled' }], summary: { valueName, changed: !dryRun, dryRun: Boolean(dryRun), journalId: dryRun ? null : journalId, recoverable: true, previousValueType: entry.valueType }, undoMetadata: dryRun ? null : { journalId, action: 'startup-disable' } };
   }
@@ -80,7 +86,7 @@ function createStartupManager({ execFile = execFileAsync, readJournal, writeJour
     const existing = await query(journal.valueName);
     // Never replace an entry that another process recreated in the meantime.
     if (existing) throw new Error('Startup entry already exists; restore was not applied.');
-    if (!dryRun) await execFile('reg.exe', ['add', CURRENT_USER_RUN_KEY, '/v', journal.valueName, '/t', journal.valueType, '/d', journal.valueData, '/f'], { windowsHide: true, timeout: 10000, maxBuffer: 1024 * 1024 });
+    if (!dryRun) await execFile('reg.exe', ['add', CURRENT_USER_RUN_KEY, '/v', journal.valueName, '/t', journal.valueType, '/d', journal.valueData, '/f'], { windowsHide: true, timeout: REGISTRY_TIMEOUT_MS, maxBuffer: 1024 * 1024 });
     return { items: [{ valueName: journal.valueName, state: dryRun ? 'would-restore' : 'restored' }], summary: { valueName: journal.valueName, changed: !dryRun, dryRun: Boolean(dryRun), journalId, restoredValueType: journal.valueType, recoverable: true }, undoMetadata: null };
   }
 

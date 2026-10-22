@@ -9,6 +9,10 @@ const executable = process.env.KNOUX_SMOKE_EXECUTABLE ? path.resolve(process.env
 const evidencePath = process.env.KNOUX_SMOKE_EVIDENCE ? path.resolve(process.env.KNOUX_SMOKE_EVIDENCE) : path.join(projectRoot, 'docs', 'evidence', 'packaged-operations-smoke.json');
 const execFileAsync = promisify(execFile);
 const currentUserRunKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run';
+// The smoke drives roughly two dozen real Windows operations back to back.
+// On a low-power host that sequence measures well over a minute, so a fixed
+// 90-second wall clock produced false failures that proved nothing.
+const SMOKE_TIMEOUT_MS = Number(process.env.KNOUX_SMOKE_TIMEOUT_MS || 600000);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -19,8 +23,8 @@ function launch(exe, args) {
     const child = spawn(exe, args, { windowsHide: true, stdio: 'ignore' });
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error('Packaged operations smoke timed out after 90 seconds.'));
-    }, 90000);
+      reject(new Error(`Packaged operations smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`));
+    }, SMOKE_TIMEOUT_MS);
     child.once('error', error => { clearTimeout(timer); reject(error); });
     child.once('exit', code => { clearTimeout(timer); resolve(code); });
   });
@@ -41,7 +45,10 @@ async function main() {
     await execFileAsync('reg.exe', ['add', currentUserRunKey, '/v', startupValue, '/t', 'REG_SZ', '/d', 'cmd.exe /c exit 0', '/f'], { windowsHide: true, timeout: 10000 });
     await fs.mkdir(cleanupFixture, { recursive: true });
     await fs.mkdir(cancelFixture, { recursive: true });
-    for (let index = 0; index < 130; index += 1) { const child = path.join(cancelFixture, `entry-${index}`); await fs.mkdir(child); await fs.writeFile(path.join(child, 'fixture.txt'), String(index), 'utf8'); }
+    // The cancellation fixture has to be big enough that the scan is still
+    // running when the cancel request arrives. A tiny fixture finished before
+    // the request could land, which produced a false failure.
+    for (let index = 0; index < 900; index += 1) { const child = path.join(cancelFixture, `entry-${index}`); await fs.mkdir(child); await fs.writeFile(path.join(child, 'fixture.txt'), String(index), 'utf8'); }
     await fs.writeFile(path.join(fixture, 'hash-fixture.txt'), 'KNOuX packaged operation smoke\n', 'utf8');
     await fs.writeFile(path.join(fixture, 'duplicate-a.txt'), 'same-content\n', 'utf8');
     await fs.writeFile(path.join(fixture, 'duplicate-b.txt'), 'same-content\n', 'utf8');
@@ -60,6 +67,7 @@ async function main() {
       `--knoux-startup-smoke-value=${startupValue}`
     ];
     if (process.env.KNOUX_SMOKE_OFFLINE === '1') appArgs.push('--host-rules=MAP * 0.0.0.0');
+    if (process.env.KNOUX_SMOKE_USER_DATA_DIR) appArgs.push(`--user-data-dir=${path.resolve(process.env.KNOUX_SMOKE_USER_DATA_DIR)}`);
     const code = await launch(executable, appArgs);
     assert(code === 0, `Packaged operations smoke exited with code ${code}.`);
     const report = JSON.parse(await fs.readFile(output, 'utf8'));
@@ -86,11 +94,21 @@ async function main() {
     assert(evidence.automationRun?.success === true && evidence.automationRemoved === true, 'Automation did not run successfully and remove its Task Scheduler entry.');
     assert(evidence.cancellation?.success === false && evidence.cancellation.errors?.some(error => String(error).includes('cancelled')), 'Cancellation request did not produce a cancelled operation.');
     for (const phase of ['queued', 'preflight', 'running', 'progress', 'cancelled']) assert(evidence.lifecyclePhases?.includes(phase), `Cancellation lifecycle is missing ${phase}.`);
+    const vault = report.clipboard || {};
+    assert(vault.captured === true, 'The Clipboard Vault did not capture a real Windows clipboard entry.');
+    assert(vault.capturedType === 'text', 'The Clipboard Vault did not capture the clipboard entry as text.');
+    assert(vault.capturedDuringPause === false, 'The Clipboard Vault captured content while capture was paused.');
+    assert(vault.capturedAfterResume === true, 'The Clipboard Vault did not capture content after capture was resumed.');
+    assert(vault.pinned === true, 'The Clipboard Vault did not pin a captured entry.');
+    assert(vault.deleted === true, 'The Clipboard Vault did not delete a captured entry.');
+    assert(vault.clearedItems >= 1 && vault.itemsAfterClear === 0, 'The Clipboard Vault did not clear its history.');
+    assert(vault.storageMode === 'encrypted' || vault.persistenceAvailable === false, 'The Clipboard Vault reported an impossible storage mode.');
+    if (vault.storageMode === 'encrypted') assert(vault.encryptionAvailable === true, 'The Clipboard Vault claimed encrypted storage without an available operating-system key.');
     const restoredStartup = await execFileAsync('reg.exe', ['query', currentUserRunKey, '/v', startupValue], { windowsHide: true, timeout: 10000 });
     assert(restoredStartup.stdout.includes(startupValue), 'Startup value is absent after restore.');
     await fs.access(agedFile);
     await fs.mkdir(path.dirname(evidencePath), { recursive: true });
-    await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true } }, null, 2), 'utf8');
+    await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true, clipboardVaultVerified: true, clipboardVault: { captured: vault.captured, capturedDuringPause: vault.capturedDuringPause, capturedAfterResume: vault.capturedAfterResume, pinned: vault.pinned, deleted: vault.deleted, clearedItems: vault.clearedItems, storageMode: vault.storageMode, encryptionAvailable: vault.encryptionAvailable } } }, null, 2), 'utf8');
     console.log('Packaged operations smoke PASS: cleanup preview, quarantine, and undo were verified in a disposable temporary fixture.');
     completed = true;
   } finally {

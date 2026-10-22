@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { createAutomationStore } = require('../electron/automation.cjs') as {
+const { createAutomationStore, safeError } = require('../electron/automation.cjs') as {
   createAutomationStore: (options: { userDataPath: string; executablePath: string; runTask: (args: string[]) => Promise<{ stdout: string; stderr: string }> }) => {
     list: () => Promise<AutomationSchedule[]>;
     create: (input: { toolId: string; label: string; trigger: Record<string, unknown> }) => Promise<AutomationSchedule>;
@@ -13,6 +13,7 @@ const { createAutomationStore } = require('../electron/automation.cjs') as {
     setEnabled: (id: string, enabled: boolean) => Promise<AutomationSchedule>;
     recordRun: (id: string, result: Record<string, unknown>) => Promise<AutomationSchedule>;
   };
+  safeError: (error: unknown) => string;
 };
 
 interface AutomationSchedule { id: string; toolId: string; label: string; enabled: boolean; trigger: Record<string, unknown>; lastRun: Record<string, unknown> | null; }
@@ -58,5 +59,17 @@ describe('local automation store', () => {
     await expect(store.remove(created.id)).resolves.toBe(true);
     expect(await store.list()).toEqual([]);
     expect(runTask.mock.calls.map(call => call[0][2])).toContainEqual(expect.stringContaining('KNOuXSmartOrganizer-'));
+  });
+
+  it('never forwards the scheduler command line to the renderer', async () => {
+    // `execFile` embeds the whole command line in its error message. That text
+    // contains the executable path and the automation id, and must not reach
+    // the renderer.
+    const leaking = new Error('Command failed: schtasks.exe /Create /TN KNOuXSmartOrganizer-abc /TR "C:\\Secret Path\\KNOuX.exe" --automation-run=abc');
+    expect(safeError(leaking)).not.toContain('schtasks.exe');
+    expect(safeError(leaking)).not.toContain('Secret Path');
+    expect(safeError(leaking)).toBe('Windows Task Scheduler request failed.');
+    const sanitized = Object.assign(new Error('Windows Task Scheduler request failed (timed-out).'), { code: 'SCHEDULER_FAILED' });
+    expect(safeError(sanitized)).toBe('Windows Task Scheduler request failed (timed-out).');
   });
 });

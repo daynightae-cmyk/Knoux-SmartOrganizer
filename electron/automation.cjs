@@ -24,7 +24,17 @@ function taskArgs(schedule, executable) {
   if (schedule.trigger.kind === 'startup') args.push('ONSTART');
   return [...args, '/F'];
 }
-function safeError(error) { return String(error?.message || 'Windows Task Scheduler request failed.').replace(/[\r\n]+/g, ' ').slice(0, 500); }
+/**
+ * Sanitises a scheduler failure for the renderer.
+ *
+ * `execFile` embeds the whole command line in its error message. That command
+ * line must never be forwarded, so only a stable reason is kept.
+ */
+function safeError(error) {
+  const text = String(error?.message || 'Windows Task Scheduler request failed.').replace(/[\r\n]+/g, ' ').slice(0, 500);
+  if (error?.code === 'SCHEDULER_FAILED') return text;
+  return 'Windows Task Scheduler request failed.';
+}
 
 function createAutomationStore({ userDataPath, executablePath, runTask = async () => ({ stdout: '', stderr: '' }) }) {
   const target = path.join(userDataPath, 'automations.json');
@@ -56,4 +66,4 @@ function createAutomationStore({ userDataPath, executablePath, runTask = async (
   return { list, create, remove, setEnabled, recordRun, find, taskArgs: schedule => taskArgs(schedule, executablePath) };
 }
 
-module.exports = { AUTOMATION_TOOLS, createAutomationStore, taskArgs, taskName };
+module.exports = { AUTOMATION_TOOLS, createAutomationStore, taskArgs, taskName, safeError };

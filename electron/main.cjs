@@ -143,23 +143,28 @@ async function codeSigningInfo() {
   const unavailable = { state: 'UNAVAILABLE', status: null, publisher: null, timestampPublisher: null, signatureAlgorithm: null, timestamped: false };
   if (process.platform !== 'win32') return unavailable;
   const script = '& { param($target) $s = Get-AuthenticodeSignature -LiteralPath $target; $ts = $null; if ($s.TimeStamperCertificate) { $ts = $s.TimeStamperCertificate.Subject }; [pscustomobject]@{ State = $s.Status.ToString(); Status = $s.StatusMessage; Subject = $s.SignerCertificate.Subject; TimestampSubject = $ts; Algorithm = $s.SignerCertificate.SignatureAlgorithm.FriendlyName } | ConvertTo-Json -Compress }';
-  try {
-    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script, process.execPath], { windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 });
-    const payload = JSON.parse(String(stdout || '').trim());
-    const status = String(payload?.State || 'Unknown');
-    const signed = status === 'Valid';
-    return {
-      state: signed ? 'SIGNED_PRODUCTION' : 'UNSIGNED_PRODUCTION_CANDIDATE',
-      status,
-      statusMessage: payload?.Status ? String(payload.Status).slice(0, 300) : null,
-      publisher: payload?.Subject ? String(payload.Subject).slice(0, 300) : null,
-      timestampPublisher: payload?.TimestampSubject ? String(payload.TimestampSubject).slice(0, 300) : null,
-      signatureAlgorithm: payload?.Algorithm ? String(payload.Algorithm).slice(0, 120) : null,
-      timestamped: Boolean(payload?.TimestampSubject)
-    };
-  } catch {
-    return unavailable;
+  const shells = [
+    path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+    path.join(process.env.ProgramFiles || 'C:\\Program Files', 'PowerShell', '7', 'pwsh.exe')
+  ].filter(candidate => { try { return fs.existsSync(candidate); } catch { return false; } });
+  for (const shell of shells) {
+    try {
+      const { stdout } = await execFileAsync(shell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script, process.execPath], { windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 });
+      const payload = JSON.parse(String(stdout || '').replace(/^\uFEFF/, '').trim());
+      const status = String(payload?.State || 'Unknown');
+      const signed = status === 'Valid';
+      return {
+        state: signed ? 'SIGNED_PRODUCTION' : 'UNSIGNED_PRODUCTION_CANDIDATE',
+        status,
+        statusMessage: payload?.Status ? String(payload.Status).slice(0, 300) : null,
+        publisher: payload?.Subject ? String(payload.Subject).slice(0, 300) : null,
+        timestampPublisher: payload?.TimestampSubject ? String(payload.TimestampSubject).slice(0, 300) : null,
+        signatureAlgorithm: payload?.Algorithm ? String(payload.Algorithm).slice(0, 120) : null,
+        timestamped: Boolean(payload?.TimestampSubject)
+      };
+    } catch { /* try the next shell */ }
   }
+  return unavailable;
 }
 /** Removes local filesystem paths and long free text from diagnostic output. */
 function sanitizeDiagnosticText(value) {
@@ -208,7 +213,32 @@ async function buildDiagnostics() {
 function argumentValue(name) { const prefix = `--${name}=`; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 function smokeArgument(name) { const value = argumentValue(name); return value ? path.resolve(value) : null; }
 function automationArgument() { const prefix = '--automation-run='; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
-async function taskScheduler(args) { const { stdout, stderr } = await execFileAsync('schtasks.exe', args, { windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 }); return { stdout, stderr }; }
+/**
+ * Runs the Windows Task Scheduler.
+ *
+ * `schtasks.exe` is slow on a loaded machine and its own error message embeds
+ * the whole command line, which must never reach the renderer. The failure is
+ * therefore reported as a stable reason plus the scheduler's own short
+ * message, and a timed-out request is retried once.
+ */
+async function taskScheduler(args) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const { stdout, stderr } = await execFileAsync('schtasks.exe', args, { windowsHide: true, timeout: 120000, maxBuffer: 1024 * 1024 });
+      return { stdout, stderr };
+    } catch (error) {
+      const code = Number(error?.code);
+      const timedOut = error?.killed === true || error?.signal === 'SIGTERM' || code === 'ETIMEDOUT';
+      const detail = String(error?.stderr || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(0, 3).join(' ').slice(0, 200);
+      if (timedOut && attempt === 0) { await new Promise(resolve => setTimeout(resolve, 750)); continue; }
+      const reason = timedOut ? 'timed-out' : (Number.isFinite(code) && code > 0 ? `exit-${code}` : 'failed');
+      const failure = new Error(`Windows Task Scheduler request failed (${reason})${detail ? `: ${detail}` : ''}`);
+      failure.code = 'SCHEDULER_FAILED';
+      throw failure;
+    }
+  }
+  throw new Error('Windows Task Scheduler request failed.');
+}
 function requireTemporaryPath(target, label) { const tempRoot = path.resolve(os.tmpdir()) + path.sep; if (!target || !target.startsWith(tempRoot)) throw new Error(`${label} must be inside the system temporary directory.`); return target; }
 async function runPackagedSmoke() {
   const settingsTarget = smokeArgument('knoux-settings-smoke-output');
@@ -229,6 +259,10 @@ async function runPackagedSmoke() {
     const source = JSON.stringify(fixture); const cleanupSource = JSON.stringify(cleanupFixture); const cancelSource = JSON.stringify(cancelFixture); const startupSource = JSON.stringify(startupSmokeValue);
     const evidence = await mainWindow.webContents.executeJavaScript(`(async () => {
       const run = (toolId, inputs = {}) => window.knoux.runTool({ toolId, inputs }); const fixture = ${source}; const cleanupFixture = ${cleanupSource}; const cancelFixture = ${cancelSource}; const startupSmokeValue = ${startupSource};
+      // The Clipboard Vault is opt-in, so the smoke enables it through the
+      // ordinary settings path before the main process verifies a real
+      // Windows clipboard capture.
+      const settingsBeforeClipboard = await window.knoux.getSettings(); await window.knoux.updateSettings({ clipboard: { ...settingsBeforeClipboard.clipboard, enabled: true, paused: false, privateMode: false } });
       const health = await run('system-health'); const smartScan = await run('smart-scan'); const servicesInventory = await run('services-inventory', { limit: 2000 }); const serviceCandidate = servicesInventory.items.find(item => item.protected === false && /^[A-Za-z0-9_.-]{1,256}$/.test(String(item.name || ''))); const serviceDryRun = serviceCandidate ? await run('service-control', { serviceName: serviceCandidate.name, action: 'manual', confirm: true, dryRun: true }) : null; const disks = await run('disk-overview'); const processes = await run('process-inventory'); const battery = await run('battery-status'); const startupItems = await run('startup-items'); const installedApps = await run('installed-apps'); const networkDiagnostics = await run('network-diagnostics'); const hardwareInventory = await run('hardware-inventory'); const eventWarnings = await run('event-warnings'); const emptyFolders = await run('empty-folders', { folder: fixture, limit: 500 }); const downloadsInventory = await run('downloads-inventory', { limit: 500 }); const hash = await run('file-hash', { filePath: fixture + '\\\\hash-fixture.txt' });
       const large = await run('large-files', { folder: fixture, thresholdBytes: 1, limit: 500 }); const duplicates = await run('duplicate-files', { folder: fixture, minimumBytes: 1, limit: 500 });
       const preview = await run('organize-downloads-preview', { folder: fixture, limit: 500 }); const apply = await run('organize-downloads-apply', { folder: fixture, confirm: true, limit: 500 });
@@ -240,7 +274,9 @@ async function runPackagedSmoke() {
       const repairToolIds = ['repair-dism-check-health', 'repair-dism-scan-health', 'repair-dism-restore-health', 'repair-sfc-verify-only', 'repair-sfc-scan-now', 'repair-dns-flush', 'repair-winsock-reset', 'repair-tcpip-reset']; const repairDryRuns = await Promise.all(repairToolIds.map(toolId => run(toolId, { confirm: true, dryRun: true }))); const adminDryRun = repairDryRuns[0];
       return { health, smartScan, servicesInventory, serviceCandidate: serviceCandidate ? { name: serviceCandidate.name } : null, serviceDryRun, disks, processes, battery, startupItems, installedApps, networkDiagnostics, hardwareInventory, eventWarnings, emptyFolders, downloadsInventory, hash, large, duplicates, preview, apply, undo, cleanupFixture, cleanupPreview, cleanupApply, cleanupUndo, startupDisable, startupRestore, automation, automationRun, automationRemoved, cancellation, lifecyclePhases, repairDryRuns, adminDryRun };
     })()`);
-    await fsp.mkdir(path.dirname(operationTarget), { recursive: true }); await fsp.writeFile(operationTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, fixture, evidence }, null, 2), 'utf8');
+    await fsp.mkdir(path.dirname(operationTarget), { recursive: true });
+    const clipboardEvidence = await verifyClipboardVault().catch(error => ({ error: String(error?.message || error) }));
+    await fsp.writeFile(operationTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, fixture, evidence, clipboard: clipboardEvidence }, null, 2), 'utf8');
   }
   app.isQuiting = true; app.quit();
 }
@@ -307,6 +343,9 @@ async function walk(root, context, options = {}) {
       const full = path.join(folder, entry.name); let stat;
       if (matchesExclusion(full, exclusions)) { totals.excluded += 1; continue; }
       try { stat = await fsp.lstat(full); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
+      // Progress is reported on a fixed cadence so a long scan stays
+      // cancellable and the drawer keeps moving.
+      if (inspected % 50 === 0) context.progress(inspected, Math.max(inspected + queue.length, inspected), `Inspected ${inspected.toLocaleString()} filesystem items`);
       let classified;
       try { classified = await classifyEntry(full, stat, { root, reparsePointPolicy: policy }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
       if (classified.entryKind === 'reparse') {
@@ -324,7 +363,6 @@ async function walk(root, context, options = {}) {
       if (!stat.isFile()) continue;
       totals.filesVisited += 1; if (classified.hardlinked) totals.hardlinkedFiles += 1;
       files.push({ ...classified, modifiedAt: new Date(stat.mtimeMs).toISOString(), createdAt: new Date(stat.birthtimeMs || stat.mtimeMs).toISOString() });
-      if (inspected % 100 === 0) context.progress(inspected, Math.max(inspected + queue.length, inspected), `Inspected ${inspected.toLocaleString()} filesystem items`);
     }
   }
   return { files, folders, links, totals, partial: false };
@@ -333,7 +371,26 @@ function expectedStartupType(action) { return ({ automatic: 'automatic', delayed
 function expectedServiceState(action) { return ({ start: 'Running', stop: 'Stopped', restart: 'Running' })[action] ?? null; }
 async function diskOverview() { return windowsProviders.collectLogicalDisks(); }
 async function servicesInventory() { const list = await windowsProviders.collectServices(); return list.map(item => { const guarded = privilegedRunner.isProtectedService(item.name) || !item.controllable; return { ...item, protected: guarded, controllable: !guarded }; }); }
-async function systemHealth() { return windowsProviders.collectSystemHealth(); }
+let systemHealthInFlight = null;
+let systemHealthCached = null;
+let systemHealthCachedAt = 0;
+/**
+ * System health is measured once and shared.
+ *
+ * The dashboard measures health at boot while the user may already be running
+ * the tool, and two concurrent WMI queries made both of them slower on a
+ * loaded machine. A short cache and a single in-flight promise keep the
+ * measurement truthful and remove the contention.
+ */
+async function systemHealth() {
+  const nowMs = Date.now();
+  if (systemHealthCached && nowMs - systemHealthCachedAt < 5000) return systemHealthCached;
+  if (systemHealthInFlight) return systemHealthInFlight;
+  systemHealthInFlight = windowsProviders.collectSystemHealth()
+    .then(value => { systemHealthCached = value; systemHealthCachedAt = Date.now(); return value; })
+    .finally(() => { systemHealthInFlight = null; });
+  return systemHealthInFlight;
+}
 async function scanLargeFiles(root, context, threshold, limit) {
   // `limit` slices the returned results; the walk gets its own scan budget.
   const data = await walk(root, context, { scanBudget: SCAN_BUDGET });
@@ -431,7 +488,20 @@ const moveWithFallback = safeMove.moveWithFallback;
 async function runTool(context, tool, inputs) {
   const home = app.getPath('home'); const folder = allowedDirectory(inputs.folder || home); const limit = inputs.limit || 50000;
   if (OPERATION_SPECS[tool.engine]) { const output = await privilegedRunner.run(tool.engine, { dryRun: inputs.dryRun }); if (!inputs.dryRun && output.summary.exitCode !== 0) throw new Error(`Privileged operation exited with code ${output.summary.exitCode}.`); if (!inputs.dryRun) context.warnings.push(...(output.summary.verification?.limitation ? [output.summary.verification.limitation] : [])); return output; }
-  if (tool.engine === 'servicesInventory') { const list = await servicesInventory(); const search = String(inputs.search || '').toLocaleLowerCase(); const filtered = search ? list.filter(item => `${item.name} ${item.displayName} ${item.description || ''}`.toLocaleLowerCase().includes(search)) : list; return { items: filtered.slice(0, inputs.limit || 2000), summary: { services: filtered.length, protectedServices: filtered.filter(item => item.protected).length, delayedAutomatic: filtered.filter(item => item.delayedAuto).length, running: filtered.filter(item => item.running).length, provider: 'Win32_Service' } }; }
+  if (tool.engine === 'servicesInventory') {
+    let list = []; let providerError = null;
+    try { list = await servicesInventory(); } catch (error) { providerError = error; }
+    // A service inventory that did not answer is reported as an unavailable
+    // source, not as an empty list of services.
+    if (providerError) {
+      const warning = `The Windows service inventory did not answer (${providerError.message}). No service list is reported for this run.`;
+      context.warnings.push(warning);
+      return { items: [], summary: { services: 0, protectedServices: 0, delayedAutomatic: 0, running: 0, inventoryAvailable: false, unavailableReason: providerError.message, provider: 'Win32_Service' }, warnings: [warning], partial: true };
+    }
+    const search = String(inputs.search || '').toLocaleLowerCase();
+    const filtered = search ? list.filter(item => `${item.name} ${item.displayName} ${item.description || ''}`.toLocaleLowerCase().includes(search)) : list;
+    return { items: filtered.slice(0, inputs.limit || 2000), summary: { services: filtered.length, protectedServices: filtered.filter(item => item.protected).length, delayedAutomatic: filtered.filter(item => item.delayedAuto).length, running: filtered.filter(item => item.running).length, inventoryAvailable: true, provider: 'Win32_Service' } };
+  }
   if (tool.engine === 'serviceControl') {
     const list = await servicesInventory(); const service = list.find(item => item.name.toLocaleLowerCase() === inputs.serviceName.toLocaleLowerCase()); if (!service) throw new Error('Windows service was not found.');
     if (service.protected) throw new Error('This Windows service is protected and cannot be changed by SmartOrganizer.');
@@ -865,6 +935,61 @@ async function execute(request) {
     phase(operationId, tool.id, cancelled ? 'cancelled' : 'failed', error.message, { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: false }); await log('error', 'operation.failed', { operationId, toolId: tool.id, error: error.message }); return result;
   } finally { operations.delete(operationId); }
 }
+/**
+ * Proves the Clipboard Vault against the REAL Windows clipboard inside the
+ * packaged application.
+ *
+ * The text is written to the operating system clipboard, the vault observes
+ * it through the same poll any other application would trigger, and the item
+ * is then pinned, deleted and cleared. Capture is enabled first through the
+ * ordinary settings path, because capture is opt-in.
+ */
+async function verifyClipboardVault() {
+  if (!clipboardVault) return { skipped: 'vault-unavailable' };
+  const marker = `KNOuX clipboard smoke ${Date.now()}`;
+  const settle = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const before = clipboardVault.status();
+  clipboard.writeText(marker);
+  await settle(2600);
+  const captured = clipboardVault.list({ query: marker })[0] || null;
+
+  await updateSettings({ clipboard: { ...(await getSettings()).clipboard, paused: true } });
+  clipboard.writeText(`${marker} paused`);
+  await settle(2200);
+  const duringPause = clipboardVault.list({ query: 'paused' }).length;
+
+  await updateSettings({ clipboard: { ...(await getSettings()).clipboard, paused: false } });
+  clipboard.writeText(`${marker} resumed`);
+  await settle(2200);
+  const afterResume = clipboardVault.list({ query: 'resumed' }).length;
+
+  let pinned = false;
+  let deleted = false;
+  if (captured) {
+    const result = await clipboardVault.setPinned(captured.id, true);
+    pinned = Boolean(result?.pinned);
+    deleted = await clipboardVault.remove(captured.id);
+  }
+  const cleared = await clipboardVault.clear();
+  const after = clipboardVault.status();
+  return {
+    enabledBefore: before.enabled,
+    marker,
+    captured: Boolean(captured),
+    capturedPreview: captured?.preview ?? null,
+    capturedType: captured?.type ?? null,
+    capturedDuringPause: duringPause > 0,
+    capturedAfterResume: afterResume > 0,
+    pinned,
+    deleted,
+    clearedItems: cleared,
+    storageMode: after.storageMode,
+    persistenceAvailable: after.persistenceAvailable,
+    encryptionAvailable: after.encryptionAvailable,
+    itemsAfterClear: after.items
+  };
+}
+
 function createWindow() {
   const bounds = settingsCache?.general.rememberWindowBounds ? settingsCache.window.bounds : null;
   mainWindow = new BrowserWindow({

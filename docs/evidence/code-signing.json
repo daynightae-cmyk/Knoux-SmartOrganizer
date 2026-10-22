@@ -1,0 +1,34 @@
+{
+  "capturedAt": "2026-10-22T03:00:50.665Z",
+  "signingState": "UNSIGNED_PRODUCTION_CANDIDATE",
+  "signingRequired": false,
+  "allArtifactsSigned": false,
+  "artifacts": [
+    {
+      "role": "installer",
+      "file": "release\\KNOuX-SmartOrganizer-Setup-x64.exe",
+      "present": true,
+      "verifier": "pwsh.exe",
+      "status": "UnknownError",
+      "statusMessage": "The form specified for the subject is not one supported or known by the specified trust provider.",
+      "publisher": null,
+      "timestampPublisher": null,
+      "signatureAlgorithm": null,
+      "timestamped": false,
+      "signed": false
+    },
+    {
+      "role": "installed-executable",
+      "file": "release\\win-unpacked\\KNOuX SmartOrganizer.exe",
+      "present": true,
+      "verifier": "pwsh.exe",
+      "status": "UnknownError",
+      "statusMessage": "The form specified for the subject is not one supported or known by the specified trust provider.",
+      "publisher": null,
+      "timestampPublisher": null,
+      "signatureAlgorithm": null,
+      "timestamped": false,
+      "signed": false
+    }
+  ]
+}

@@ -36,7 +36,7 @@ const POWERSHELL_TIMEOUT = 60000;
 const PROVIDER_TIMEOUTS = Object.freeze({
   'Win32_LogicalDisk': 30000,
   'MSFT_PhysicalDisk': 60000,
-  'Win32_Service': 60000,
+  'Win32_Service': 120000,
   'Win32_Process': 60000,
   'Get-WinEvent': 45000,
   'Win32_StartupCommand': 90000,
@@ -58,7 +58,9 @@ const PROVIDER_TIMEOUTS = Object.freeze({
   'Win32_Battery': 60000,
   'root/WMI BatteryStatus': 60000,
   'Win32_OperatingSystem': 45000,
-  'Win32_PerfFormattedData_PerfOS_Processor': 45000
+  'Win32_SystemHealthExtended': 60000,
+  'Win32_SystemHealthMinimal': 90000,
+  'Win32_PerfFormattedData_PerfOS_Processor': 60000
 });
 
 /**
@@ -167,20 +169,36 @@ function enumName(group, value) {
   return table[Number(value)] ?? null;
 }
 
-async function powershellJson(script, { timeout = POWERSHELL_TIMEOUT, maxBuffer = 32 * 1024 * 1024, execFile: runner = execFileAsync, provider = 'PowerShell' } = {}) {
-  let stdout;
-  try {
-    ({ stdout } = await runner('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], { windowsHide: true, timeout, maxBuffer }));
-  } catch (error) {
-    // `error.message` from execFile embeds the full command line, so it is never
-    // forwarded. The provider identity and a stable reason are the only signal.
-    const timedOut = error.killed === true || error.signal === 'SIGTERM' || error.code === 'ETIMEDOUT';
-    const missing = error.code === 'ENOENT';
-    throw new ProviderUnavailableError(provider, missing ? 'powershell-not-found' : timedOut ? 'timed-out' : 'query-failed', { timeoutMs: timeout });
+/**
+ * Runs a PowerShell script and parses its JSON output.
+ *
+ * A provider timeout on a loaded machine is transient, not a permanent
+ * condition: the same query answers in seconds once the machine settles. A
+ * timed-out attempt is therefore retried once before it is reported, which
+ * turned a busy workstation into a failed operation.
+ */
+async function powershellJson(script, { timeout = POWERSHELL_TIMEOUT, maxBuffer = 32 * 1024 * 1024, execFile: runner = execFileAsync, provider = 'PowerShell', retries = 1 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    let stdout;
+    try {
+      ({ stdout } = await runner('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], { windowsHide: true, timeout, maxBuffer }));
+    } catch (error) {
+      // `error.message` from execFile embeds the full command line, so it is never
+      // forwarded. The provider identity and a stable reason are the only signal.
+      const timedOut = error.killed === true || error.signal === 'SIGTERM' || error.code === 'ETIMEDOUT';
+      const missing = error.code === 'ENOENT';
+      if (!timedOut || missing || attempt === retries) {
+        throw new ProviderUnavailableError(provider, missing ? 'powershell-not-found' : timedOut ? 'timed-out' : 'query-failed', { timeoutMs: timeout });
+      }
+      await new Promise(resolve => setTimeout(resolve, 750));
+      continue;
+    }
+    const trimmed = String(stdout).trim();
+    if (!trimmed) return null;
+    try { return JSON.parse(trimmed); }
+    catch { throw new ProviderUnavailableError(provider, 'unreadable-response'); }
   }
-  const trimmed = String(stdout).trim();
-  if (!trimmed) return null;
-  try { return JSON.parse(trimmed); } catch { throw new ProviderUnavailableError(provider, 'unreadable-response'); }
+  throw new ProviderUnavailableError(provider, 'query-failed', { timeoutMs: timeout });
 }
 
 /**
@@ -726,16 +744,41 @@ async function collectBatteries(options = {}) { return normalizeBattery(await po
 // System health  (Wave 1 / system P0)
 // ---------------------------------------------------------------------------
 
-const SYSTEM_SCRIPT = [
-  "$os=Get-CimInstance Win32_OperatingSystem",
-  "$cpu=@(Get-CimInstance Win32_Processor | Select-Object LoadPercentage,Name,NumberOfCores,NumberOfLogicalProcessors)",
+/**
+ * System health is gathered in TWO PowerShell processes.
+ *
+ * The core script asks for the cheap classes, which normally answer in about a
+ * second, and keeps its tight budget. The extended script asks for the
+ * classes that can be slow (the performance counter and the volume list) and
+ * has its own budget, so a slow extended query degrades the result instead of
+ * destroying it. Every query is individually guarded so one unavailable WMI
+ * class cannot abort the rest, and the operating system is queried once
+ * instead of twice.
+ */
+const SYSTEM_CORE_SCRIPT = [
+  "$os=try{Get-CimInstance Win32_OperatingSystem -ErrorAction Stop}catch{$null}",
+  "$cpu=try{@(Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object LoadPercentage,Name,NumberOfCores,NumberOfLogicalProcessors)}catch{@()}",
+  "$battery=try{@(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object EstimatedChargeRemaining,BatteryStatus)}catch{@()}",
+  "$startup=if($os){$os.LastBootUpTime}else{$null}",
+  "[pscustomobject]@{os=$os;cpu=$cpu;battery=$battery;lastBootUpTime=$startup} | ConvertTo-Json -Depth 5"
+].join('; ');
+
+const SYSTEM_EXTENDED_SCRIPT = [
   // Win32_Processor.LoadPercentage is frequently unavailable or saturated; the
   // documented performance counter is preferred and both values are reported.
-  "$perf=$null; try { $perf=Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter \"Name='_Total'\" -ErrorAction Stop | Select-Object PercentProcessorTime } catch { $perf=$null }",
-  "$disk=@(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object DeviceID,VolumeName,FileSystem,Size,FreeSpace)",
-  "$battery=@(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object EstimatedChargeRemaining,BatteryStatus)",
-  "$startup=(Get-CimInstance Win32_OperatingSystem).LastBootUpTime",
-  "[pscustomobject]@{os=$os;cpu=$cpu;perf=$perf;disks=$disk;battery=$battery;lastBootUpTime=$startup} | ConvertTo-Json -Depth 5"
+  "$perf=try{Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter \"Name='_Total'\" -ErrorAction Stop | Select-Object PercentProcessorTime}catch{$null}",
+  "$disk=try{@(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction Stop | Select-Object DeviceID,VolumeName,FileSystem,Size,FreeSpace)}catch{@()}",
+  "[pscustomobject]@{perf=$perf;disks=$disk} | ConvertTo-Json -Depth 5"
+].join('; ');
+
+/**
+ * The last-resort query used when even the core classes do not answer in
+ * time. It asks for the operating system row alone, so a saturated machine
+ * still gets a truthful reading instead of no result at all.
+ */
+const SYSTEM_MINIMAL_SCRIPT = [
+  "$os=try{Get-CimInstance Win32_OperatingSystem -ErrorAction Stop}catch{$null}",
+  "[pscustomobject]@{os=$os;cpu=@();perf=$null;disks=@();battery=@();lastBootUpTime=if($os){$os.LastBootUpTime}else{$null}} | ConvertTo-Json -Depth 5"
 ].join('; ');
 
 function normalizeSystemHealth(raw) {
@@ -781,7 +824,50 @@ function normalizeSystemHealth(raw) {
   };
 }
 
-async function collectSystemHealth(options = {}) { return normalizeSystemHealth(await powershellJson(SYSTEM_SCRIPT, { ...options, provider: 'Win32_OperatingSystem', timeout: options.timeout ?? providerTimeout('Win32_OperatingSystem') })); }
+/**
+ * Collects system health.
+ *
+ * The cheap classes are measured first with their tight budget. The slower
+ * classes are measured separately, and their failure degrades the result
+ * instead of destroying it. If even the core classes do not answer, a minimal
+ * operating-system query is tried, so the tool reports what it could prove
+ * rather than nothing at all.
+ */
+async function collectSystemHealth(options = {}) {
+  let core = null;
+  let coreError = null;
+  try {
+    core = await powershellJson(SYSTEM_CORE_SCRIPT, { ...options, provider: 'Win32_OperatingSystem', timeout: options.timeout ?? providerTimeout('Win32_OperatingSystem') });
+  } catch (error) {
+    coreError = error;
+  }
+  if (!core) {
+    // Last resort: ask for the operating system row alone, with a longer budget.
+    const minimal = await powershellJson(SYSTEM_MINIMAL_SCRIPT, { ...options, provider: 'Win32_SystemHealthMinimal', timeout: providerTimeout('Win32_SystemHealthMinimal') });
+    return {
+      ...normalizeSystemHealth(minimal),
+      degraded: true,
+      degradationReason: `The full Windows health query did not answer inside its budget (${coreError?.reason || 'unavailable'}), so only the operating-system reading is reported.`,
+      provider: 'Win32_OperatingSystem (minimal query)'
+    };
+  }
+  let extended = null;
+  let degraded = false;
+  let degradationReason = null;
+  try {
+    extended = await powershellJson(SYSTEM_EXTENDED_SCRIPT, { ...options, provider: 'Win32_SystemHealthExtended', timeout: providerTimeout('Win32_SystemHealthExtended') });
+  } catch (error) {
+    degraded = true;
+    degradationReason = `The disk and CPU-load part of the Windows health query did not answer inside its budget (${error?.reason || 'unavailable'}), so those values are absent from this result.`;
+  }
+  const raw = { ...core, ...(extended || {}) };
+  return {
+    ...normalizeSystemHealth(raw),
+    degraded,
+    ...(degraded ? { degradationReason } : {}),
+    provider: 'Win32_OperatingSystem + Win32_Processor + Win32_Battery + Win32_PerfFormattedData_PerfOS_Processor + Win32_LogicalDisk'
+  };
+}
 
 module.exports = {
   UNINSTALL_ROOTS,
