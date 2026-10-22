@@ -1,4 +1,4 @@
-import { Activity, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer } from 'lucide-react';
+import { Activity, ClipboardCopy, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
 import { filterToolsByPage } from '../lib/guards';
@@ -33,6 +33,7 @@ export default function HomePage() {
           <p>{t('home.subtitle')}</p>
           <div className="hero-actions">
             <button className="primary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
+            <button className="secondary" onClick={() => setPage('clipboard')}><ClipboardCopy size={16} />{t('nav.clipboard')}</button>
             <button className="secondary" onClick={() => setPage('history')}><History size={16} />{t('home.recent')}</button>
           </div>
           <p className="muted small">

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell, Tray, Menu, nativeImage, clipboard, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
@@ -19,6 +19,7 @@ const verificationKit = require('./verification.cjs');
 const historyExport = require('./history-export.cjs');
 const safeMove = require('./safe-move.cjs');
 const logRedaction = require('./log-redaction.cjs');
+const { createClipboardVault } = require('./clipboard-vault.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
@@ -34,6 +35,7 @@ let settingsCache = null;
 let settingsStore = null;
 let automationStore = null;
 let startupManager = null;
+let clipboardVault = null;
 const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
@@ -126,6 +128,9 @@ function phase(operationId, toolId, phaseName, message, more = {}) {
 }
 function applyRuntimeSettings(settings) {
   app.setLoginItemSettings({ openAtLogin: settings.general.startWithWindows, args: settings.general.startMinimized ? ['--start-minimized'] : [] });
+  // The Clipboard Vault reads its own policy from settings, so enabling or
+  // pausing capture is a real runtime change, not a stored preference.
+  if (clipboardVault) clipboardVault.updateSettings(settings).catch(() => {});
 }
 /**
  * Reports the real Authenticode state of the running executable.
@@ -889,6 +894,14 @@ function createWindow() {
 function createTray() { const icon = nativeImage.createEmpty(); tray = new Tray(icon); tray.setToolTip('KNOuX SmartOrganizer'); tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open', click: () => { mainWindow.show(); } }, { label: 'Smart Scan', click: () => execute({ toolId: 'smart-scan', inputs: {} }) }, { type: 'separator' }, { label: 'Exit', click: () => { app.isQuiting = true; app.quit(); } }])); tray.on('click', () => mainWindow.show()); }
 app.whenReady().then(async () => {
   await ensureAppStorage(); settingsStore = createSettingsStore({ userDataPath: app.getPath('userData') }); settingsCache = await settingsStore.load(); applyRuntimeSettings(settingsCache); startupManager = createStartupManager({ readJournal: name => readJson(name, null), writeJournal: writeJson }); automationStore = createAutomationStore({ userDataPath: app.getPath('userData'), executablePath: process.execPath, runTask: taskScheduler });
+  clipboardVault = createClipboardVault({
+    safeStorage, clipboard,
+    storagePath: appDataPath('clipboard-vault.json'),
+    readSettings: async () => settingsCache,
+    onChange: () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:clipboard-changed', clipboardVault.status()); }
+  });
+  await clipboardVault.init();
+  clipboardVault.start();
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
@@ -913,6 +926,26 @@ app.whenReady().then(async () => {
   ipcMain.handle('knoux:operation-cancel', (_event, operationId) => { const operation = operations.get(z.string().uuid().parse(operationId)); if (operation) { operation.cancelRequested = true; operation.cancelled = true; } return Boolean(operation); });
   ipcMain.handle('knoux:open-path', async (_event, target) => shell.openPath(allowedDirectory(z.string().min(1).max(32767).parse(target))));
   ipcMain.handle('knoux:diagnostics-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-diagnostics.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; const diagnostics = await buildDiagnostics(); await fsp.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2), 'utf8'); return result.filePath; });
+  // KNOuX Clipboard Vault. Capture stays off until the user enables it in the
+  // vault page or in Settings.
+  ipcMain.handle('knoux:clipboard-status', () => clipboardVault.status());
+  ipcMain.handle('knoux:clipboard-list', (_event, request) => {
+    const parsed = z.object({ query: z.string().max(500).optional(), type: z.enum(['all', 'text', 'image', 'files']).optional(), pinnedOnly: z.boolean().optional() }).strict().parse(request || {});
+    return clipboardVault.list({ query: parsed.query || '', type: parsed.type || 'all', pinnedOnly: Boolean(parsed.pinnedOnly) });
+  });
+  ipcMain.handle('knoux:clipboard-get', (_event, id) => clipboardVault.get(z.string().uuid().parse(id)));
+  ipcMain.handle('knoux:clipboard-pin', async (_event, request) => { const parsed = z.object({ id: z.string().uuid(), pinned: z.boolean() }).strict().parse(request); return clipboardVault.setPinned(parsed.id, parsed.pinned); });
+  ipcMain.handle('knoux:clipboard-delete', async (_event, id) => clipboardVault.remove(z.string().uuid().parse(id)));
+  ipcMain.handle('knoux:clipboard-clear', async () => clipboardVault.clear());
+  ipcMain.handle('knoux:clipboard-copy-back', (_event, id) => clipboardVault.copyBack(z.string().uuid().parse(id)));
+  ipcMain.handle('knoux:clipboard-open-source', async (_event, id) => {
+    const files = clipboardVault.sourceFiles(z.string().uuid().parse(id));
+    if (!files.length) throw new Error('This clipboard entry has no source file.');
+    // Only a path the user actually copied may be opened.
+    const target = normalisePath(files[0]);
+    if (!fs.existsSync(target)) throw new Error('The source file is no longer available.');
+    return shell.openPath(target);
+  });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); else mainWindow.show(); });

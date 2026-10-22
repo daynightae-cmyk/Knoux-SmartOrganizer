@@ -1,6 +1,24 @@
 import type { OperationEvent, OperationRecord, ToolResult } from '@shared/contracts';
 
-export interface AppInfo { version: string; startedAt: string; platform: string; isPackaged: boolean; electron: string; chromium: string }
+export interface AppInfo {
+  version: string;
+  startedAt: string;
+  platform: string;
+  arch?: string;
+  isPackaged: boolean;
+  electron: string;
+  chromium: string;
+  node?: string;
+  releaseChannel?: string;
+  codeSigning?: {
+    state: 'SIGNED_PRODUCTION' | 'UNSIGNED_PRODUCTION_CANDIDATE' | 'UNAVAILABLE';
+    status: string | null;
+    publisher: string | null;
+    timestampPublisher: string | null;
+    signatureAlgorithm: string | null;
+    timestamped?: boolean;
+  };
+}
 
 export type AutomationTrigger =
   | { kind: 'daily'; time: string }

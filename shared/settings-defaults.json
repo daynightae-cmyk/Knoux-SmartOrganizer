@@ -68,6 +68,16 @@
     "usageAnalytics": false,
     "aiPrivacy": "local-only"
   },
+  "clipboard": {
+    "enabled": false,
+    "paused": false,
+    "privateMode": false,
+    "maxItems": 200,
+    "retentionDays": 14,
+    "captureImages": true,
+    "captureFiles": true,
+    "sensitiveProtection": true
+  },
   "notifications": {
     "operationSuccess": true,
     "operationFailure": true,

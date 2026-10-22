@@ -17,10 +17,67 @@ interface AutomationSchedule {
   lastRun: { startedAt: string; finishedAt: string; success: boolean; summary: Record<string, unknown>; warnings: string[]; errors: string[] } | null;
 }
 
+export interface ClipboardItem {
+  id: string;
+  type: 'text' | 'image' | 'files';
+  createdAt: string;
+  pinned: boolean;
+  sizeBytes: number;
+  sensitive: boolean;
+  preview: string;
+  lineCount: number;
+  text?: string | null;
+  files?: string[] | null;
+  image?: string | null;
+}
+
+export interface ClipboardStatus {
+  enabled: boolean;
+  paused: boolean;
+  privateMode: boolean;
+  running: boolean;
+  monitoring: boolean;
+  storageMode: 'encrypted' | 'memory-only';
+  persistenceAvailable: boolean;
+  encryptionAvailable: boolean;
+  items: number;
+  pinned: number;
+  skippedSensitive: number;
+  skippedOversize: number;
+  unreadableItems: number;
+  maxItems: number;
+  retentionDays: number;
+  captureImages: boolean;
+  captureFiles: boolean;
+  sensitiveProtection: boolean;
+  storageBytes: number;
+  limits: { maxTextBytes: number; maxImageBytes: number; maxFiles: number };
+}
+
+export interface AppInfo {
+  version: string;
+  startedAt: string;
+  platform: string;
+  arch?: string;
+  isPackaged: boolean;
+  electron: string;
+  chromium: string;
+  node?: string;
+  releaseChannel?: string;
+  codeSigning?: {
+    state: 'SIGNED_PRODUCTION' | 'UNSIGNED_PRODUCTION_CANDIDATE' | 'UNAVAILABLE';
+    status: string | null;
+    publisher: string | null;
+    timestampPublisher: string | null;
+    signatureAlgorithm: string | null;
+    timestamped?: boolean;
+  };
+}
+
 declare global {
   interface Window {
     knoux: {
-      appInfo: () => Promise<{ version: string; startedAt: string; platform: string; isPackaged: boolean; electron: string; chromium: string }>;
+      appInfo: () => Promise<AppInfo>;
       listTools: () => Promise<ToolDefinition[]>;
       getSettings: () => Promise<AppSettings>;
       updateSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>;
@@ -40,6 +97,16 @@ declare global {
       runTool: (request: { toolId: string; inputs: Record<string, unknown> }) => Promise<ToolResult>;
       cancelOperation: (operationId: string) => Promise<boolean>;
       openPath: (target: string) => Promise<string>;
+      exportDiagnostics: () => Promise<string | null>;
+      clipboardStatus: () => Promise<ClipboardStatus>;
+      clipboardList: (request?: { query?: string; type?: 'all' | 'text' | 'image' | 'files'; pinnedOnly?: boolean }) => Promise<ClipboardItem[]>;
+      clipboardGet: (id: string) => Promise<ClipboardItem | null>;
+      clipboardSetPinned: (request: { id: string; pinned: boolean }) => Promise<ClipboardItem | null>;
+      clipboardDelete: (id: string) => Promise<boolean>;
+      clipboardClear: () => Promise<number>;
+      clipboardCopyBack: (id: string) => Promise<ClipboardItem | null>;
+      clipboardOpenSource: (id: string) => Promise<string>;
+      onClipboardChanged: (callback: (status: ClipboardStatus) => void) => () => void;
       onSettingsChanged: (callback: (settings: AppSettings) => void) => () => void;
       onOperationEvent: (callback: (event: OperationEvent) => void) => () => void;
     };

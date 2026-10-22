@@ -1,0 +1,34 @@
+
+/* KNOuX Clipboard Vault -------------------------------------------------- */
+.clipboard-page { max-width:1180px; }
+.clipboard-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; }
+.clipboard-welcome { border-color:#a855f766; background:linear-gradient(120deg,#1a1430,#14182b); color:var(--text); }
+.clipboard-welcome-line { font-size:16px; font-weight:800; margin:0 0 6px; line-height:1.6; }
+.clipboard-controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px; }
+.clipboard-filters { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { border:1px solid var(--border); background:var(--surface-raised); color:var(--muted); border-radius:99px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:background .2s,color .2s,border-color .2s; }
+.chip:hover { border-color:var(--accent-border); color:var(--text); }
+.chip.active { background:#a855f726; border-color:#a855f766; color:var(--primary-bright); }
+.clipboard-privacy { border:1px solid var(--border); border-radius:15px; background:linear-gradient(145deg,var(--surface),#0f111c); padding:17px; margin-bottom:18px; box-shadow:var(--shadow-soft); }
+.clipboard-privacy h3 { font-size:14px; margin:0 0 12px; }
+.clipboard-privacy-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; margin-bottom:10px; }
+.clipboard-privacy-grid .setting { min-height:64px; }
+.clipboard-privacy-grid .setting input[type="number"] { width:100%; }
+.clipboard-privacy-grid .setting input[type="checkbox"] { width:20px; height:20px; accent-color:var(--primary); }
+.clipboard-timeline { display:grid; gap:18px; }
+.clipboard-day { display:grid; gap:9px; }
+.clipboard-day-head { font-size:12px; text-transform:uppercase; letter-spacing:1.4px; color:var(--muted); margin:0; font-weight:800; }
+.clipboard-card { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; background:linear-gradient(145deg,var(--surface),#0f111c); box-shadow:var(--shadow-soft); transition:border-color .2s,transform .2s; }
+.clipboard-card:hover { border-color:var(--accent-border); transform:translateY(-1px); }
+.clipboard-card.pinned { border-color:#c4a6ff5c; box-shadow:var(--shadow-soft),0 0 0 1px #a855f71f inset; }
+.clipboard-card-main { display:flex; gap:12px; min-width:0; flex:1; }
+.clipboard-type { flex:none; width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:#a855f71c; color:var(--primary-bright); }
+.clipboard-card-body { min-width:0; display:grid; gap:7px; }
+.clipboard-preview { margin:0; font-size:12px; line-height:1.6; color:var(--text); overflow-wrap:anywhere; max-height:3.2em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.clipboard-card.expanded .clipboard-preview { -webkit-line-clamp:unset; max-height:none; display:block; }
+.clipboard-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.clipboard-full { margin:6px 0 0; padding:11px; border-radius:10px; border:1px solid var(--border-soft); background:var(--bg); color:var(--text); font-size:12px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; max-height:320px; overflow:auto; }
+.clipboard-files { margin:6px 0 0; padding-inline-start:18px; font-size:11px; color:var(--muted); display:grid; gap:4px; overflow-wrap:anywhere; }
+.clipboard-card-actions { display:flex; gap:5px; flex:none; }
+.clipboard-card-actions .icon-button { padding:8px; }
+@media(max-width:900px){ .clipboard-card { flex-direction:column; } .clipboard-card-actions { align-self:flex-end; } }

@@ -21,6 +21,16 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
   runTool: (request) => ipcRenderer.invoke('knoux:tool-run', request),
   cancelOperation: (operationId) => ipcRenderer.invoke('knoux:operation-cancel', operationId),
   openPath: (target) => ipcRenderer.invoke('knoux:open-path', target),
+  exportDiagnostics: () => ipcRenderer.invoke('knoux:diagnostics-export'),
+  clipboardStatus: () => ipcRenderer.invoke('knoux:clipboard-status'),
+  clipboardList: (request) => ipcRenderer.invoke('knoux:clipboard-list', request),
+  clipboardGet: (id) => ipcRenderer.invoke('knoux:clipboard-get', id),
+  clipboardSetPinned: (request) => ipcRenderer.invoke('knoux:clipboard-pin', request),
+  clipboardDelete: (id) => ipcRenderer.invoke('knoux:clipboard-delete', id),
+  clipboardClear: () => ipcRenderer.invoke('knoux:clipboard-clear'),
+  clipboardCopyBack: (id) => ipcRenderer.invoke('knoux:clipboard-copy-back', id),
+  clipboardOpenSource: (id) => ipcRenderer.invoke('knoux:clipboard-open-source', id),
+  onClipboardChanged: (callback) => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('knoux:clipboard-changed', listener); return () => ipcRenderer.removeListener('knoux:clipboard-changed', listener); },
   onSettingsChanged: (callback) => { const listener = (_event, payload) => callback(payload); ipcRenderer.on('knoux:settings-changed', listener); return () => ipcRenderer.removeListener('knoux:settings-changed', listener); },
   onOperationEvent: (callback) => {
     const listener = (_event, payload) => callback(payload);

@@ -1,12 +1,12 @@
 import {
-  Activity, AppWindow, BatteryCharging, CalendarClock, Cpu, FolderOpen, HardDrive, History,
+  Activity, AppWindow, BatteryCharging, CalendarClock, ClipboardCopy, Cpu, FolderOpen, HardDrive, History,
   LayoutDashboard, Network, Rocket, ScanSearch, Server, Settings, ShieldPlus, Trash2
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Locale } from '../locales';
 
 export type PageId =
-  | 'home' | 'scan' | 'storage' | 'files' | 'applications' | 'cleanup' | 'startup'
+  | 'home' | 'scan' | 'clipboard' | 'storage' | 'files' | 'applications' | 'cleanup' | 'startup'
   | 'system' | 'repair' | 'services' | 'network' | 'hardware' | 'automation' | 'history' | 'settings';
 
 export type GroupId = 'home' | 'organize' | 'optimize' | 'care' | 'automation' | 'system';
@@ -23,7 +23,8 @@ const page = (id: PageId, nameKey: string, icon: LucideIcon, group: GroupId): Pa
 export const pageGroups: Array<{ id: GroupId; nameKey: string; pages: PageDef[] }> = [
   { id: 'home', nameKey: 'nav.group.home', pages: [
     page('home', 'nav.home', LayoutDashboard, 'home'),
-    page('scan', 'nav.scan', ScanSearch, 'home')
+    page('scan', 'nav.scan', ScanSearch, 'home'),
+    page('clipboard', 'nav.clipboard', ClipboardCopy, 'home')
   ] },
   { id: 'organize', nameKey: 'nav.group.organize', pages: [
     page('storage', 'nav.storage', HardDrive, 'organize'),
@@ -66,11 +67,12 @@ export function pageTitleKey(id: PageId): string {
   if (id === 'history') return 'history.title';
   if (id === 'settings') return 'settings.title';
   if (id === 'automation') return 'nav.automation';
+  if (id === 'clipboard') return 'clipboard.title';
   return 'tools.title';
 }
 
 export function isCatalogPage(id: PageId): boolean {
-  return !['home', 'scan', 'automation', 'history', 'settings'].includes(id);
+  return !['home', 'scan', 'clipboard', 'automation', 'history', 'settings'].includes(id);
 }
 
 export function pageSubtitleKey(id: PageId): string | null {
@@ -79,6 +81,7 @@ export function pageSubtitleKey(id: PageId): string | null {
   if (id === 'settings') return 'settings.subtitle';
   if (id === 'automation') return 'automation.subtitle';
   if (id === 'scan') return 'smartScan.subtitle';
+  if (id === 'clipboard') return 'clipboard.subtitle';
   return null;
 }
 

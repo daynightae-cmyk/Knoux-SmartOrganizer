@@ -164,6 +164,16 @@ export interface AppSettings {
     usageAnalytics: false;
     aiPrivacy: 'local-only';
   };
+  clipboard: {
+    enabled: boolean;
+    paused: boolean;
+    privateMode: boolean;
+    maxItems: number;
+    retentionDays: number;
+    captureImages: boolean;
+    captureFiles: boolean;
+    sensitiveProtection: boolean;
+  };
   notifications: {
     operationSuccess: boolean;
     operationFailure: boolean;

@@ -4,7 +4,7 @@ import type { Locale } from '../locales';
 import { useStore } from '../state/store';
 
 export default function SettingsPage() {
-  const { settings, appInfo, update, t } = useStore();
+  const { settings, appInfo, update, t, setNotice } = useStore();
   if (!settings) return <p>{t('common.loading')}</p>;
 
   const change = <K extends Exclude<keyof AppSettings, 'settingsVersion'>>(section: K, value: AppSettings[K]) => {
@@ -82,6 +82,17 @@ export default function SettingsPage() {
         <Toggle label={t('settings.usageAnalytics')} checked={false} disabled onChange={() => {}} />
         <Setting label={t('settings.aiPrivacy')}><output>{t('settings.value.localOnly')}</output></Setting>
       </SettingsSection>
+      <SettingsSection title={t('settings.section.clipboard')} resetLabel={t('settings.resetSection')} onReset={() => resetSection('clipboard')}>
+        <Toggle label={t('settings.clipboardEnabled')} checked={settings.clipboard.enabled} onChange={value => change('clipboard', { ...settings.clipboard, enabled: value })} />
+        <Toggle label={t('settings.clipboardPaused')} checked={settings.clipboard.paused} onChange={value => change('clipboard', { ...settings.clipboard, paused: value })} />
+        <Toggle label={t('settings.clipboardPrivate')} checked={settings.clipboard.privateMode} onChange={value => change('clipboard', { ...settings.clipboard, privateMode: value })} />
+        <Toggle label={t('settings.clipboardImages')} checked={settings.clipboard.captureImages} onChange={value => change('clipboard', { ...settings.clipboard, captureImages: value })} />
+        <Toggle label={t('settings.clipboardFiles')} checked={settings.clipboard.captureFiles} onChange={value => change('clipboard', { ...settings.clipboard, captureFiles: value })} />
+        <Toggle label={t('settings.clipboardSensitive')} checked={settings.clipboard.sensitiveProtection} onChange={value => change('clipboard', { ...settings.clipboard, sensitiveProtection: value })} />
+        <Setting label={t('settings.clipboardRetention')}><input type="number" min="1" max="365" value={settings.clipboard.retentionDays} onChange={e => change('clipboard', { ...settings.clipboard, retentionDays: Math.max(1, Math.min(365, Number(e.target.value) || 1)) })} /></Setting>
+        <Setting label={t('settings.clipboardMaxItems')}><input type="number" min="10" max="2000" value={settings.clipboard.maxItems} onChange={e => change('clipboard', { ...settings.clipboard, maxItems: Math.max(10, Math.min(2000, Number(e.target.value) || 200)) })} /></Setting>
+        <Setting label={t('settings.section.clipboardNote')}><output>{t('clipboard.privacyNote')}</output></Setting>
+      </SettingsSection>
       <SettingsSection title={t('settings.section.notifications')} resetLabel={t('settings.resetSection')} onReset={() => resetSection('notifications')}>
         {(['operationSuccess', 'operationFailure', 'diskWarning', 'scheduledScan', 'update', 'restartRequired'] as const).map(key => <Toggle key={key} label={t(`settings.${key}`)} checked={settings.notifications[key]} onChange={value => change('notifications', { ...settings.notifications, [key]: value })} />)}
       </SettingsSection>
@@ -119,10 +130,14 @@ export default function SettingsPage() {
         <Setting label="Chromium"><output>{appInfo?.chromium || '—'}</output></Setting>
         <Setting label={t('settings.license')}><output>MIT</output></Setting>
         <Setting label={t('settings.build')}><output>{appInfo?.isPackaged ? t('settings.value.packaged') : t('settings.value.development')}</output></Setting>
+        <Setting label={t('settings.signing')}><output>{appInfo?.codeSigning?.state ? t(`settings.signingState.${appInfo.codeSigning.state}`) : t('settings.value.unavailable')}</output></Setting>
+        {appInfo?.codeSigning?.publisher && <Setting label={t('settings.publisher')}><output dir="ltr">{appInfo.codeSigning.publisher}</output></Setting>}
+        {appInfo?.codeSigning?.timestamped && <Setting label={t('settings.timestamped')}><output>{t('settings.value.yes')}</output></Setting>}
       </SettingsSection>
       <div className="settings-actions">
         <button className="secondary" onClick={() => window.knoux.exportSettings()}>{t('settings.export')}</button>
         <button className="secondary" onClick={async () => { const imported = await window.knoux.importSettings(); if (imported) void update(imported); }}>{t('settings.import')}</button>
+        <button className="secondary" onClick={async () => { const saved = await window.knoux.exportDiagnostics(); if (saved) setNotice(`${t('diagnostics.exported')} — ${saved}`); }}>{t('diagnostics.export')}</button>
         <button className="secondary danger" onClick={async () => update(await window.knoux.resetSettings())}>{t('settings.reset')}</button>
       </div>
     </section>

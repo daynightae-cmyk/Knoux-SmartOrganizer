@@ -44,6 +44,11 @@ const settingsSchema = z.object({
     backgroundBehavior: z.enum(['continue', 'pause-intensive', 'pause-all'])
   }).strict(),
   privacy: z.object({ telemetry: z.literal(false), crashReporting: z.literal(false), diagnostics: z.boolean(), usageAnalytics: z.literal(false), aiPrivacy: z.literal('local-only') }).strict(),
+  clipboard: z.object({
+    enabled: z.boolean(), paused: z.boolean(), privateMode: z.boolean(),
+    maxItems: z.number().int().min(10).max(2000), retentionDays: z.number().int().min(1).max(365),
+    captureImages: z.boolean(), captureFiles: z.boolean(), sensitiveProtection: z.boolean()
+  }).strict(),
   notifications: z.object({ operationSuccess: z.boolean(), operationFailure: z.boolean(), diskWarning: z.boolean(), scheduledScan: z.boolean(), update: z.boolean(), restartRequired: z.boolean() }).strict(),
   automation: z.object({ enabled: z.boolean(), quietHoursStart: clockSchema, quietHoursEnd: clockSchema, onBatteryPolicy: z.enum(['skip', 'skip-intensive', 'run']), missedSchedulePolicy: z.enum(['skip', 'run-next-start']) }).strict(),
   history: z.object({ retentionDays: z.number().int().min(1).max(3650), automaticCleanup: z.boolean(), exportFormat: z.enum(['json', 'csv']) }).strict(),
