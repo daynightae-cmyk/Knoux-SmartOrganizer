@@ -257,6 +257,7 @@ jobs:
               "--knoux-operation-smoke-fixture=$fixture",
               "--knoux-temp-cleanup-smoke-fixture=$cleanupFixture",
               "--knoux-cancel-smoke-fixture=$cancelFixture",
+              '--knoux-cancel-hold-ms=1000',
               "--knoux-startup-smoke-value=$startupValue"
             )
             $run = Start-Process -FilePath $exe -ArgumentList $args -Wait -PassThru
@@ -328,11 +329,18 @@ jobs:
 
       - name: Enforce clean-runner signature
         shell: pwsh
+        env:
+          SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
         run: |
+          $signingExpected = -not [string]::IsNullOrWhiteSpace($env:SIGNING_PFX_BASE64) -and -not [string]::IsNullOrWhiteSpace($env:SIGNING_PFX_PASSWORD)
           $candidate = Join-Path $env:RUNNER_TEMP 'candidate'
           $installer = Get-ChildItem -LiteralPath $candidate -Recurse -Filter 'KNOuX-SmartOrganizer-Setup-x64.exe' | Select-Object -First 1
           $sig = Get-AuthenticodeSignature -LiteralPath $installer.FullName
-          if ($sig.Status -ne 'Valid' -or $null -eq $sig.TimeStamperCertificate) {
-            Write-Error 'Clean-runner artifact is not a Valid timestamped Authenticode installer.'
+          if ($signingExpected -and ($sig.Status -ne 'Valid' -or $null -eq $sig.TimeStamperCertificate)) {
+            Write-Error 'Clean-runner artifact is not a Valid timestamped Authenticode installer, but signing credentials were supplied.'
             exit 1
+          }
+          if (-not $signingExpected) {
+            Write-Warning "Fresh-runner product verification passed; the artifact is an UNSIGNED_PRODUCTION_CANDIDATE (Authenticode status: $($sig.Status)). The trusted signing identity is BLOCKED EXTERNAL."
           }
