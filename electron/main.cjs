@@ -20,6 +20,7 @@ const historyExport = require('./history-export.cjs');
 const safeMove = require('./safe-move.cjs');
 const logRedaction = require('./log-redaction.cjs');
 const { createClipboardVault } = require('./clipboard-vault.cjs');
+const smokePaths = require('./smoke-paths.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
@@ -261,7 +262,17 @@ async function taskScheduler(args) {
   }
   throw new Error('Windows Task Scheduler request failed.');
 }
-function requireTemporaryPath(target, label) { const tempRoot = path.resolve(os.tmpdir()) + path.sep; if (!target || !target.startsWith(tempRoot)) throw new Error(`${label} must be inside the system temporary directory.`); return target; }
+/**
+ * The directories a smoke run is allowed to write to.
+ *
+ * A command line can ask the application to write a file, so the write is
+ * confined to a temporary root. The list has to cover every root Windows
+ * actually uses for temporary work: `os.tmpdir()`, the TEMP/TMP variables and
+ * the CI runner's own RUNNER_TEMP. Accepting only `os.tmpdir()` made the
+ * application refuse its own smoke paths on a CI runner (whose RUNNER_TEMP
+ * lives on a different volume) and exit with code 1.
+ */
+const requireTemporaryPath = (target, label) => smokePaths.requireTemporaryPath(target, label);
 async function runPackagedSmoke() {
   const settingsTarget = smokeArgument('knoux-settings-smoke-output');
   const operationTarget = smokeArgument('knoux-operation-smoke-output');
@@ -570,7 +581,21 @@ async function runTool(context, tool, inputs) {
     return { ...output, summary: { ...output.summary, journalId: inputs.journalId, restoredStartupAction: journal.oldAction, startedAt, finishedAt, verification: proof ?? { status: 'unverified', method: 'dry-run: no state was changed' } }, partial: Boolean(proof && proof.status !== 'verified') };
   }
   if (tool.engine === 'systemHealth') return { summary: await systemHealth(), items: [] };
-  if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).then(value => ({ value, error: null })).catch(error => ({ value: [], error })); const warnings = []; if (physical.error) warnings.push('The physical disk provider did not answer, so physical disk details are absent from this result.'); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, unknownPressureDrives: items.filter(item => item.pressure === 'unknown').length, physicalDisks: physical.value, physicalDiskCount: physical.value.length, physicalDisksAvailable: !physical.error, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' }, warnings, partial: Boolean(physical.error) }; }
+  if (tool.engine === 'diskOverview') {
+    let rawItems = []; let providerError = null;
+    try { rawItems = await diskOverview(); } catch (error) { providerError = error; }
+    // A volume inventory that did not answer is reported as an unavailable
+    // source. Reporting "zero drives" would be a lie about the machine.
+    if (providerError) {
+      const warning = `The Windows volume inventory did not answer (${providerError.message}). No volume data is reported for this run.`;
+      context.warnings.push(warning);
+      return { items: [], summary: { drives: 0, pressuredDrives: 0, criticalDrives: 0, unknownPressureDrives: 0, physicalDisks: [], physicalDiskCount: 0, physicalDisksAvailable: false, inventoryAvailable: false, unavailableReason: providerError.message, volumeProvider: 'Win32_LogicalDisk' }, warnings: [warning], partial: true };
+    }
+    const items = advancedLocal.diskPressure(rawItems);
+    const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).then(value => ({ value, error: null })).catch(error => ({ value: [], error }));
+    const warnings = []; if (physical.error) warnings.push('The physical disk provider did not answer, so physical disk details are absent from this result.');
+    return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, unknownPressureDrives: items.filter(item => item.pressure === 'unknown').length, physicalDisks: physical.value, physicalDiskCount: physical.value.length, physicalDisksAvailable: !physical.error, inventoryAvailable: true, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' }, warnings, partial: Boolean(physical.error) };
+  }
   if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
   if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scanning.minimumDuplicateBytes, limit);
   if (tool.engine === 'emptyFolders') {
@@ -874,7 +899,12 @@ async function runTool(context, tool, inputs) {
   }
   if (tool.engine === 'smartScan') {
     const health = await systemHealth(); context.progress(1, 7, 'Measured system health');
-    const disk = await diskOverview(); context.progress(2, 7, 'Read storage volumes and pressure');
+    // A volume source that does not answer degrades the scan; it must not
+    // discard the storage, privacy and duplicate findings that did answer.
+    let disk = []; let diskUnavailable = null;
+    try { disk = await diskOverview(); } catch (error) { diskUnavailable = error; }
+    if (diskUnavailable) context.warnings.push(`The volume source did not answer during the scan (${diskUnavailable.message}), so disk-pressure findings are absent.`);
+    context.progress(2, 7, 'Read storage volumes and pressure');
     // One traversal of Downloads feeds large-file, privacy and duplicate analysis.
     const downloadsFolder = app.getPath('downloads');
     const downloadsData = await walk(downloadsFolder, context, { scanBudget: 15000 });
@@ -886,7 +916,7 @@ async function runTool(context, tool, inputs) {
     context.progress(5, 7, 'Verified exact duplicate groups with SHA-256');
     const temp = await runTool(context, toolDefinitions.find(t => t.engine === 'tempPreview'), {}); context.progress(6, 7, 'Measured recoverable temporary-file footprint');
     const score = advancedLocal.buildSmartScore({ health, disks: disk, duplicateSummary: duplicate.summary, privacySummary: privacy.summary, tempEligibleBytes: temp.summary.eligibleBytes }); context.progress(7, 7, 'Completed local multi-signal Smart Scan');    const findings = [];
-    for (const volume of advancedLocal.diskPressure(disk).filter(item => item.pressure !== 'healthy')) findings.push({ severity: ['critical', 'high'].includes(volume.pressure) ? 'warning' : 'info', key: 'diskPressure', drive: volume.deviceId, freePercent: volume.freePercent, pressure: volume.pressure, source: 'Win32_LogicalDisk', evidence: `Volume ${volume.deviceId} has ${volume.freePercent}% free`, confidence: volume.freePercent == null ? 'low' : 'high' });
+    for (const volume of advancedLocal.diskPressure(disk || []).filter(item => item.pressure !== 'healthy')) findings.push({ severity: ['critical', 'high'].includes(volume.pressure) ? 'warning' : 'info', key: 'diskPressure', drive: volume.deviceId, freePercent: volume.freePercent, pressure: volume.pressure, source: 'Win32_LogicalDisk', evidence: `Volume ${volume.deviceId} has ${volume.freePercent}% free`, confidence: volume.freePercent == null ? 'low' : 'high' });
     if (largeDownloads.length) findings.push({ severity: 'info', key: 'largeDownloads', value: largeDownloads.length, bytes: largeDownloads.reduce((sum, file) => sum + file.size, 0), source: 'Downloads traversal', evidence: `${largeDownloads.length} file(s) at or above 100 MB`, confidence: 'high' });
     if (duplicate.summary.duplicateGroups) findings.push({ severity: 'info', key: 'exactDuplicates', groups: duplicate.summary.duplicateGroups, reclaimableBytes: duplicate.summary.reclaimableBytes, source: 'SHA-256 content verification', evidence: duplicate.summary.hardlinkPolicy, confidence: 'high' });
     if (privacy.summary.exposureCount) findings.push({ severity: 'warning', key: 'privacyMetadataReview', value: privacy.summary.exposureCount, contentsInspected: false, source: 'Filename metadata only', evidence: 'File contents were not read', confidence: 'medium' });
@@ -895,7 +925,9 @@ async function runTool(context, tool, inputs) {
     if (downloadsData.totals.hardlinkedFiles) findings.push({ severity: 'info', key: 'hardlinkedFiles', value: downloadsData.totals.hardlinkedFiles, source: 'Windows file identity', evidence: 'Multiple names for one physical file are not reclaimable duplicates', confidence: 'high' });
     return {
       items: findings,
-      partial: Boolean(downloadsData.partial || duplicate.partial || temp.partial),
+      // A source that did not answer leaves the result incomplete, so it has
+      // to be reported as partial and not merely as a warning.
+      partial: Boolean(downloadsData.partial || duplicate.partial || temp.partial || diskUnavailable),
       summary: {
         smartScore: score.score, scoreReasons: score.reasons, scoreMethod: 'backend local multi-signal calculation; the renderer only displays it', health,
         volumes: advancedLocal.diskPressure(disk),

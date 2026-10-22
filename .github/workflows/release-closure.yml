@@ -260,7 +260,20 @@ jobs:
               "--knoux-startup-smoke-value=$startupValue"
             )
             $run = Start-Process -FilePath $exe -ArgumentList $args -Wait -PassThru
-            if ($run.ExitCode -ne 0) { throw "Installed application smoke failed with exit code $($run.ExitCode)." }
+            if ($run.ExitCode -ne 0) {
+              # The application writes its own structured failure into the
+              # smoke output, so the real reason is printed instead of only
+              # the exit code.
+              foreach ($file in @($operationOutput, $settingsOutput)) {
+                if (Test-Path $file) {
+                  Write-Warning "Smoke output from ${file}:"
+                  Get-Content -LiteralPath $file -Raw | Write-Warning
+                } else {
+                  Write-Warning "No smoke output was written to ${file}."
+                }
+              }
+              throw "Installed application smoke failed with exit code $($run.ExitCode)."
+            }
             if (-not (Test-Path $operationOutput) -or -not (Test-Path $settingsOutput)) { throw 'Installed application did not emit smoke evidence.' }
 
             $operations = Get-Content -LiteralPath $operationOutput -Raw | ConvertFrom-Json
