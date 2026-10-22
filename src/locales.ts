@@ -501,6 +501,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'tools.readOnlyNote': { ar: 'أداة قراءة فقط — لا تعدّل شيئًا على جهازك.', en: 'Read-only tool — changes nothing on your machine.' },
   'tools.runAgain': { ar: 'إعادة التشغيل', en: 'Run again' },
   'result.summaryNote': { ar: 'قيم مقاسة محليًا من Windows أثناء التنفيذ.', en: 'Values measured from Windows during execution.' },
+  'result.partialNote': { ar: 'اكتملت العملية مع أجزاء غير مؤكدة — راجع التحذيرات بالتفصيل.', en: 'The operation finished with unproven parts — review the warnings for detail.' },
   'result.key.platform': { ar: 'المنصة', en: 'Platform' },
   'result.key.release': { ar: 'إصدار Windows', en: 'Windows release' },
   'result.key.hostname': { ar: 'اسم الجهاز', en: 'Device name' },
@@ -643,6 +644,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'system.signatureChecked': { ar: 'التوقيعات المفحوصة', en: 'Signatures checked' },
   'system.signatureBudget': { ar: 'بلغ الحد الأقصى لفحص التوقيعات', en: 'Signature check budget reached' },
   'system.signature': { ar: 'التوقيع', en: 'Signature' },
+  'system.verifySignatures': { ar: 'فحص التوقيع الرقمي (أبطأ — يوثّق كل ملف تنفيذي)', en: 'Verify Authenticode signatures (slower — verifies each executable)' },
 
   // Shared semantic states
   'common.partial': { ar: 'جزئي', en: 'Partial' },

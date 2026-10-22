@@ -65,7 +65,9 @@ async function verifyMove({ source, destination, expectedIdentity = null }) {
     check('destination-is-file', true, after.isFile, after.isFile)
   ];
   if (expectedIdentity) {
-    const identityMatched = !after.fileIdentity || after.fileIdentity === expectedIdentity;
+    // A missing identity is not a match: an unverifiable identity must fail the
+    // proof instead of passing vacuously.
+    const identityMatched = Boolean(after.fileIdentity) && after.fileIdentity === expectedIdentity;
     checks.push(check('file-identity-preserved', expectedIdentity, after.fileIdentity, identityMatched));
   }
   return {
@@ -106,6 +108,26 @@ function verifyRegistryValue(expectedPresent, entry) {
     valueName: entry?.valueName ?? null,
     observedEntry: entry ?? null
   };
+}
+
+/**
+ * Registry-value restore proof. Presence alone is not a restore: the previous
+ * value AND its registry type must both come back.
+ */
+function verifyRegistryEntry(expected, observed) {
+  const expectedName = expected?.valueName ?? null;
+  const expectedType = expected?.valueType ?? null;
+  const expectedData = expected?.valueData ?? null;
+  const observedName = observed?.valueName ?? null;
+  const observedType = observed?.valueType ?? null;
+  const observedData = observed?.valueData ?? null;
+  const checks = [
+    check('registry-value-present', true, Boolean(observed), Boolean(observed)),
+    check('registry-value-name', expectedName, observedName, expectedName === observedName),
+    check('registry-value-type', expectedType, observedType, expectedType === observedType),
+    check('registry-value-data', expectedData, observedData, expectedData === observedData)
+  ];
+  return { ...verification(checks), valueName: observedName, observedEntry: observed ?? null };
 }
 
 /**
@@ -171,6 +193,7 @@ module.exports = {
   verifyRelocation,
   verifyRestore,
   verifyRegistryValue,
+  verifyRegistryEntry,
   aggregateVerifications,
   exitCodeOnlyVerification,
   mutationSucceeded,

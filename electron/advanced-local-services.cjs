@@ -119,7 +119,11 @@ function enrichDuplicateGroups(groups) {
     });
     const recommendedKeeper = files[0] || null;
     const reviewFiles = files.slice(1);
-    const groupReclaimable = Number(group?.reclaimableBytes) || ((Number(group?.size) || 0) * Math.max(0, files.length - 1));
+    // A group of hard links has a measured reclaimable size of zero. `||` would
+    // discard that zero and fall back to a naive estimate that over-reports the
+    // storage a user could actually recover.
+    const measuredReclaimable = Number(group?.reclaimableBytes);
+    const groupReclaimable = Number.isFinite(measuredReclaimable) ? measuredReclaimable : ((Number(group?.size) || 0) * Math.max(0, files.length - 1));
     reclaimableBytes += groupReclaimable;
     return {
       ...group,

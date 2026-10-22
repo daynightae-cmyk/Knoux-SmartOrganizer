@@ -4,6 +4,7 @@ import type { ToolDefinition } from '@shared/contracts';
 import { formatDurationMs } from '../../lib/format';
 import { canRunTool, cancelAllowed, isActivePhase, progressOf, requiresConfirmation, undoAllowed } from '../../lib/guards';
 import { toolIcon } from '../../lib/icons';
+import { buildToolInputs } from '../../lib/tool-inputs';
 import { useStore } from '../../state/store';
 import { AdminBadge, AvailabilityBadge, CapabilityBadges, RiskBadge } from './ToolBadges';
 import { ToolResultView } from './ToolResult';
@@ -45,23 +46,6 @@ export function ToolWarnings({ tool }: { tool: ToolDefinition }) {
   );
 }
 
-function inputsFor(toolId: string, extra: Record<string, unknown>, confirmed: boolean, aux: { journalId: string; serviceName: string; serviceAction: string; startupValue: string; dryRun: boolean }) {
-  if (['organize-downloads-undo', 'temp-cleanup-undo'].includes(toolId)) return { journalId: aux.journalId, ...extra };
-  if (toolId === 'service-startup-undo' || toolId === 'startup-restore') return { journalId: aux.journalId, confirm: true, ...extra };
-  if (toolId === 'service-control') {
-    return { serviceName: aux.serviceName, action: aux.serviceAction, confirm: true, ...(aux.dryRun ? { dryRun: true } : {}), ...extra };
-  }
-  if (toolId === 'startup-disable') return { valueName: aux.startupValue, confirm: true, ...extra };
-  if (['organize-downloads-apply', 'temp-cleanup-apply'].includes(toolId)) {
-    return { confirm: true, ...(aux.dryRun ? { dryRun: true } : {}), ...extra };
-  }
-  const adminLike = extra.__admin === true;
-  const base: Record<string, unknown> = adminLike || toolId.startsWith('repair-') ? { confirm: true, ...(aux.dryRun ? { dryRun: true } : {}), ...extra } : { ...extra };
-  delete base.__admin;
-  if (confirmed) base.confirm = true;
-  return base;
-}
-
 export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folder: string; file: string }) {
   const { t, locale, event, result, run, cancel, chooseFolder, chooseFile } = useStore();
   const [confirmed, setConfirmed] = useState(false);
@@ -70,9 +54,10 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
   const [serviceAction, setServiceAction] = useState('restart');
   const [startupValue, setStartupValue] = useState('');
   const [dryRun, setDryRun] = useState(false);
+  const [verifySignatures, setVerifySignatures] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { setConfirmed(false); setBusy(false); }, [tool.id]);
+  useEffect(() => { setConfirmed(false); setBusy(false); setDryRun(false); setVerifySignatures(false); }, [tool.id]);
 
   const needsConfirm = requiresConfirmation(tool);
   const available = canRunTool(tool);
@@ -85,14 +70,14 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
   const extra: Record<string, unknown> = {};
   if (folder && ['large-files', 'duplicate-files', 'empty-folders', 'organize-downloads-preview', 'organize-downloads-apply'].includes(tool.id)) extra.folder = folder;
   if (file && tool.id === 'file-hash') extra.filePath = file;
-  if (tool.requiresAdmin || tool.riskLevel !== 'read-only') extra.__admin = true;
+  if (tool.id === 'process-inventory') extra.verifySignatures = verifySignatures;
 
   const execute = async () => {
     if (!available || busy || activeForTool) return;
     if (needsConfirm && !confirmed) return;
     setBusy(true);
     try {
-      await run(tool, inputsFor(tool.id, extra, confirmed, { journalId, serviceName, serviceAction, startupValue, dryRun }));
+      await run(tool, buildToolInputs(tool, extra, confirmed, { journalId, serviceName, serviceAction, startupValue, dryRun }));
     } finally {
       setBusy(false);
     }
@@ -142,6 +127,12 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
       )}
       {tool.id === 'startup-disable' && (
         <label className="setting"><span>{t('startup.valueName')}</span><input value={startupValue} onChange={e => setStartupValue(e.target.value)} placeholder={t('startup.valueName')} /></label>
+      )}
+      {tool.id === 'process-inventory' && (
+        <label className="confirmation">
+          <input type="checkbox" checked={verifySignatures} onChange={e => setVerifySignatures(e.target.checked)} />
+          <span>{t('system.verifySignatures')}</span>
+        </label>
       )}
       {['organize-downloads-undo', 'temp-cleanup-undo', 'service-startup-undo', 'startup-restore'].includes(tool.id) && (
         <label className="setting"><span>{t('tools.journal')}</span><input value={journalId} onChange={e => setJournalId(e.target.value)} placeholder={t('tools.journalHint')} dir="ltr" /></label>

@@ -39,6 +39,8 @@ export function ToolResultView({ result }: { result: ToolResult }) {
   const [copied, setCopied] = useState('');
   const entries = Object.entries(result.summary);
   const items = expanded ? result.items : result.items.slice(0, 8);
+  // A partial result is never presented as a clean success.
+  const state = !result.success ? 'error' : result.partial ? 'partial' : 'success';
 
   const copy = async (text: string) => {
     try {
@@ -49,11 +51,12 @@ export function ToolResultView({ result }: { result: ToolResult }) {
   };
 
   return (
-    <div className={result.success ? 'result result-success' : 'result result-error'}>
+    <div className={`result result-${state}`}>
       <h3>
         {result.success ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-        {result.success ? t('common.result') : t('operation.failed')}
+        {result.success ? (result.partial ? t('common.partial') : t('common.result')) : t('operation.failed')}
       </h3>
+      {result.partial && result.success && <p className="muted small">{t('result.partialNote')}</p>}
       <p className="muted small">{t('result.summaryNote')}</p>
       {result.errors.map(error => <p key={error} role="alert">{error}</p>)}
       {result.warnings.length > 0 && (

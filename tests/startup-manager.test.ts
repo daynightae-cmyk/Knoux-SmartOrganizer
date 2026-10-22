@@ -8,13 +8,17 @@ const { createStartupManager, CURRENT_USER_RUN_KEY } = require('../electron/star
 };
 
 const journalId = '11111111-1111-4111-8111-111111111111';
+const RUN_KEY_OUTPUT = `
+HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
+    OneDrive    REG_SZ    C:\\Windows\\System32\\OneDriveSetup.exe /background
+`;
 let execute: ReturnType<typeof vi.fn>;
 let journals: Map<string, Record<string, unknown>>;
 
 beforeEach(() => {
   journals = new Map();
   execute = vi.fn(async (_file: string, args: string[]) => {
-    if (args[0] === 'query') return { stdout: `\n    OneDrive    REG_SZ    C:\\Windows\\System32\\OneDriveSetup.exe /background\n` };
+    if (args[0] === 'query') return { stdout: RUN_KEY_OUTPUT };
     return { stdout: '' };
   });
 });
@@ -30,7 +34,10 @@ function manager() {
 describe('current-user startup manager', () => {
   it('disables only one named current-user Run value and stores a restore journal', async () => {
     const result = await manager().disable({ valueName: 'OneDrive' });
-    expect(execute).toHaveBeenNthCalledWith(1, 'reg.exe', ['query', CURRENT_USER_RUN_KEY, '/v', 'OneDrive'], expect.any(Object));
+    // The whole Run key is read, not a single `/v` value: `reg query /v` exits
+    // with code 1 both when the value is missing and when the key is unreadable,
+    // which used to turn an unreadable key into a "verified removal".
+    expect(execute).toHaveBeenNthCalledWith(1, 'reg.exe', ['query', CURRENT_USER_RUN_KEY], expect.any(Object));
     expect(execute).toHaveBeenNthCalledWith(2, 'reg.exe', ['delete', CURRENT_USER_RUN_KEY, '/v', 'OneDrive', '/f'], expect.any(Object));
     expect(result.summary).toMatchObject({ valueName: 'OneDrive', changed: true, recoverable: true });
     const [name, journal] = [...journals.entries()][0];
@@ -49,12 +56,32 @@ describe('current-user startup manager', () => {
 
   it('restores only a valid local journal and refuses to overwrite an existing startup value', async () => {
     journals.set(`undo-startup-${journalId}.json`, { journalId, action: 'startup-disable', source: CURRENT_USER_RUN_KEY, valueName: 'OneDrive', valueType: 'REG_SZ', valueData: 'C:\\Windows\\System32\\OneDriveSetup.exe /background' });
-    execute.mockImplementationOnce(async () => { const error = new Error('not found') as Error & { code?: number }; error.code = 1; throw error; });
+    execute.mockImplementationOnce(async () => ({ stdout: '\nHKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n' }));
     const result = await manager().restore({ journalId });
     expect(result.summary).toMatchObject({ valueName: 'OneDrive', changed: true, recoverable: true });
     expect(execute).toHaveBeenNthCalledWith(2, 'reg.exe', ['add', CURRENT_USER_RUN_KEY, '/v', 'OneDrive', '/t', 'REG_SZ', '/d', 'C:\\Windows\\System32\\OneDriveSetup.exe /background', '/f'], expect.any(Object));
     execute.mockClear();
     await expect(manager().restore({ journalId })).rejects.toThrow('already exists');
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports an unreadable Run key as an error instead of a missing entry', async () => {
+    execute.mockImplementationOnce(async () => { const error = new Error('Access is denied.') as Error & { code?: number }; error.code = 1; throw error; });
+    await expect(manager().disable({ valueName: 'OneDrive' })).rejects.toThrow('Unable to inspect');
+    expect(journals.size).toBe(0);
+  });
+
+  it('refuses to delete a startup value whose registry type cannot be restored', async () => {
+    execute.mockImplementationOnce(async () => ({ stdout: '\nHKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n    OneDrive    REG_DWORD    1\n' }));
+    await expect(manager().disable({ valueName: 'OneDrive' })).rejects.toThrow('unsupported registry type');
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(journals.size).toBe(0);
+  });
+
+  it('reports a startup value that does not exist without touching the registry', async () => {
+    execute.mockImplementationOnce(async () => ({ stdout: '\nHKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n' }));
+    await expect(manager().disable({ valueName: 'OneDrive' })).rejects.toThrow('not found');
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(journals.size).toBe(0);
   });
 });

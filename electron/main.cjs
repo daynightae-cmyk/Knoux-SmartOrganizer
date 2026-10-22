@@ -16,6 +16,9 @@ const advancedLocal = require('./advanced-local-services.cjs');
 const windowsProviders = require('./windows-providers.cjs');
 const windowsFs = require('./windows-fs-metadata.cjs');
 const verificationKit = require('./verification.cjs');
+const historyExport = require('./history-export.cjs');
+const safeMove = require('./safe-move.cjs');
+const logRedaction = require('./log-redaction.cjs');
 
 const execFileAsync = promisify(execFile);
 const operations = new Map();
@@ -35,6 +38,22 @@ const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
 
+// Only one interactive instance may own the settings, history and tray. The
+// headless automation and smoke paths are exempt, because they are short-lived
+// processes that must be able to run while an interactive instance is open.
+const isAutomationProcess = process.argv.some(argument => argument.startsWith('--automation-run='));
+const isSmokeProcess = process.argv.some(argument => /--knoux-[a-z-]*smoke-output=/.test(argument));
+const isHeadlessProcess = isAutomationProcess || isSmokeProcess;
+if (!isHeadlessProcess && !app.requestSingleInstanceLock()) app.quit();
+if (!isHeadlessProcess) {
+  app.on('second-instance', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
 const runRequestSchema = z.object({
   toolId: z.string().min(1).max(64),
   inputs: z.record(z.unknown()).default({})
@@ -44,7 +63,32 @@ function appDataPath(name) { return path.join(app.getPath('userData'), name); }
 async function ensureAppStorage() { await fsp.mkdir(app.getPath('userData'), { recursive: true }); await fsp.mkdir(appDataPath('logs'), { recursive: true }); }
 async function readJson(name, fallback) { try { return JSON.parse(await fsp.readFile(appDataPath(name), 'utf8')); } catch { return fallback; } }
 async function writeJson(name, data) { const target = appDataPath(name); const temp = `${target}.${process.pid}.${Date.now()}.${crypto.randomUUID()}.tmp`; await fsp.writeFile(temp, JSON.stringify(data, null, 2), 'utf8'); try { for (let attempt = 0; attempt < 6; attempt += 1) { try { await fsp.rename(temp, target); return; } catch (error) { if (!['EPERM', 'EACCES', 'EBUSY'].includes(error?.code) || attempt === 5) throw error; await new Promise(resolve => setTimeout(resolve, 25 * (attempt + 1))); } } } finally { await fsp.rm(temp, { force: true }).catch(() => {}); } }
-async function log(level, event, details = {}) { const line = JSON.stringify({ timestamp: new Date().toISOString(), level, event, ...details }) + '\n'; await fsp.appendFile(path.join(appDataPath('logs'), 'operations.ndjson'), line).catch(() => {}); }
+// Operation logs are written locally only, but they are still a place where a
+// secret could end up. Values are redacted by key, and the log file is rotated
+// so it cannot grow without bound on a long-lived installation.
+const LOG_MAX_BYTES = logRedaction.LOG_MAX_BYTES;
+const LOG_MAX_ARCHIVES = logRedaction.LOG_MAX_ARCHIVES;
+let logMutationQueue = Promise.resolve();
+async function rotateAuditLog(target) {
+  try {
+    const stats = await fsp.stat(target);
+    if (stats.size < LOG_MAX_BYTES) return;
+  } catch { return; }
+  try { await fsp.rm(`${target}.${LOG_MAX_ARCHIVES}`, { force: true }); } catch { /* best effort */ }
+  for (let index = LOG_MAX_ARCHIVES - 1; index >= 1; index -= 1) {
+    try { await fsp.rename(`${target}.${index}`, `${target}.${index + 1}`); } catch { /* best effort */ }
+  }
+  try { await fsp.rename(target, `${target}.1`); } catch { /* best effort */ }
+}
+function log(level, event, details = {}) {
+  const task = logMutationQueue.catch(() => {}).then(async () => {
+    const target = path.join(appDataPath('logs'), 'operations.ndjson');
+    await rotateAuditLog(target);
+    await fsp.appendFile(target, logRedaction.formatLogLine(level, event, details), 'utf8');
+  });
+  logMutationQueue = task;
+  return task.catch(() => {});
+}
 async function getSettings() { const value = await settingsStore.get(); settingsCache = value; return value; }
 function publishSettings(value) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:settings-changed', value); }
 async function updateSettings(patch) { const value = await settingsStore.update(patch); settingsCache = value; applyRuntimeSettings(value); publishSettings(value); return value; }
@@ -65,7 +109,13 @@ function addHistory(entry) { const task = historyMutationQueue.catch(() => {}).t
 function emit(event) { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('knoux:operation-event', event); }
 function phase(operationId, toolId, phaseName, message, more = {}) {
   const context = operations.get(operationId); const updatedAt = new Date().toISOString();
-  if (context) { context.phase = phaseName; context.updatedAt = updatedAt; if (typeof more.percent === 'number') context.progressValue = more.percent; }
+  if (context) {
+    context.phase = phaseName; context.updatedAt = updatedAt;
+    if (typeof more.percent === 'number') context.progressValue = more.percent;
+    // A finished operation must not keep showing the last intermediate percentage.
+    if (phaseName === 'completed') context.progressValue = 100;
+    if (phaseName === 'failed' || phaseName === 'cancelled') context.progressValue = null;
+  }
   emit({
     operationId, toolId, startedAt: context?.startedAt || updatedAt, updatedAt,
     progress: context?.progressValue ?? null, phase: phaseName, summary: more.result?.summary || {},
@@ -76,6 +126,79 @@ function phase(operationId, toolId, phaseName, message, more = {}) {
 }
 function applyRuntimeSettings(settings) {
   app.setLoginItemSettings({ openAtLogin: settings.general.startWithWindows, args: settings.general.startMinimized ? ['--start-minimized'] : [] });
+}
+/**
+ * Reports the real Authenticode state of the running executable.
+ *
+ * The path is passed to PowerShell as an argument, never interpolated into the
+ * script, and the result is reported as-is. An unsigned build is reported as
+ * an unsigned production candidate; it is never described as signed.
+ */
+async function codeSigningInfo() {
+  const unavailable = { state: 'UNAVAILABLE', status: null, publisher: null, timestampPublisher: null, signatureAlgorithm: null, timestamped: false };
+  if (process.platform !== 'win32') return unavailable;
+  const script = '& { param($target) $s = Get-AuthenticodeSignature -LiteralPath $target; $ts = $null; if ($s.TimeStamperCertificate) { $ts = $s.TimeStamperCertificate.Subject }; [pscustomobject]@{ State = $s.Status.ToString(); Status = $s.StatusMessage; Subject = $s.SignerCertificate.Subject; TimestampSubject = $ts; Algorithm = $s.SignerCertificate.SignatureAlgorithm.FriendlyName } | ConvertTo-Json -Compress }';
+  try {
+    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script, process.execPath], { windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024 });
+    const payload = JSON.parse(String(stdout || '').trim());
+    const status = String(payload?.State || 'Unknown');
+    const signed = status === 'Valid';
+    return {
+      state: signed ? 'SIGNED_PRODUCTION' : 'UNSIGNED_PRODUCTION_CANDIDATE',
+      status,
+      statusMessage: payload?.Status ? String(payload.Status).slice(0, 300) : null,
+      publisher: payload?.Subject ? String(payload.Subject).slice(0, 300) : null,
+      timestampPublisher: payload?.TimestampSubject ? String(payload.TimestampSubject).slice(0, 300) : null,
+      signatureAlgorithm: payload?.Algorithm ? String(payload.Algorithm).slice(0, 120) : null,
+      timestamped: Boolean(payload?.TimestampSubject)
+    };
+  } catch {
+    return unavailable;
+  }
+}
+/** Removes local filesystem paths and long free text from diagnostic output. */
+function sanitizeDiagnosticText(value) {
+  return String(value ?? '').replace(/[A-Za-z]:\\[^\r\n"']+/g, '[local-path]').replace(/\\\\[^\r\n"']+/g, '[unc-path]').slice(0, 500);
+}
+/**
+ * Builds a local support bundle.
+ *
+ * It contains no clipboard content, no user file content and no settings
+ * values beyond a small non-sensitive summary. Local paths are redacted.
+ */
+async function buildDiagnostics() {
+  const settings = await getSettings();
+  const toolList = await serializeRegistry(toolDefinitions);
+  const records = await history();
+  const recent = records.slice(0, 25);
+  return {
+    generatedAt: new Date().toISOString(),
+    app: {
+      version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch,
+      isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome,
+      node: process.versions.node, releaseChannel: 'stable', codeSigning: await codeSigningInfo()
+    },
+    toolCapabilities: toolList.map(tool => ({
+      id: tool.id, category: tool.category, riskLevel: tool.riskLevel, requiresAdmin: tool.requiresAdmin,
+      available: tool.availability.available, capability: tool.availability.capability ?? null,
+      reason: tool.availability.reason ? sanitizeDiagnosticText(tool.availability.reason) : null
+    })),
+    recentOperations: recent.map(record => ({
+      operationId: record.operationId, toolId: record.toolId, action: record.action,
+      success: Boolean(record.success), partial: Boolean(record.partial),
+      startedAt: record.startedAt, finishedAt: record.finishedAt, durationMs: record.durationMs ?? null,
+      errors: (record.errors || []).map(sanitizeDiagnosticText)
+    })),
+    privacy: {
+      telemetry: false, usageAnalytics: false, crashReporting: false, clipboardUpload: false,
+      clipboardContentsIncluded: false, settingsIncluded: false, pathsRedacted: true
+    },
+    settingsSummary: {
+      locale: settings.localization.locale, theme: settings.appearance.theme, accent: settings.appearance.accent,
+      elevationPolicy: settings.security.elevationPolicy, automaticCleanup: settings.history.automaticCleanup,
+      retentionDays: settings.history.retentionDays, diagnosticLogging: settings.advanced.diagnosticLogging
+    }
+  };
 }
 function argumentValue(name) { const prefix = `--${name}=`; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 function smokeArgument(name) { const value = argumentValue(name); return value ? path.resolve(value) : null; }
@@ -144,10 +267,32 @@ function unavailableWarnings(unavailable, label) {
  * asking for the top 8 large files examined 8 entries, so large-files,
  * duplicate-files and empty-folders could never return anything at low limits.
  */
+/**
+ * Matches a path against the user's exclusion patterns. A pattern matches the
+ * exact path, anything under it, or the file name itself. Exclusions are
+ * honoured by the traversal itself, so every scanner and every mutation path
+ * sees the same selection.
+ */
+function matchesExclusion(target, patterns) {
+  const list = Array.isArray(patterns) ? patterns : [];
+  if (!list.length) return false;
+  const resolved = path.resolve(target).toLowerCase();
+  const fileName = path.basename(target).toLowerCase();
+  return list.some(pattern => {
+    const value = String(pattern || '').trim().toLowerCase();
+    if (!value) return false;
+    if (fileName === value) return true;
+    const candidate = path.resolve(value).toLowerCase();
+    if (resolved === candidate) return true;
+    return resolved.startsWith(candidate.endsWith(path.sep) ? candidate : candidate + path.sep);
+  });
+}
 async function walk(root, context, options = {}) {
   const files = []; const folders = []; const links = []; const queue = [root]; const scanBudget = options.scanBudget || options.limit || 50000;
-  const policy = options.reparsePointPolicy || await reparsePointPolicy(); let inspected = 0;
-  const totals = { foldersVisited: 0, filesVisited: 0, reparsePointsSkipped: 0, reparsePointsTraversed: 0, accessDenied: 0, hardlinkedFiles: 0, cloudPlaceholders: 0, allocatedSizeAvailable: false };
+  const policy = options.reparsePointPolicy || await reparsePointPolicy();
+  const exclusions = options.exclusions || (await getSettings()).scanning.exclusions || [];
+  let inspected = 0;
+  const totals = { foldersVisited: 0, filesVisited: 0, reparsePointsSkipped: 0, reparsePointsTraversed: 0, accessDenied: 0, hardlinkedFiles: 0, cloudPlaceholders: 0, allocatedSizeAvailable: false, excluded: 0 };
   while (queue.length) {
     isCancelled(context); const folder = queue.shift(); totals.foldersVisited += 1; folders.push(folder); let entries;
     try { entries = await fsp.readdir(folder, { withFileTypes: true }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${folder}: ${error.code || 'unavailable'}`); continue; }
@@ -155,6 +300,7 @@ async function walk(root, context, options = {}) {
       isCancelled(context); if (++inspected > scanBudget) { context.warnings.push(`Scan stopped after examining ${scanBudget.toLocaleString()} filesystem items; results are partial.`); return { files, folders, links, totals, partial: true }; }
 
       const full = path.join(folder, entry.name); let stat;
+      if (matchesExclusion(full, exclusions)) { totals.excluded += 1; continue; }
       try { stat = await fsp.lstat(full); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
       let classified;
       try { classified = await classifyEntry(full, stat, { root, reparsePointPolicy: policy }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
@@ -262,15 +408,21 @@ async function tempCleanupCandidates(context) {
   const smokeFixture = app.isPackaged && smokeArgument('knoux-temp-cleanup-smoke-fixture');
   const temp = smokeFixture ? requireTemporaryPath(smokeFixture, 'Packaged cleanup fixture') : (process.env.TEMP || os.tmpdir());
   if (smokeFixture) allowedDirectory(temp);
-  const data = await walk(temp, context, { scanBudget: Math.min(SCAN_BUDGET, 25000) });
-  const oldest = Date.now() - (await getSettings()).cleanup.minimumFileAgeDays * 86400000;
+  const settings = await getSettings();
+  const exclusions = [...(settings.scanning.exclusions || []), ...(settings.cleanup.exclusions || [])];
+  const data = await walk(temp, context, { scanBudget: Math.min(SCAN_BUDGET, 25000), exclusions });
+  const oldest = Date.now() - settings.cleanup.minimumFileAgeDays * 86400000;
   const selected = data.files.filter(file => new Date(file.modifiedAt).getTime() < oldest);
-  return { temp, data, selected };
+  return { temp, data, selected, exclusions };
 }
-async function moveWithFallback(source, destination) {
-  try { await fsp.rename(source, destination); }
-  catch (error) { if (error?.code !== 'EXDEV') throw error; await fsp.copyFile(source, destination, fs.constants.COPYFILE_EXCL); await fsp.unlink(source); }
-}
+/**
+ * Moves a file without ever silently overwriting an existing destination.
+ *
+ * See electron/safe-move.cjs: the destination is reserved atomically with an
+ * exclusive create, cross-volume moves are staged and size-verified, and the
+ * source is removed last.
+ */
+const moveWithFallback = safeMove.moveWithFallback;
 async function runTool(context, tool, inputs) {
   const home = app.getPath('home'); const folder = allowedDirectory(inputs.folder || home); const limit = inputs.limit || 50000;
   if (OPERATION_SPECS[tool.engine]) { const output = await privilegedRunner.run(tool.engine, { dryRun: inputs.dryRun }); if (!inputs.dryRun && output.summary.exitCode !== 0) throw new Error(`Privileged operation exited with code ${output.summary.exitCode}.`); if (!inputs.dryRun) context.warnings.push(...(output.summary.verification?.limitation ? [output.summary.verification.limitation] : [])); return output; }
@@ -315,83 +467,142 @@ async function runTool(context, tool, inputs) {
     return { ...output, summary: { ...output.summary, journalId: inputs.journalId, restoredStartupAction: journal.oldAction, startedAt, finishedAt, verification: proof ?? { status: 'unverified', method: 'dry-run: no state was changed' } }, partial: Boolean(proof && proof.status !== 'verified') };
   }
   if (tool.engine === 'systemHealth') return { summary: await systemHealth(), items: [] };
-  if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).catch(() => []); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, physicalDisks: physical, physicalDiskCount: physical.length, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' } }; }
+  if (tool.engine === 'diskOverview') { const rawItems = await diskOverview(); const items = advancedLocal.diskPressure(rawItems); const physical = await windowsProviders.collectPhysicalDisks({ timeout: 45000 }).then(value => ({ value, error: null })).catch(error => ({ value: [], error })); const warnings = []; if (physical.error) warnings.push('The physical disk provider did not answer, so physical disk details are absent from this result.'); return { items, summary: { drives: items.length, pressuredDrives: items.filter(item => ['critical', 'high'].includes(item.pressure)).length, criticalDrives: items.filter(item => item.pressure === 'critical').length, unknownPressureDrives: items.filter(item => item.pressure === 'unknown').length, physicalDisks: physical.value, physicalDiskCount: physical.value.length, physicalDisksAvailable: !physical.error, volumeProvider: 'Win32_LogicalDisk', physicalProvider: 'MSFT_PhysicalDisk' }, warnings, partial: Boolean(physical.error) }; }
   if (tool.engine === 'largeFiles') return await scanLargeFiles(folder, context, Number(inputs.thresholdBytes) || (await getSettings()).scanning.largeFileBytes, limit);
   if (tool.engine === 'duplicates') return await scanDuplicates(folder, context, Number(inputs.minimumBytes) || (await getSettings()).scanning.minimumDuplicateBytes, limit);
-  if (tool.engine === 'emptyFolders') { const data = await walk(folder, context, { scanBudget: SCAN_BUDGET }); traversalWarnings(context, data.totals); const empty = []; for (const item of data.folders) { try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); } catch {} } return { items: empty.slice(0, limit), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length, traversal: data.totals }, partial: data.partial }; }
+  if (tool.engine === 'emptyFolders') {
+    const data = await walk(folder, context, { scanBudget: SCAN_BUDGET }); traversalWarnings(context, data.totals);
+    const empty = []; let inaccessible = 0;
+    for (let index = 0; index < data.folders.length; index++) {
+      isCancelled(context); const item = data.folders[index];
+      try { if ((await fsp.readdir(item)).length === 0) empty.push({ path: item }); }
+      catch (error) { inaccessible += 1; if (inaccessible <= 20) context.warnings.push(`${item}: ${error.code || 'unavailable'}`); }
+      if (index % 50 === 0) context.progress(index + 1, data.folders.length || 1, `Checked ${index + 1} of ${data.folders.length} folders`);
+    }
+    if (inaccessible > 20) context.warnings.push(`${inaccessible} folder(s) could not be read; they are reported as neither empty nor non-empty.`);
+    return { items: empty.slice(0, limit), summary: { folder, foldersScanned: data.folders.length, emptyFolders: empty.length, inaccessibleFolders: inaccessible, traversal: data.totals }, partial: data.partial || inaccessible > 0 };
+  }
   if (tool.engine === 'downloadsInventory') {
     const downloads = app.getPath('downloads'); const data = await walk(downloads, context, { scanBudget: SCAN_BUDGET }); traversalWarnings(context, data.totals); const intelligence = advancedLocal.buildStorageIntelligence(data.files, downloads); const privacy = advancedLocal.privacyExposure(data.files);
-    const items = [...data.files].sort((a,b) => b.size-a.size).slice(0, 200).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
-    return { items, summary: { folder: downloads, files: data.files.length, totalBytes: intelligence.totalBytes, extensionGroups: intelligence.extensionGroups, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, privacyExposureCount: privacy.summary.exposureCount, privacyExposureBytes: privacy.summary.exposureBytes, privacyMetadataOnly: true, privacyContentsInspected: false, privacyFindings: privacy.items.slice(0, 50), metadataOnly: true, contentsInspected: false, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
+    const shown = [...data.files].sort((a, b) => b.size - a.size).slice(0, Math.max(0, Number(inputs.limit) > 0 ? Number(inputs.limit) : data.files.length));
+    const items = shown.map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
+    return { items, summary: { folder: downloads, files: data.files.length, shownFiles: items.length, truncated: items.length < data.files.length, limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, totalBytes: intelligence.totalBytes, extensionGroups: intelligence.extensionGroups, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, privacyExposureCount: privacy.summary.exposureCount, privacyExposureBytes: privacy.summary.exposureBytes, privacyMetadataOnly: true, privacyContentsInspected: false, privacyFindings: privacy.items.slice(0, 50), metadataOnly: true, contentsInspected: false, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
   }
-  if (tool.engine === 'organizePreview') { const plan = await downloadOrganizationPlan(context, limit, inputs.folder); if (plan.collisions.length) context.warnings.push(`${plan.collisions.length} planned move(s) were withheld because the destination name already exists.`); return { items: [...plan.plans, ...plan.collisions.map(item => ({ ...item, blocked: 'destination-exists' })), ...plan.skipped].slice(0, 1000), summary: { sourceFolder: plan.source, plannedMoves: plan.plans.length, blockedByCollision: plan.collisions.length, skipped: plan.skipped.length, skippedReasons: plan.skipped.map(item => item.reason), previewOnly: true, traversal: plan.totals }, partial: plan.partial }; }
+  if (tool.engine === 'organizePreview') {
+    const plan = await downloadOrganizationPlan(context, limit, inputs.folder);
+    if (plan.collisions.length) context.warnings.push(`${plan.collisions.length} planned move(s) were withheld because the destination name already exists.`);
+    if (plan.skipped.length) context.warnings.push(`${plan.skipped.length} file(s) were skipped by the safety policy (${[...new Set(plan.skipped.map(item => item.reason))].join(', ')}).`);
+    const combined = [...plan.plans, ...plan.collisions.map(item => ({ ...item, blocked: 'destination-exists' })), ...plan.skipped];
+    const shown = combined.slice(0, Math.max(0, Number(inputs.limit) > 0 ? Number(inputs.limit) : combined.length));
+    return { items: shown, summary: { sourceFolder: plan.source, plannedMoves: plan.plans.length, blockedByCollision: plan.collisions.length, skipped: plan.skipped.length, skippedReasons: [...new Set(plan.skipped.map(item => item.reason))], shownItems: shown.length, limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, previewOnly: true, traversal: plan.totals }, partial: plan.partial };
+  }
   if (tool.engine === 'organizeApply') {
     if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving files.');
     const plan = await downloadOrganizationPlan(context, limit, inputs.folder);
-    const journal = []; const verifications = [];
-    for (let index = 0; index < plan.plans.length; index++) {
-      isCancelled(context); const item = plan.plans[index];
-      if (fs.existsSync(item.destination)) { context.warnings.push(`Skipped name conflict: ${item.source}`); verifications.push(verificationKit.verification([verificationKit.check('destination-absent', true, false, false)], { skipped: 'destination-exists' })); continue; }
-      try {
-        await fsp.mkdir(path.dirname(item.destination), { recursive: true });
-        await moveWithFallback(item.source, item.destination);
-        journal.push({ source: item.source, destination: item.destination, size: item.size, fileIdentity: item.fileIdentity });
-        verifications.push(await verificationKit.verifyMove({ source: item.source, destination: item.destination, expectedIdentity: item.fileIdentity }));
-      } catch (error) { context.warnings.push(`${item.source}: ${error.code || error.message || 'unavailable'}`); verifications.push(verificationKit.verification([verificationKit.check('move-completed', true, false, false)], { error: String(error.code || error.message || 'unavailable') })); }
-      context.progress(index + 1, plan.plans.length || 1, `Moved ${index + 1} files`);
-    }
+    // The journal is written BEFORE the first mutation. If the process dies
+    // mid-run the intent journal is still on disk, so every file that moved
+    // remains recoverable instead of being orphaned.
     const journalId = crypto.randomUUID();
-    await writeJson(`undo-${journalId}.json`, { journalId, createdAt: new Date().toISOString(), action: 'organize-downloads', moves: journal });
+    const journalFile = `undo-${journalId}.json`;
+    const planned = plan.plans.slice(0, Math.max(0, Number(inputs.limit) > 0 ? Number(inputs.limit) : plan.plans.length));
+    await writeJson(journalFile, { journalId, createdAt: new Date().toISOString(), action: 'organize-downloads', status: 'in-progress', plannedMoves: planned.length, moves: planned.map(item => ({ source: item.source, destination: item.destination, size: item.size, fileIdentity: item.fileIdentity, status: 'planned' })) });
+    const journal = []; const verifications = [];
+    for (let index = 0; index < planned.length; index++) {
+      isCancelled(context); const item = planned[index];
+      try {
+        await moveWithFallback(item.source, item.destination);
+        journal.push({ source: item.source, destination: item.destination, size: item.size, fileIdentity: item.fileIdentity, status: 'moved' });
+        verifications.push(await verificationKit.verifyMove({ source: item.source, destination: item.destination, expectedIdentity: item.fileIdentity }));
+      } catch (error) {
+        const reason = String(error.code || error.message || 'unavailable');
+        context.warnings.push(`${item.source}: ${reason}`);
+        journal.push({ source: item.source, destination: item.destination, size: item.size, fileIdentity: item.fileIdentity, status: 'failed', reason });
+        verifications.push(verificationKit.verification([verificationKit.check('move-completed', true, false, false)], { error: reason }));
+      }
+      context.progress(index + 1, planned.length || 1, `Moved ${index + 1} of ${planned.length} files`);
+    }
+    await writeJson(journalFile, { journalId, createdAt: new Date().toISOString(), action: 'organize-downloads', status: 'completed', plannedMoves: planned.length, moves: journal });
     const aggregate = verificationKit.aggregateVerifications(verifications);
     if (aggregate.status !== 'verified') context.warnings.push(`Post-move verification reported "${aggregate.status}". The requested state could not be proven for every file.`);
-    return { items: journal.slice(0, 1000), summary: { journalId, movedFiles: journal.length, skippedFiles: plan.plans.length - journal.length, verification: aggregate }, partial: plan.partial || aggregate.status !== 'verified', undoMetadata: { journalId, action: 'organize-downloads' }, restartRequired: false };
+    const moved = journal.filter(entry => entry.status === 'moved').length;
+    return { items: journal.slice(0, 1000), summary: { journalId, movedFiles: moved, failedFiles: journal.length - moved, skippedFiles: plan.plans.length - planned.length, limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, plannedMoves: plan.plans.length, verification: aggregate }, partial: plan.partial || aggregate.status !== 'verified' || journal.length !== moved, undoMetadata: { journalId, action: 'organize-downloads' }, restartRequired: false };
   }
   if (tool.engine === 'organizeUndo') {
     const journalId = z.string().uuid().parse(inputs.journalId); const journal = await readJson(`undo-${journalId}.json`, null); if (!journal || !Array.isArray(journal.moves)) throw new Error('Undo journal is unavailable.');
-    const restored = []; const conflicts = []; const verifications = [];
+    const restored = []; const conflicts = []; const verifications = []; const untouched = [];
     for (let index = journal.moves.length - 1; index >= 0; index--) {
       isCancelled(context); const item = journal.moves[index];
-      if (fs.existsSync(item.source)) { conflicts.push({ path: item.source, reason: 'original-already-exists' }); verifications.push(verificationKit.verification([verificationKit.check('original-absent', true, false, false)], { conflict: 'original-already-exists' })); context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`); continue; }
-      if (!fs.existsSync(item.destination)) { conflicts.push({ path: item.destination, reason: 'organized-file-missing' }); verifications.push(verificationKit.verification([verificationKit.check('organized-file-present', true, false, false)], { conflict: 'organized-file-missing' })); continue; }
-      try { await fsp.mkdir(path.dirname(item.source), { recursive: true }); await moveWithFallback(item.destination, item.source); restored.push(item); verifications.push(await verificationKit.verifyRestore({ original: item.source, relocated: item.destination, expectedSize: item.size ?? null })); }
-      catch (error) { conflicts.push({ path: item.source, reason: String(error.code || error.message || 'unavailable') }); verifications.push(verificationKit.verification([verificationKit.check('restore-completed', true, false, false)], { error: String(error.code || error.message || 'unavailable') })); }
+      const sourcePresent = fs.existsSync(item.source); const destinationPresent = fs.existsSync(item.destination);
+      // Never overwrite: a restored file that already exists is a conflict, and
+      // a move that never happened is not a failure.
+      if (!destinationPresent) { untouched.push({ path: item.source, reason: 'organized-file-missing' }); continue; }
+      if (sourcePresent) { conflicts.push({ path: item.source, reason: 'original-already-exists' }); verifications.push(verificationKit.verification([verificationKit.check('original-absent', true, false, false)], { conflict: 'original-already-exists' })); context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`); continue; }
+      try { await moveWithFallback(item.destination, item.source); restored.push(item); verifications.push(await verificationKit.verifyRestore({ original: item.source, relocated: item.destination, expectedSize: item.size ?? null })); }
+      catch (error) { const reason = String(error.code || error.message || 'unavailable'); conflicts.push({ path: item.source, reason }); verifications.push(verificationKit.verification([verificationKit.check('restore-completed', true, false, false)], { error: reason })); }
       context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} files`);
     }
     const aggregate = verificationKit.aggregateVerifications(verifications);
-    if (conflicts.length) context.warnings.push(`${conflicts.length} file(s) were not restored because the original location or the organized file was unavailable. Nothing was overwritten.`);
+    if (conflicts.length) context.warnings.push(`${conflicts.length} file(s) were not restored because the original location was already occupied. Nothing was overwritten.`);
+    if (untouched.length) context.warnings.push(`${untouched.length} journalled file(s) were not at the organised location and were left alone.`);
     if (aggregate.status !== 'verified') context.warnings.push(`Post-restore verification reported "${aggregate.status}".`);
-    return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, conflicts: conflicts.slice(0, 100), verification: aggregate }, partial: aggregate.status !== 'verified', restartRequired: false };
+    return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, conflicts: conflicts.slice(0, 100), notRestoredBecauseMissing: untouched.length, verification: aggregate }, partial: aggregate.status !== 'verified' || conflicts.length > 0, restartRequired: false };
   }
-  if (tool.engine === 'tempPreview') { const candidate = await tempCleanupCandidates(context); return { items: candidate.selected.sort((a,b) => b.size-a.size).slice(0, 500), summary: { folder: candidate.temp, eligibleFiles: candidate.selected.length, eligibleBytes: candidate.selected.reduce((sum, item) => sum + item.size, 0), readOnlyPreview: true }, partial: candidate.data.partial }; }
+  if (tool.engine === 'tempPreview') { const candidate = await tempCleanupCandidates(context); traversalWarnings(context, candidate.data.totals); const selected = candidate.selected.sort((a, b) => b.size - a.size); const capped = selected.slice(0, Math.max(0, Number(inputs.limit) > 0 ? Number(inputs.limit) : selected.length)); return { items: capped, summary: { folder: candidate.temp, eligibleFiles: selected.length, eligibleBytes: selected.reduce((sum, item) => sum + item.size, 0), shownFiles: capped.length, limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, minimumFileAgeDays: (await getSettings()).cleanup.minimumFileAgeDays, exclusions: (await getSettings()).cleanup.exclusions, readOnlyPreview: true }, partial: candidate.data.partial }; }
   if (tool.engine === 'tempCleanupApply') {
     if (inputs.confirm !== true) throw new Error('Explicit confirmation is required before moving temporary files.');
-    const candidate = await tempCleanupCandidates(context); const journalId = crypto.randomUUID(); const quarantine = appDataPath(path.join('cleanup-quarantine', journalId)); const moves = [];
+    const candidate = await tempCleanupCandidates(context); traversalWarnings(context, candidate.data.totals);
+    const ordered = candidate.selected.sort((a, b) => b.size - a.size);
+    const applyLimit = Number(inputs.limit) > 0 ? Number(inputs.limit) : ordered.length;
+    const selected = ordered.slice(0, applyLimit);
+    if (inputs.dryRun) return { items: selected.slice(0, 1000), summary: { dryRun: true, eligibleFiles: ordered.length, wouldQuarantineFiles: selected.length, wouldQuarantineBytes: selected.reduce((sum, item) => sum + item.size, 0), limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, recoverable: true, changed: false }, partial: candidate.data.partial };
+    const journalId = crypto.randomUUID();
+    const journalFile = `undo-temp-cleanup-${journalId}.json`;
+    const quarantine = appDataPath(path.join('cleanup-quarantine', journalId));
+    // The journal is written before the first move so a crash still leaves a
+    // complete recovery record for everything that was quarantined.
+    await writeJson(journalFile, { journalId, createdAt: new Date().toISOString(), action: 'temp-cleanup', status: 'in-progress', quarantineDirectory: quarantine, plannedMoves: selected.length, moves: selected.map(item => ({ source: item.path, quarantine: path.join(quarantine, `${crypto.createHash('sha256').update(item.path).digest('hex').slice(0, 16)}-${path.basename(item.path)}`), size: item.size, status: 'planned' })) });
     await fsp.mkdir(quarantine, { recursive: true });
-    for (let index = 0; index < candidate.selected.length; index++) {
-      isCancelled(context); const item = candidate.selected[index]; const target = path.join(quarantine, `${crypto.createHash('sha256').update(item.path).digest('hex').slice(0, 16)}-${path.basename(item.path)}`);
-      try { if (fs.existsSync(item.path)) { await moveWithFallback(item.path, target); moves.push({ source: item.path, quarantine: target, size: item.size }); } } catch (error) { context.warnings.push(`${item.path}: ${error.code || error.message || 'unavailable'}`); }
-      context.progress(index + 1, candidate.selected.length || 1, `Quarantined ${index + 1} temporary files`);
+    const moves = [];
+    for (let index = 0; index < selected.length; index++) {
+      isCancelled(context); const item = selected[index]; const target = path.join(quarantine, `${crypto.createHash('sha256').update(item.path).digest('hex').slice(0, 16)}-${path.basename(item.path)}`);
+      try { if (fs.existsSync(item.path)) { await moveWithFallback(item.path, target); moves.push({ source: item.path, quarantine: target, size: item.size, status: 'quarantined' }); } else { moves.push({ source: item.path, quarantine: target, size: item.size, status: 'missing', reason: 'source-vanished' }); } }
+      catch (error) { const reason = String(error.code || error.message || 'unavailable'); context.warnings.push(`${item.path}: ${reason}`); moves.push({ source: item.path, quarantine: target, size: item.size, status: 'failed', reason }); }
+      context.progress(index + 1, selected.length || 1, `Quarantined ${index + 1} of ${selected.length} temporary files`);
     }
-    await writeJson(`undo-temp-cleanup-${journalId}.json`, { journalId, createdAt: new Date().toISOString(), action: 'temp-cleanup', moves });
-    return { items: moves.slice(0, 1000), summary: { journalId, quarantinedFiles: moves.length, quarantinedBytes: moves.reduce((sum, item) => sum + item.size, 0), recoverable: true }, partial: candidate.data.partial, undoMetadata: { journalId, action: 'temp-cleanup' } };
+    await writeJson(journalFile, { journalId, createdAt: new Date().toISOString(), action: 'temp-cleanup', status: 'completed', quarantineDirectory: quarantine, plannedMoves: selected.length, moves });
+    const quarantined = moves.filter(entry => entry.status === 'quarantined');
+    const settings = await getSettings();
+    if (settings.cleanup.recycleBinByDefault) context.warnings.push('Temporary files were moved to a recoverable KNOuX quarantine instead of the Windows Recycle Bin, so the cleanup stays reversible inside SmartOrganizer.');
+    return { items: moves.slice(0, 1000), summary: { journalId, quarantinedFiles: quarantined.length, failedFiles: moves.filter(entry => entry.status === 'failed').length, missingFiles: moves.filter(entry => entry.status === 'missing').length, eligibleFiles: ordered.length, quarantinedBytes: quarantined.reduce((sum, item) => sum + item.size, 0), limitApplied: Number(inputs.limit) > 0 ? Number(inputs.limit) : null, quarantineDirectory: quarantine, recycleBinUsed: false, recoverable: true, permanentDeletion: false }, partial: candidate.data.partial || quarantined.length !== selected.length, undoMetadata: { journalId, action: 'temp-cleanup' } };
   }
   if (tool.engine === 'tempCleanupUndo') {
-    const journalId = z.string().uuid().parse(inputs.journalId); const journal = await readJson(`undo-temp-cleanup-${journalId}.json`, null); if (!journal || !Array.isArray(journal.moves)) throw new Error('Cleanup undo journal is unavailable.'); const restored = [];
-    for (let index = journal.moves.length - 1; index >= 0; index--) { isCancelled(context); const item = journal.moves[index]; try { if (fs.existsSync(item.quarantine) && !fs.existsSync(item.source)) { await fsp.mkdir(path.dirname(item.source), { recursive: true }); await moveWithFallback(item.quarantine, item.source); restored.push(item); } } catch (error) { context.warnings.push(`${item.source}: ${error.code || error.message || 'unavailable'}`); } context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} temporary files`); }
-    return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, recoverable: true } };
+    const journalId = z.string().uuid().parse(inputs.journalId); const journal = await readJson(`undo-temp-cleanup-${journalId}.json`, null); if (!journal || !Array.isArray(journal.moves)) throw new Error('Cleanup undo journal is unavailable.'); const restored = []; const conflicts = []; const verifications = [];
+    for (let index = journal.moves.length - 1; index >= 0; index--) {
+      isCancelled(context); const item = journal.moves[index];
+      if (!fs.existsSync(item.quarantine)) { conflicts.push({ path: item.source, reason: 'quarantined-file-missing' }); verifications.push(verificationKit.verification([verificationKit.check('quarantined-file-present', true, false, false)], { conflict: 'quarantined-file-missing' })); continue; }
+      if (fs.existsSync(item.source)) { conflicts.push({ path: item.source, reason: 'original-already-exists' }); verifications.push(verificationKit.verification([verificationKit.check('original-absent', true, false, false)], { conflict: 'original-already-exists' })); continue; }
+      try { await moveWithFallback(item.quarantine, item.source); restored.push(item); verifications.push(await verificationKit.verifyRestore({ original: item.source, relocated: item.quarantine, expectedSize: item.size ?? null })); }
+      catch (error) { const reason = String(error.code || error.message || 'unavailable'); conflicts.push({ path: item.source, reason }); verifications.push(verificationKit.verification([verificationKit.check('restore-completed', true, false, false)], { error: reason })); }
+      context.progress(journal.moves.length - index, journal.moves.length || 1, `Restored ${journal.moves.length - index} temporary files`);
+    }
+    const aggregate = verificationKit.aggregateVerifications(verifications);
+    if (conflicts.length) context.warnings.push(`${conflicts.length} temporary file(s) were not restored because the original location was already occupied or the quarantined copy was missing. Nothing was overwritten.`);
+    if (aggregate.status !== 'verified') context.warnings.push(`Post-restore verification reported "${aggregate.status}".`);
+    return { items: restored, summary: { journalId, restoredFiles: restored.length, skippedFiles: journal.moves.length - restored.length, conflicts: conflicts.slice(0, 100), verification: aggregate, recoverable: true }, partial: aggregate.status !== 'verified' || conflicts.length > 0 };
   }
   if (tool.engine === 'startupDisable') { const result = await startupManager.disable({ valueName: inputs.valueName, dryRun: inputs.dryRun }); if (!inputs.dryRun) { const observed = await startupManager.query(inputs.valueName); const proof = verificationKit.verifyRegistryValue(false, observed); result.summary.verification = proof; result.partial = proof.status !== 'verified'; if (proof.status !== 'verified') context.warnings.push('The startup entry was still present after the change; the requested state could not be proven.'); } return result; }
-  if (tool.engine === 'startupRestore') { const result = await startupManager.restore({ journalId: inputs.journalId, dryRun: inputs.dryRun }); if (!inputs.dryRun) { const journal = await readJson(`undo-startup-${inputs.journalId}.json`, null); const observed = await startupManager.query(journal?.valueName); const proof = verificationKit.verifyRegistryValue(true, observed); result.summary.verification = proof; result.partial = proof.status !== 'verified'; if (proof.status !== 'verified') context.warnings.push('The startup entry was not restored to the journaled value; the requested state could not be proven.'); } return result; }
+  if (tool.engine === 'startupRestore') { const journal = await readJson(`undo-startup-${inputs.journalId}.json`, null); const result = await startupManager.restore({ journalId: inputs.journalId, dryRun: inputs.dryRun }); if (!inputs.dryRun) { const observed = journal?.valueName ? await startupManager.query(journal.valueName) : null; const proof = verificationKit.verifyRegistryEntry(journal ? { valueName: journal.valueName, valueType: journal.valueType, valueData: journal.valueData } : null, observed); result.summary.verification = proof; result.partial = proof.status !== 'verified'; if (proof.status !== 'verified') context.warnings.push('The startup entry was not restored to the journaled value and type; the requested state could not be proven.'); } return result; }
   if (tool.engine === 'startupItems') { const items = await windowsProviders.collectStartupItems(); return { items, summary: { entries: items.length, managedSources: items.filter(item => item.managedBySmartOrganizer).length, readOnlySources: items.filter(item => !item.managedBySmartOrganizer).length, sources: [...new Set(items.map(item => item.source))], writeScope: 'current-user Run key only', provider: 'Win32_StartupCommand' } }; }
   if (tool.engine === 'installedApps') {
-    const [registryPayload, appx] = await Promise.all([
+    const [registryPayload, appxResult] = await Promise.all([
       windowsProviders.collectUninstallApps(),
-      windowsProviders.collectAppxApps().catch(() => [])
+      windowsProviders.collectAppxApps().then(value => ({ value, error: null })).catch(error => ({ value: [], error }))
     ]);
     const rawItems = registryPayload?.items ?? [];
     const list = windowsProviders.normalizeUninstallApp(rawItems);
     const sourceFailures = Number(registryPayload?.sourceFailures) || 0;
     const entryFailures = Number(registryPayload?.entryFailures) || 0;
+    const appx = appxResult.value;
     const packages = Array.isArray(appx) ? appx : windowsProviders.asArray(appx);
     const seen = new Set();
     const merged = [];
@@ -404,21 +615,25 @@ async function runTool(context, tool, inputs) {
     merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
     const hygiene = advancedLocal.analyzeInstalledApps(merged);
     const unavailable = sourceFailures + entryFailures;
+    const warnings = [];
+    if (unavailable) warnings.push('Some installed-application registry entries were unavailable; the inventory is partial.');
+    if (appxResult.error) warnings.push('The MSIX/AppX package provider did not answer, so packaged applications are absent from this inventory.');
     return {
       items: merged,
       summary: {
         ...hygiene,
         registryReadOnly: true, registrySourcesAttempted: windowsProviders.UNINSTALL_ROOTS.length, registrySourceFailures: sourceFailures, registryEntryFailures: entryFailures,
-        uninstallRegistryEntries: list.length, packageEntries: packages.length,
+        uninstallRegistryEntries: list.length, packageEntries: packages.length, packageProviderAvailable: !appxResult.error,
         architectureKnown: merged.filter(app => app.architecture).length,
         installDateKnown: merged.filter(app => app.installDate).length,
         estimatedSizeKnown: merged.filter(app => app.estimatedSizeBytes != null).length,
+        measuredSizeKnown: merged.filter(app => app.measuredSizeBytes != null).length,
         providers: ['UninstallRegistry', 'Get-AppxPackage'],
         winGetUsed: false,
         win32ProductUsed: false
       },
-      warnings: unavailable ? ['Some installed-application registry entries were unavailable; the inventory is partial.'] : [],
-      partial: unavailable > 0
+      warnings,
+      partial: unavailable > 0 || Boolean(appxResult.error)
     };
   }
   if (tool.engine === 'networkDiagnostics') {
@@ -464,7 +679,16 @@ async function runTool(context, tool, inputs) {
     };
   }
   if (tool.engine === 'eventWarnings') {
-    const events = await windowsProviders.collectEvents();
+    let events = null; let providerError = null;
+    try { events = await windowsProviders.collectEvents(); } catch (error) { providerError = error; }
+    const baseSummary = { periodDays: 7, groupedForTriage: true, levelFilter: [1, 2, 3], maxEvents: 200, boundedQuery: true, provider: 'Get-WinEvent (System log)', nativeEventLogApi: false, nativeEventLogApiNote: 'EvtQuery/EvtSubscribe would require a native addon; the bounded documented PowerShell query is used instead.' };
+    // An unreadable event log is not an empty event log. The two are reported apart.
+    if (!events) {
+      const reason = String(providerError?.message || providerError?.code || 'unavailable');
+      const warning = 'The Windows System event log could not be read; this is not an empty log.';
+      context.warnings.push(warning);
+      return { items: [], summary: { ...baseSummary, logAccessible: false, eventsRead: 0, unreadableReason: reason }, warnings: [warning], partial: true };
+    }
     const clustered = advancedLocal.clusterEventWarnings(events.map(event => ({ ...event, ProviderName: event.provider, Id: event.eventId, LevelDisplayName: event.levelName, TimeCreated: event.timeCreated, Message: event.message })));
     return {
       items: clustered.items.map(item => ({
@@ -480,32 +704,37 @@ async function runTool(context, tool, inputs) {
         clusterKey: `${item.provider}/${item.id}/${item.level}`,
         evidence: { source: 'Windows System event log', boundedQuery: true, periodDays: 7, levelFilter: [1, 2, 3], maxEvents: 200, sample: item.sample ?? null }
       })),
-      summary: { ...clustered.summary, periodDays: 7, groupedForTriage: true, levelFilter: [1, 2, 3], maxEvents: 200, boundedQuery: true, provider: 'Get-WinEvent (System log)', nativeEventLogApi: false, nativeEventLogApiNote: 'EvtQuery/EvtSubscribe would require a native addon; the bounded documented PowerShell query is used instead.' }
+      summary: { ...clustered.summary, ...baseSummary, logAccessible: true, eventsRead: events.length }
     };
   }
   if (tool.engine === 'processInventory') {
     const processes = await windowsProviders.collectProcesses();
     const ordered = [...processes].sort((a, b) => (b.workingSetBytes || 0) - (a.workingSetBytes || 0));
-    // Verify each distinct executable once. Signing checks are per-file and many
-    // processes share one image, so verifying per process repeated the same cost.
+    // Authenticode verification is expensive (tens of seconds for a full pass),
+    // so it is opt-in. Without it no signature verdict is claimed at all.
+    const verifySignatures = inputs.verifySignatures === true;
     const candidates = [];
     const seenPaths = new Set();
-    for (const item of ordered) {
-      const key = String(item.executablePath || '').toLowerCase();
-      if (!key || seenPaths.has(key)) continue;
-      seenPaths.add(key); candidates.push(item);
-      if (candidates.length >= SIGNATURE_BUDGET) break;
+    if (verifySignatures) {
+      for (const item of ordered) {
+        const key = String(item.executablePath || '').toLowerCase();
+        if (!key || seenPaths.has(key)) continue;
+        seenPaths.add(key); candidates.push(item);
+        if (candidates.length >= SIGNATURE_BUDGET) break;
+      }
     }
     const signatureBudget = candidates.length;
-    const signatures = await windowsProviders.collectProcessSignatures(candidates.map(item => item.executablePath), { limit: SIGNATURE_BUDGET });
+    const signatures = verifySignatures ? await windowsProviders.collectProcessSignatures(candidates.map(item => item.executablePath), { limit: SIGNATURE_BUDGET }) : [];
     const byPath = new Map(signatures.map(entry => [String(entry.path || '').toLowerCase(), entry]));
     const notChecked = signatures.filter(entry => !entry.signatureAvailable).length;
-    if (notChecked) context.warnings.push(`${notChecked} of ${signatureBudget} executable signature check(s) did not complete; those processes are reported without a signature verdict.`);
-    const items = ordered.slice(0, 500).map(entry => {
+    if (verifySignatures && notChecked) context.warnings.push(`${notChecked} of ${signatureBudget} executable signature check(s) did not complete; those processes are reported without a signature verdict.`);
+    if (!verifySignatures) context.warnings.push('Authenticode verification was not requested, so no signature verdict is reported for any process.');
+    const shown = ordered.slice(0, 500);
+    const items = shown.map(entry => {
       const signature = byPath.get(String(entry.executablePath || '').toLowerCase());
       return { ...entry, signatureStatus: signature?.signatureStatus ?? null, signatureAvailable: signature?.signatureAvailable ?? false, signatureSubject: signature?.signatureSubject ?? null, signatureMessage: signature?.signatureMessage ?? null };
     });
-    return { items, partial: notChecked > 0, summary: { processes: ordered.length, readOnly: true, signatureChecked: items.filter(item => item.signatureAvailable).length, signatureBudget, distinctExecutables: seenPaths.size, signatureBudgetExhausted: seenPaths.size > SIGNATURE_BUDGET, signatureChecksFailed: notChecked, terminationPerformed: false, provider: 'Win32_Process + Get-AuthenticodeSignature' } };
+    return { items, partial: notChecked > 0 || shown.length < ordered.length, summary: { processes: ordered.length, shownProcesses: shown.length, truncated: shown.length < ordered.length, readOnly: true, signatureVerificationRequested: verifySignatures, signatureChecked: items.filter(item => item.signatureAvailable).length, signatureBudget, distinctExecutables: seenPaths.size, signatureBudgetExhausted: verifySignatures && seenPaths.size > SIGNATURE_BUDGET, signatureChecksFailed: notChecked, terminationPerformed: false, provider: verifySignatures ? 'Win32_Process + Get-AuthenticodeSignature (on request)' : 'Win32_Process' } };
   }
   if (tool.engine === 'batteryStatus') {
     const batteries = await windowsProviders.collectBatteries();
@@ -514,13 +743,31 @@ async function runTool(context, tool, inputs) {
   if (tool.engine === 'fileHash') {
     const file = allowedFile(String(inputs.filePath || ''));
     const algorithm = inputs.algorithm === 'sha512' ? 'sha512' : 'sha256';
-    const before = windowsFs.identitySnapshot(await fsp.lstat(file));
+    const stats = await fsp.lstat(file);
+    const classified = await classifyEntry(file, stats, { root: path.dirname(file), reparsePointPolicy: 'skip' });
+    // Hashing a cloud placeholder would silently download remote content, and
+    // hashing a link would read outside the file the user chose.
+    if (classified.entryKind === 'reparse') throw new Error('This entry is a link or cloud placeholder; hashing it would read content the user did not select.');
+    const before = windowsFs.identitySnapshot(stats);
+    const totalBytes = Math.max(0, Number(before.size) || 0);
     const hash = crypto.createHash(algorithm);
-    await new Promise((resolve, reject) => { const stream = fs.createReadStream(file); stream.on('error', reject); stream.on('data', chunk => hash.update(chunk)); stream.on('end', resolve); });
+    let bytesRead = 0; let lastReported = 0;
+    await new Promise((resolve, reject) => {
+      const stream = fs.createReadStream(file);
+      const cancel = () => { const error = new Error('Operation cancelled by the user.'); error.code = 'CANCELLED'; stream.destroy(error); };
+      stream.on('error', error => reject(error));
+      stream.on('data', chunk => {
+        if (context.cancelRequested || context.cancelled) { cancel(); return; }
+        bytesRead += chunk.length; hash.update(chunk);
+        if (totalBytes > 0 && bytesRead - lastReported >= 4 * 1024 * 1024) { lastReported = bytesRead; context.progress(bytesRead, totalBytes, `Hashed ${Math.round((bytesRead / totalBytes) * 100)}% of the file`); }
+      });
+      stream.on('end', resolve);
+    });
+    context.progress(totalBytes || 1, totalBytes || 1, 'Finished reading the file');
     const after = windowsFs.identitySnapshot(await fsp.lstat(file).catch(() => null));
     const changedDuringRead = windowsFs.identityChanged(before, after);
     if (changedDuringRead) context.warnings.push('The file changed while it was being hashed; the digest may not describe a single consistent version.');
-    return { items: [{ path: file, algorithm, digest: hash.digest('hex'), fileIdentity: before.fileIdentity, sizeAtRead: before.size, modifiedAtRead: new Date(before.modifiedMs).toISOString(), changedDuringRead }], summary: { algorithm, file, changedDuringRead, fileIdentity: before.fileIdentity }, partial: changedDuringRead };
+    return { items: [{ path: file, algorithm, digest: hash.digest('hex'), fileIdentity: before.fileIdentity, sizeAtRead: before.size, modifiedAtRead: new Date(before.modifiedMs).toISOString(), changedDuringRead }], summary: { algorithm, file, changedDuringRead, fileIdentity: before.fileIdentity, bytesRead, sizeAtRead: before.size, digestReliable: !changedDuringRead }, partial: changedDuringRead };
   }
   if (tool.engine === 'smartScan') {
     const health = await systemHealth(); context.progress(1, 7, 'Measured system health');
@@ -535,8 +782,7 @@ async function runTool(context, tool, inputs) {
     const duplicate = await scanDuplicates(downloadsFolder, context, Math.max((await getSettings()).scanning.minimumDuplicateBytes, 1024), 10000);
     context.progress(5, 7, 'Verified exact duplicate groups with SHA-256');
     const temp = await runTool(context, toolDefinitions.find(t => t.engine === 'tempPreview'), {}); context.progress(6, 7, 'Measured recoverable temporary-file footprint');
-    const score = advancedLocal.buildSmartScore({ health, disks: disk, duplicateSummary: duplicate.summary, privacySummary: privacy.summary, tempEligibleBytes: temp.summary.eligibleBytes }); context.progress(7, 7, 'Completed local multi-signal Smart Scan');
-    const findings = [];
+    const score = advancedLocal.buildSmartScore({ health, disks: disk, duplicateSummary: duplicate.summary, privacySummary: privacy.summary, tempEligibleBytes: temp.summary.eligibleBytes }); context.progress(7, 7, 'Completed local multi-signal Smart Scan');    const findings = [];
     for (const volume of advancedLocal.diskPressure(disk).filter(item => item.pressure !== 'healthy')) findings.push({ severity: ['critical', 'high'].includes(volume.pressure) ? 'warning' : 'info', key: 'diskPressure', drive: volume.deviceId, freePercent: volume.freePercent, pressure: volume.pressure, source: 'Win32_LogicalDisk', evidence: `Volume ${volume.deviceId} has ${volume.freePercent}% free`, confidence: volume.freePercent == null ? 'low' : 'high' });
     if (largeDownloads.length) findings.push({ severity: 'info', key: 'largeDownloads', value: largeDownloads.length, bytes: largeDownloads.reduce((sum, file) => sum + file.size, 0), source: 'Downloads traversal', evidence: `${largeDownloads.length} file(s) at or above 100 MB`, confidence: 'high' });
     if (duplicate.summary.duplicateGroups) findings.push({ severity: 'info', key: 'exactDuplicates', groups: duplicate.summary.duplicateGroups, reclaimableBytes: duplicate.summary.reclaimableBytes, source: 'SHA-256 content verification', evidence: duplicate.summary.hardlinkPolicy, confidence: 'high' });
@@ -546,6 +792,7 @@ async function runTool(context, tool, inputs) {
     if (downloadsData.totals.hardlinkedFiles) findings.push({ severity: 'info', key: 'hardlinkedFiles', value: downloadsData.totals.hardlinkedFiles, source: 'Windows file identity', evidence: 'Multiple names for one physical file are not reclaimable duplicates', confidence: 'high' });
     return {
       items: findings,
+      partial: Boolean(downloadsData.partial || duplicate.partial || temp.partial),
       summary: {
         smartScore: score.score, scoreReasons: score.reasons, scoreMethod: 'backend local multi-signal calculation; the renderer only displays it', health,
         volumes: advancedLocal.diskPressure(disk),
@@ -557,27 +804,59 @@ async function runTool(context, tool, inputs) {
         privacyExposureCount: privacy.summary.exposureCount || 0,
         privacyMetadataOnly: true, privacyContentsInspected: false,
         tempEligibleBytes: temp.summary.eligibleBytes || 0,
-        traversal: { ...downloadsData.totals, traversals: 1, previousTraversals: 3 }
+        // The scan performs three real folder traversals: Downloads, the
+        // duplicate verification pass over Downloads, and the temporary folder.
+        traversal: { ...downloadsData.totals, traversals: 3, traversalBreakdown: ['downloads-inventory', 'duplicate-files', 'temp-cleanup-preview'], partialStages: { downloads: Boolean(downloadsData.partial), duplicates: Boolean(duplicate.partial), temporary: Boolean(temp.partial) } }
       }
     };
   }
   throw new Error('Registered tool handler is unavailable.');
 }
+/**
+ * Builds a truthful failed result. A request that never reached a handler must
+ * still be visible in history and in the operation drawer: silently throwing
+ * away an invalid request is how an operation disappears without explanation.
+ */
+function failedResult(operationId, toolId, startedAt, message, warnings = []) {
+  return { operationId, toolId: toolId || 'unknown', success: false, startedAt, finishedAt: new Date().toISOString(), summary: {}, items: [], warnings, errors: [message], partial: false, restartRequired: false, undoMetadata: null };
+}
+async function recordFailure(operationId, toolId, startedAt, message, warnings = []) {
+  const result = failedResult(operationId, toolId, startedAt, message, warnings);
+  phase(operationId, result.toolId, 'failed', message, { result });
+  await addHistory({ ...result, action: result.toolId, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: false });
+  await log('error', 'operation.failed', { operationId, toolId: result.toolId, error: message });
+  return result;
+}
+function zodIssues(error) {
+  const issues = Array.isArray(error?.issues) ? error.issues : [];
+  return issues.map(issue => `${issue.path.join('.') || 'input'}: ${issue.message}`).join('; ') || 'The request was rejected.';
+}
 async function execute(request) {
-  const parsed = runRequestSchema.parse(request); const tool = toolDefinitions.find(item => item.id === parsed.toolId); if (!tool) throw new Error('Unknown tool ID.');
-  const availability = await tool.availabilityProbe(); if (!availability.available) throw new Error(availability.reason || 'Tool is unavailable.');
-  const inputs = tool.inputSchema.parse(parsed.inputs); const operationId = crypto.randomUUID(); const startedAt = new Date().toISOString();
+  const startedAt = new Date().toISOString(); const operationId = crypto.randomUUID();
+  const parsed = runRequestSchema.safeParse(request);
+  if (!parsed.success) return recordFailure(operationId, null, startedAt, zodIssues(parsed.error));
+  const tool = toolDefinitions.find(item => item.id === parsed.data.toolId);
+  if (!tool) return recordFailure(operationId, parsed.data.toolId, startedAt, 'Unknown tool ID.');
+  const availability = await tool.availabilityProbe().catch(error => ({ available: false, reason: error?.message || 'Tool availability could not be determined.' }));
+  if (!availability.available) return recordFailure(operationId, tool.id, startedAt, availability.reason || 'Tool is unavailable.');
+  const inputs = tool.inputSchema.safeParse(parsed.data.inputs);
+  if (!inputs.success) return recordFailure(operationId, tool.id, startedAt, zodIssues(inputs.error));
   const context = { cancelled: false, cancelRequested: false, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
   operations.set(operationId, context); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request, schema, handler, and local availability');
   if (tool.riskLevel !== 'read-only') phase(operationId, tool.id, 'awaiting-confirmation', 'Validated the explicit confirmation supplied for this write operation');
   try {
-    if (tool.requiresAdmin && !inputs.dryRun) { if ((await getSettings()).security.elevationPolicy === 'deny') throw new Error('Elevation is disabled in Security settings.'); phase(operationId, tool.id, 'awaiting-admin', 'Waiting for Windows administrator approval'); }
-    phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = tool.outputSchema.parse(await tool.handler(context, inputs));
-    const result = { operationId, toolId: tool.id, success: true, startedAt, finishedAt: new Date().toISOString(), summary: output.summary, items: output.items, warnings: [...context.warnings, ...(output.warnings || [])], errors: [], partial: Boolean(output.partial), restartRequired: Boolean(output.restartRequired), undoMetadata: output.undoMetadata || null };
-    phase(operationId, tool.id, 'result', 'Structured result available', { result }); phase(operationId, tool.id, 'completed', 'Operation completed', { result });
-    await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: tool.supportsUndo }); await log('info', 'operation.completed', { operationId, toolId: tool.id }); return result;
+    if (tool.requiresAdmin && !inputs.data.dryRun) { if ((await getSettings()).security.elevationPolicy === 'deny') throw new Error('Elevation is disabled in Security settings.'); phase(operationId, tool.id, 'awaiting-admin', 'Waiting for Windows administrator approval'); }
+    phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = tool.outputSchema.parse(await tool.handler(context, inputs.data));
+    // A mutation that could not be proven is never reported as a clean success.
+    const verificationStatus = typeof output.summary?.verification?.status === 'string' ? output.summary.verification.status : null;
+    const partial = Boolean(output.partial) || verificationStatus === 'unverified';
+    const success = verificationStatus !== 'failed';
+    const errors = success ? [] : ['Post-change verification proved the requested state was not reached.'];
+    const result = { operationId, toolId: tool.id, success, startedAt, finishedAt: new Date().toISOString(), summary: output.summary, items: output.items, warnings: [...context.warnings, ...(output.warnings || [])], errors, partial, restartRequired: Boolean(output.restartRequired), undoMetadata: output.undoMetadata || null };
+    phase(operationId, tool.id, success ? 'result' : 'failed', success ? 'Structured result available' : (errors[0]), { result }); phase(operationId, tool.id, success ? 'completed' : 'failed', success ? 'Operation completed' : errors[0], { result });
+    await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: tool.supportsUndo && Boolean(result.undoMetadata) }); await log('info', 'operation.completed', { operationId, toolId: tool.id, partial }); return result;
   } catch (error) {
-    const cancelled = error.code === 'CANCELLED'; const result = { operationId, toolId: tool.id, success: false, startedAt, finishedAt: new Date().toISOString(), summary: {}, items: [], warnings: context.warnings, errors: [error.message], partial: cancelled, restartRequired: false, undoMetadata: null };
+    const cancelled = error.code === 'CANCELLED'; const result = { operationId, toolId: tool.id, success: false, startedAt, finishedAt: new Date().toISOString(), summary: {}, items: [], warnings: context.warnings, errors: [error.message], partial: false, restartRequired: false, undoMetadata: null };
     phase(operationId, tool.id, cancelled ? 'cancelled' : 'failed', error.message, { result }); await addHistory({ ...result, action: tool.id, durationMs: new Date(result.finishedAt).getTime() - new Date(startedAt).getTime(), undoAvailable: false }); await log('error', 'operation.failed', { operationId, toolId: tool.id, error: error.message }); return result;
   } finally { operations.delete(operationId); }
 }
@@ -613,7 +892,7 @@ app.whenReady().then(async () => {
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
-  ipcMain.handle('knoux:app-info', () => ({ version: app.getVersion(), startedAt, platform: process.platform, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome }));
+  ipcMain.handle('knoux:app-info', async () => ({ version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', codeSigning: await codeSigningInfo() }));
   ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
   ipcMain.handle('knoux:settings-get', getSettings);
   ipcMain.handle('knoux:settings-update', (_event, patch) => updateSettings(z.record(z.unknown()).parse(patch)));
@@ -622,7 +901,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('knoux:settings-reset-section', async (_event, section) => { const value = await settingsStore.resetSection(z.string().min(1).max(32).parse(section)); settingsCache = value; applyRuntimeSettings(value); publishSettings(value); return value; });
   ipcMain.handle('knoux:settings-reset', async () => { const value = await settingsStore.resetAll(); settingsCache = value; applyRuntimeSettings(value); publishSettings(value); return value; });
   ipcMain.handle('knoux:history-list', history);
-  ipcMain.handle('knoux:history-export', async (_event, format) => { const selectedFormat = z.enum(['json', 'csv']).parse(format); const result = await dialog.showSaveDialog(mainWindow, { defaultPath: `knoux-operation-history.${selectedFormat}`, filters: [{ name: selectedFormat.toUpperCase(), extensions: [selectedFormat] }] }); if (result.canceled || !result.filePath) return null; const records = history(); if (selectedFormat === 'json') await fsp.writeFile(result.filePath, JSON.stringify(records, null, 2), 'utf8'); else { const fields = ['operationId', 'toolId', 'action', 'success', 'startedAt', 'finishedAt', 'durationMs', 'undoAvailable']; const quote = value => `"${String(value ?? '').replaceAll('"', '""')}"`; const csv = [fields.join(','), ...records.map(record => fields.map(field => quote(record[field])).join(','))].join('\r\n'); await fsp.writeFile(result.filePath, csv, 'utf8'); } return result.filePath; });
+  ipcMain.handle('knoux:history-export', async (_event, format) => { const selectedFormat = z.enum(['json', 'csv']).parse(format); const result = await dialog.showSaveDialog(mainWindow, { defaultPath: `knoux-operation-history.${selectedFormat}`, filters: [{ name: selectedFormat.toUpperCase(), extensions: [selectedFormat] }] }); if (result.canceled || !result.filePath) return null; const records = await history(); const payload = historyExport.serializeHistory(records, selectedFormat); await fsp.writeFile(result.filePath, payload, 'utf8'); return result.filePath; });
   ipcMain.handle('knoux:automation-list', () => automationStore.list());
   ipcMain.handle('knoux:automation-create', (_event, input) => automationStore.create(input));
   ipcMain.handle('knoux:automation-remove', (_event, id) => automationStore.remove(z.string().uuid().parse(id)));
@@ -633,6 +912,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('knoux:tool-run', (_event, request) => execute(request));
   ipcMain.handle('knoux:operation-cancel', (_event, operationId) => { const operation = operations.get(z.string().uuid().parse(operationId)); if (operation) { operation.cancelRequested = true; operation.cancelled = true; } return Boolean(operation); });
   ipcMain.handle('knoux:open-path', async (_event, target) => shell.openPath(allowedDirectory(z.string().min(1).max(32767).parse(target))));
+  ipcMain.handle('knoux:diagnostics-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-diagnostics.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; const diagnostics = await buildDiagnostics(); await fsp.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2), 'utf8'); return result.filePath; });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); else mainWindow.show(); });

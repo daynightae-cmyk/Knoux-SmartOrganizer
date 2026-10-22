@@ -15,7 +15,7 @@ const administratorInput = z.object({ confirm: z.literal(true), dryRun: z.boolea
 const serviceInventoryInput = z.object({ search: z.string().max(200).optional(), limit: z.number().int().min(1).max(5000).optional() }).strict();
 const serviceControlInput = z.object({ serviceName: z.string().regex(/^[A-Za-z0-9_.-]{1,256}$/), action: z.enum(['start', 'stop', 'restart', 'automatic', 'delayedAutomatic', 'manual', 'disabled']), confirm: z.literal(true), dryRun: z.boolean().optional().default(false) }).strict();
 const serviceUndoInput = z.object({ journalId: z.string().uuid(), confirm: z.literal(true), dryRun: z.boolean().optional().default(false) }).strict();
-const tempCleanupApplyInput = z.object({ confirm: z.literal(true), limit: z.number().int().min(1).max(25000).optional() }).strict();
+const tempCleanupApplyInput = z.object({ confirm: z.literal(true), dryRun: z.boolean().optional().default(false), limit: z.number().int().min(1).max(25000).optional() }).strict();
 const tempCleanupUndoInput = z.object({ journalId: z.string().uuid() }).strict();
 const startupDisableInput = z.object({ valueName: z.string().min(1).max(255).refine(value => !value.includes('\\') && !value.includes('\0'), 'Startup value name is invalid.'), confirm: z.literal(true), dryRun: z.boolean().optional().default(false) }).strict();
 const startupRestoreInput = z.object({ journalId: z.string().uuid(), confirm: z.literal(true), dryRun: z.boolean().optional().default(false) }).strict();
@@ -28,6 +28,7 @@ const outputSchema = z.object({
   undoMetadata: z.record(z.unknown()).nullable().optional()
 }).strict();
 
+const processInventoryInput = z.object({ verifySignatures: z.boolean().optional().default(false) }).strict();
 const SPECS = [
   ['system-health', 'systemHealth', 'system', 'Activity', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['smart-scan', 'smartScan', 'scan', 'ScanSearch', 'read-only', false, false, true, true, true, 'medium', emptyInput],
@@ -49,7 +50,7 @@ const SPECS = [
   ['network-diagnostics', 'networkDiagnostics', 'network', 'Network', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['hardware-inventory', 'hardwareInventory', 'hardware', 'Cpu', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['event-warnings', 'eventWarnings', 'system', 'TriangleAlert', 'read-only', false, false, false, false, true, 'medium', emptyInput],
-  ['process-inventory', 'processInventory', 'system', 'ListTree', 'read-only', false, false, false, false, true, 'medium', emptyInput],
+  ['process-inventory', 'processInventory', 'system', 'ListTree', 'read-only', false, false, false, false, true, 'medium', processInventoryInput],
   ['battery-status', 'batteryStatus', 'hardware', 'BatteryCharging', 'read-only', false, false, false, false, true, 'low', emptyInput],
   ['file-hash', 'fileHash', 'files', 'Fingerprint', 'read-only', false, false, true, true, true, 'medium', fileHashInput],
   ['repair-dism-check-health', 'dismCheckHealth', 'repair', 'ShieldCheck', 'administrator', true, true, false, false, true, 'medium', administratorInput],
