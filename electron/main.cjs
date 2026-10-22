@@ -41,6 +41,21 @@ const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
 
+/**
+ * Stops every background worker before the application goes away.
+ *
+ * The Clipboard Vault polls the Windows clipboard on an interval. A read that
+ * is still in flight when Chromium tears the message pump down is a hard
+ * error inside the runtime, and the process ends with a breakpoint status
+ * instead of the exit code the caller asked for. Stopping the watcher first
+ * makes the exit deterministic, for the interactive application and for the
+ * headless smoke runs alike.
+ */
+function shutdownBackgroundWorkers() {
+  try { if (clipboardVault) clipboardVault.stop(); } catch { /* the watcher is already gone */ }
+  try { if (tray) tray.destroy(); } catch { /* the tray is already gone */ }
+}
+
 // Only one interactive instance may own the settings, history and tray. The
 // headless automation and smoke paths are exempt, because they are short-lived
 // processes that must be able to run while an interactive instance is open.
@@ -283,7 +298,7 @@ async function runPackagedSmoke() {
     const evidence = await mainWindow.webContents.executeJavaScript(`(async () => {
       const before = await window.knoux.getSettings(); const tools = await window.knoux.listTools(); const marker = before.appearance.accent === 'blue' ? 'green' : 'blue';
       const written = await window.knoux.updateSettings({ appearance: { ...before.appearance, accent: marker } }); const persisted = await window.knoux.getSettings(); const reset = await window.knoux.resetSettingsSection('appearance');
-      await window.knoux.updateSettings({ localization: { ...before.localization, locale: 'ar' }, appearance: { ...before.appearance, theme: 'high-contrast', fontScale: 1.5, reduceMotion: true, animations: false } }); let accessibilityApplied = false; for (let attempt = 0; attempt < 40; attempt += 1) { await new Promise(resolve => setTimeout(resolve, 50)); if (document.documentElement.lang === 'ar' && document.documentElement.dir === 'rtl' && document.documentElement.dataset.theme === 'high-contrast' && document.documentElement.dataset.motion === 'reduced' && document.documentElement.style.getPropertyValue('--font-scale') === '1.5') { accessibilityApplied = true; break; } } const focusTarget = document.querySelector('button'); focusTarget?.focus(); const accessibility = { applied: accessibilityApplied, lang: document.documentElement.lang, dir: document.documentElement.dir, theme: document.documentElement.dataset.theme, motion: document.documentElement.dataset.motion, fontScale: document.documentElement.style.getPropertyValue('--font-scale'), keyboardFocusable: document.activeElement === focusTarget }; await window.knoux.updateSettings({ localization: before.localization, appearance: before.appearance });
+      await window.knoux.updateSettings({ localization: { ...before.localization, locale: 'ar' }, appearance: { ...before.appearance, theme: 'high-contrast', fontScale: 1.5, reduceMotion: true, animations: false } }); let accessibilityApplied = false; for (let attempt = 0; attempt < 240; attempt += 1) { await new Promise(resolve => setTimeout(resolve, 50)); if (document.documentElement.lang === 'ar' && document.documentElement.dir === 'rtl' && document.documentElement.dataset.theme === 'high-contrast' && document.documentElement.dataset.motion === 'reduced' && document.documentElement.style.getPropertyValue('--font-scale') === '1.5') { accessibilityApplied = true; break; } } const focusTarget = document.querySelector('button'); focusTarget?.focus(); const accessibility = { applied: accessibilityApplied, lang: document.documentElement.lang, dir: document.documentElement.dir, theme: document.documentElement.dataset.theme, motion: document.documentElement.dataset.motion, fontScale: document.documentElement.style.getPropertyValue('--font-scale'), keyboardFocusable: document.activeElement === focusTarget }; await window.knoux.updateSettings({ localization: before.localization, appearance: before.appearance });
       return { beforeVersion: before.settingsVersion, toolCount: tools.length, handlersAvailable: tools.every(tool => tool.availability && typeof tool.availability.available === 'boolean'), marker, writeObserved: written.appearance.accent === marker && persisted.appearance.accent === marker, sectionResetObserved: reset.appearance.accent === before.appearance.accent, accessibility };
     })()`);
     await fsp.mkdir(path.dirname(settingsTarget), { recursive: true }); await fsp.writeFile(settingsTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, evidence }, null, 2), 'utf8');
@@ -304,7 +319,7 @@ async function runPackagedSmoke() {
       const cleanupPreview = await run('temp-cleanup-preview', { limit: 500 }); const cleanupApply = await run('temp-cleanup-apply', { confirm: true, limit: 500 }); const cleanupUndo = cleanupApply.success && cleanupApply.summary.journalId ? await run('temp-cleanup-undo', { journalId: cleanupApply.summary.journalId }) : null;
       const startupDisable = startupSmokeValue ? await run('startup-disable', { valueName: startupSmokeValue, confirm: true }) : null; const startupRestore = startupDisable?.success && startupDisable.summary.journalId ? await run('startup-restore', { journalId: startupDisable.summary.journalId, confirm: true }) : null;
       const automation = await window.knoux.createAutomation({ toolId: 'system-health', label: 'KNOuX packaged automation smoke', trigger: { kind: 'daily', time: '23:59' } }); const automationRun = await window.knoux.runAutomation(automation.id); const automationRemoved = await window.knoux.removeAutomation(automation.id);
-      const lifecyclePhases = []; const stopObserving = window.knoux.onOperationEvent(event => { if (event.toolId === 'large-files') { lifecyclePhases.push(event.phase); if (event.phase === 'progress') window.knoux.cancelOperation(event.operationId); } }); const cancellation = await run('large-files', { folder: cancelFixture, thresholdBytes: 1, limit: 10000 }); stopObserving();
+      const lifecyclePhases = []; const stopObserving = window.knoux.onOperationEvent(event => { if (event.toolId === 'large-files') { lifecyclePhases.push(event.phase); if (event.phase === 'progress') window.knoux.cancelOperation(event.operationId); } }); const cancellation = await run('large-files', { folder: cancelFixture, thresholdBytes: 1, limit: 10000 }); for (let attempt = 0; attempt < 60 && !lifecyclePhases.includes('cancelled'); attempt += 1) { await new Promise(resolve => setTimeout(resolve, 50)); } stopObserving();
       const repairToolIds = ['repair-dism-check-health', 'repair-dism-scan-health', 'repair-dism-restore-health', 'repair-sfc-verify-only', 'repair-sfc-scan-now', 'repair-dns-flush', 'repair-winsock-reset', 'repair-tcpip-reset']; const repairDryRuns = await Promise.all(repairToolIds.map(toolId => run(toolId, { confirm: true, dryRun: true }))); const adminDryRun = repairDryRuns[0];
       return { health, smartScan, servicesInventory, serviceCandidate: serviceCandidate ? { name: serviceCandidate.name } : null, serviceDryRun, disks, processes, battery, startupItems, installedApps, networkDiagnostics, hardwareInventory, eventWarnings, emptyFolders, downloadsInventory, hash, large, duplicates, preview, apply, undo, cleanupFixture, cleanupPreview, cleanupApply, cleanupUndo, startupDisable, startupRestore, automation, automationRun, automationRemoved, cancellation, lifecyclePhases, repairDryRuns, adminDryRun };
     })()`);
@@ -317,7 +332,12 @@ async function runPackagedSmoke() {
     const scenarios = await captureVisualEvidence(path.dirname(visualTarget)).catch(error => [{ error: String(error?.message || error) }]);
     await fsp.writeFile(visualTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, scenarios }, null, 2), 'utf8');
   }
-  app.isQuiting = true; app.quit();
+  await shutdownBackgroundWorkers();
+  // A smoke run has no user state left to flush, so the process ends
+  // deterministically instead of relying on a graceful teardown that a
+  // headless Windows runner may not survive.
+  app.isQuiting = true;
+  app.exit(0);
 }
 function normalisePath(input) { const resolved = path.resolve(input); if (resolved.length > 32767) throw new Error('Path is too long.'); return resolved; }
 function allowedDirectory(input) { const resolved = normalisePath(input); if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) throw new Error('Selected folder is unavailable.'); return resolved; }
@@ -1142,7 +1162,7 @@ function createWindow() {
   });
   mainWindow.once('ready-to-show', () => { if (!settingsCache.general.startMinimized && !process.argv.includes('--start-minimized')) mainWindow.show(); });
   mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
-  mainWindow.webContents.once('did-finish-load', () => runPackagedSmoke().catch(async error => { const targets = [smokeArgument('knoux-settings-smoke-output'), smokeArgument('knoux-operation-smoke-output')].filter(Boolean); for (const target of targets) await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, error: error.message }, null, 2), 'utf8').catch(() => {}); app.isQuiting = true; app.exit(1); }));
+  mainWindow.webContents.once('did-finish-load', () => runPackagedSmoke().catch(async error => { const targets = [smokeArgument('knoux-settings-smoke-output'), smokeArgument('knoux-operation-smoke-output')].filter(Boolean); for (const target of targets) await fsp.writeFile(target, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, error: error.message }, null, 2), 'utf8').catch(() => {}); shutdownBackgroundWorkers(); app.isQuiting = true; app.exit(1); }));
   mainWindow.on('minimize', event => { if (settingsCache?.general.minimizeToTray) { event.preventDefault(); mainWindow.hide(); } });
   mainWindow.on('close', async event => {
     if (app.isQuiting) return;
@@ -1152,7 +1172,7 @@ function createWindow() {
       event.preventDefault();
       const arabic = settingsCache?.localization.locale === 'ar';
       const answer = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: arabic ? ['إلغاء', 'خروج'] : ['Cancel', 'Exit'], defaultId: 0, cancelId: 0, title: 'KNOuX SmartOrganizer', message: operations.size > 0 ? (arabic ? 'لا تزال هناك عمليات نشطة. هل تريد الخروج؟' : 'Operations are still active. Exit anyway?') : (arabic ? 'هل تريد الخروج من KNOuX SmartOrganizer؟' : 'Exit KNOuX SmartOrganizer?') });
-      if (answer.response === 1) { app.isQuiting = true; app.quit(); }
+      if (answer.response === 1) { app.isQuiting = true; shutdownBackgroundWorkers(); app.quit(); }
     }
   });
   mainWindow.on('closed', () => { mainWindow = null; });
@@ -1222,3 +1242,10 @@ app.whenReady().then(async () => {
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); else mainWindow.show(); });
+// Every exit path stops the background workers first, so no watcher is still
+// polling the operating system while the runtime is being torn down.
+app.on('before-quit', () => { app.isQuiting = true; shutdownBackgroundWorkers(); });
+// A crash is recorded rather than left as an unexplained exit. The runtime
+// reports the reason and the status code, so a failure names its own cause.
+app.on('render-process-gone', (_event, _webContents, details) => { log('error', 'renderer-gone', { reason: details?.reason || 'unknown', exitCode: details?.exitCode ?? null }); });
+app.on('child-process-gone', (_event, details) => { log('error', 'child-process-gone', { type: details?.type || 'unknown', reason: details?.reason || 'unknown', exitCode: details?.exitCode ?? null }); });

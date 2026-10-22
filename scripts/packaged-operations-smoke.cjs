@@ -1,4 +1,5 @@
 const fs = require('node:fs/promises');
+const fsSync = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { spawn, execFile } = require('node:child_process');
@@ -18,15 +19,20 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function launch(exe, args) {
+function launch(exe, args, logPath) {
   return new Promise((resolve, reject) => {
-    const child = spawn(exe, args, { windowsHide: true, stdio: 'ignore' });
+    // The application's own output is kept. A packaged application that dies
+    // without a word used to produce a bare exit code, which named no cause.
+    const stream = fsSync.createWriteStream(logPath, { flags: 'a' });
+    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    child.stdout.pipe(stream);
+    child.stderr.pipe(stream);
     const timer = setTimeout(() => {
       child.kill();
       reject(new Error(`Packaged operations smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`));
     }, SMOKE_TIMEOUT_MS);
     child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('exit', code => { clearTimeout(timer); resolve(code); });
+    child.once('exit', code => { clearTimeout(timer); stream.end(); resolve(code); });
   });
 }
 
@@ -39,6 +45,7 @@ async function main() {
   const cancelFixture = path.join(root, 'cancellation-fixture');
   const output = path.join(root, 'operations-evidence.json');
   const settingsOutput = path.join(root, 'settings-evidence.json');
+  const applicationLog = path.join(root, 'application.log');
   let completed = false;
   try {
     await fs.mkdir(fixture, { recursive: true });
@@ -67,9 +74,20 @@ async function main() {
       `--knoux-startup-smoke-value=${startupValue}`
     ];
     if (process.env.KNOUX_SMOKE_OFFLINE === '1') appArgs.push('--host-rules=MAP * 0.0.0.0');
-    if (process.env.KNOUX_SMOKE_USER_DATA_DIR) appArgs.push(`--user-data-dir=${path.resolve(process.env.KNOUX_SMOKE_USER_DATA_DIR)}`);
-    const code = await launch(executable, appArgs);
-    assert(code === 0, `Packaged operations smoke exited with code ${code}.`);
+    // The smoke runs against a disposable user-data directory. It writes
+    // settings, history and schedules, and it must not touch the settings the
+    // owner actually uses.
+    const userDataDirectory = process.env.KNOUX_SMOKE_USER_DATA_DIR ? path.resolve(process.env.KNOUX_SMOKE_USER_DATA_DIR) : path.join(root, 'user-data');
+    await fs.mkdir(userDataDirectory, { recursive: true });
+    appArgs.push(`--user-data-dir=${userDataDirectory}`);
+    const code = await launch(executable, appArgs, applicationLog);
+    if (code !== 0) {
+      // The application's own words are the diagnosis. Without them a bare
+      // exit code names no cause at all.
+      const tail = await fs.readFile(applicationLog, 'utf8').catch(() => '');
+      const detail = tail.trim().split(/\r?\n/).slice(-25).join('\n');
+      throw new Error(`Packaged operations smoke exited with code ${code}. Application output:\n${detail || '(the application produced no output)'}`);
+    }
     const report = JSON.parse(await fs.readFile(output, 'utf8'));
     const settingsReport = JSON.parse(await fs.readFile(settingsOutput, 'utf8'));
     const evidence = report.evidence || {}; const accessibility = settingsReport.evidence?.accessibility || {};
@@ -79,6 +97,10 @@ async function main() {
     assert(accessibility.lang === 'ar' && accessibility.dir === 'rtl', 'Arabic locale did not apply RTL document metadata.');
     assert(accessibility.theme === 'high-contrast' && accessibility.motion === 'reduced' && accessibility.fontScale === '1.5', 'High contrast, reduced motion, or font scale did not apply.');
     assert(accessibility.keyboardFocusable === true, 'A visible button could not receive keyboard focus.');
+    assert(settingsReport.evidence?.writeObserved === true, 'A settings change was not persisted and read back.');
+    assert(settingsReport.evidence?.sectionResetObserved === true, 'Resetting a settings section did not restore its value.');
+    assert(settingsReport.evidence?.handlersAvailable === true, 'Not every tool reported a usable availability probe.');
+    assert(settingsReport.evidence?.toolCount >= 34, `The tool registry reported ${settingsReport.evidence?.toolCount} services instead of the expected surface.`);
     for (const key of required) {
       const detail = evidence[key]?.errors?.length ? ` Errors: ${JSON.stringify(evidence[key].errors)}` : '';
       assert(evidence[key]?.success === true, `Expected successful packaged operation: ${key}.${detail}`);
@@ -112,7 +134,12 @@ async function main() {
     console.log('Packaged operations smoke PASS: cleanup preview, quarantine, and undo were verified in a disposable temporary fixture.');
     completed = true;
   } finally {
-    if (!completed) await fs.copyFile(output, path.join(projectRoot, 'docs', 'evidence', 'packaged-operations-smoke-failure.json')).catch(() => {});
+    if (!completed) {
+      const failureTarget = path.join(projectRoot, 'docs', 'evidence', 'packaged-operations-smoke-failure.json');
+      const report = await fs.readFile(output, 'utf8').then(text => JSON.parse(text)).catch(error => ({ capturedAt: new Date().toISOString(), error: String(error?.message || error) }));
+      const applicationOutput = await fs.readFile(applicationLog, 'utf8').catch(() => '');
+      await fs.writeFile(failureTarget, JSON.stringify({ ...report, applicationOutput: applicationOutput.slice(-8000) }, null, 2), 'utf8').catch(() => {});
+    }
     await execFileAsync('reg.exe', ['delete', currentUserRunKey, '/v', startupValue, '/f'], { windowsHide: true, timeout: 10000 }).catch(() => {});
     await fs.rm(root, { recursive: true, force: true });
   }
