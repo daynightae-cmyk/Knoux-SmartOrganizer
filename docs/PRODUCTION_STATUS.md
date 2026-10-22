@@ -33,7 +33,7 @@
 | History export | JSON and CSV serialization with a proven round trip | 7 export tests including Arabic, quotes, commas, newlines, empty history and failure entries | packaged smoke exercised the same code path | PASS | `electron/history-export.cjs`, `tests/history-export.test.ts` |
 | Diagnostics export | local support bundle with redacted paths and no clipboard content | static review | reachable from Settings | PASS | `electron/main.cjs` → `buildDiagnostics` |
 | NSIS setup | Electron Builder NSIS configuration | installer build | install/launch/uninstall smoke recorded | PASS | `docs/evidence/installer-smoke.json` |
-| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Workflow definitions are committed. The Linux CI job is green on the pushed source; the Windows release-closure result on the final SHA is recorded in §Verification evidence | PENDING EXTERNAL | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
+| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Workflow definitions are committed. Source CI, the Windows release gate and the fresh-runner install/launch/uninstall/reinstall verification pass on the pushed source; the signed public release gate remains blocked on the external certificate | PASS (unsigned candidate) | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
 
 ## Release position
 
@@ -60,8 +60,8 @@ The status must not change to a signed production release until the exact final 
 | Release evidence gate | PASS | `node scripts/verify-release.cjs` |
 | Artifact manifest | PASS | `npm run artifact:manifest`; SHA-256 independently re-hashed from the delivered files |
 | Trusted Authenticode | BLOCKED EXTERNAL | Requires a trusted certificate outside the repository. No self-signed substitute is accepted. `docs/evidence/code-signing.json` records `UNSIGNED_PRODUCTION_CANDIDATE`. |
-| Signed-artifact Windows closure | PENDING EXTERNAL | `.github/workflows/release-closure.yml` must pass for the exact final source SHA. |
-| Fresh Windows runner | PENDING EXTERNAL | `clean-machine-verification` job; installs and launches the candidate on a machine with no checkout and no `node_modules`. |
+| Signed-artifact Windows closure | BLOCKED EXTERNAL | The unsigned candidate passes the Windows release gate and the fresh-runner product verification. A trusted timestamped Authenticode signature is still required for a signed public release; no substitute is accepted. |
+| Fresh Windows runner | PASS (product) | `clean-machine-verification` installed, launched, exercised, uninstalled and reinstalled the candidate on `windows-latest` with no checkout and no `node_modules`; the job records the unsigned Authenticode state explicitly. |
 
 ## Delivered artifacts
 

@@ -110,6 +110,9 @@ Unit coverage in `tests/clipboard-vault.test.ts` (18 cases) additionally proves:
 | Release evidence gate | `node scripts/verify-release.cjs` | PASS |
 | Authenticode truth | `npm run signing:verify` | `UNSIGNED_PRODUCTION_CANDIDATE` — see §5 |
 | Artifact manifest | `npm run artifact:manifest` | PASS |
+| Source CI | `.github/workflows/ci.yml` | PASS on the pushed source |
+| Windows release gate | `.github/workflows/release-closure.yml` | PASS on the pushed source - baseline and final packaged, installer, offline and visual gates |
+| Fresh-runner product verification | `clean-machine-verification` | PASS - silent install, packaged launch, core operations, uninstall and reinstall on `windows-latest` without a checkout or `node_modules`; unsigned state recorded explicitly |
 
 ---
 
@@ -131,7 +134,7 @@ Unit coverage in `tests/clipboard-vault.test.ts` (18 cases) additionally proves:
 ## 5. Remaining blockers, stated exactly
 
 1. **Trusted Authenticode signing — `BLOCKED EXTERNAL`.** No signing certificate or password exists in this repository or on this machine, and none may be fabricated. Both artifacts report an Authenticode status of `UnknownError` (electron-builder applies a placeholder signature block that Windows cannot verify). The release workflow fails closed *when* signing credentials are supplied; with none supplied it produces an explicitly unsigned candidate. The signed public release gate cannot be closed from here.
-2. **Fresh-Windows-runner verification — `PENDING EXTERNAL`.** The installer was installed, launched, exercised and uninstalled on this machine, but not on a second, independent Windows installation. The CI workflow `clean-machine-verification` performs exactly that on `windows-latest` and must pass for the final SHA.
+2. **Fresh-Windows-runner verification — `PASS (product)`.** The CI job `clean-machine-verification` downloaded the exact candidate, installed it silently, launched it, exercised the core operations and accessibility transition, uninstalled it, and reinstalled it on a GitHub-hosted `windows-latest` runner with no checkout and no `node_modules`. It records the unsigned Authenticode state explicitly; the only unmet condition is the trusted signature described in blocker 1.
 3. **`service-startup-undo` live execution — `UNTESTED`.** See the matrix row 34.
 4. **Administrator-class repair execution — `PARTIAL`.** All eight repair services were executed in dry-run mode and their allowlisted plans verified. Performing the real repairs against the owner's live Windows installation was not authorized and is not claimed.
 5. **Multi-DPI visual acceptance — `PARTIAL`.** Ten real packaged-application captures now cover Arabic and English at 860×600, 1024×768, 1366×768 and 1920×1080, with the measured window size asserted against the claim. Windows display-scaling behaviour across a DPI matrix is still not verified, and the evidence file states that scope.
