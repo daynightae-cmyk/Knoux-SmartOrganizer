@@ -276,8 +276,8 @@ jobs:
             }
             if (-not (Test-Path $operationOutput) -or -not (Test-Path $settingsOutput)) { throw 'Installed application did not emit smoke evidence.' }
 
-            $operations = Get-Content -LiteralPath $operationOutput -Raw | ConvertFrom-Json
-            $settings = Get-Content -LiteralPath $settingsOutput -Raw | ConvertFrom-Json
+            $operations = Get-Content -LiteralPath $operationOutput -Raw | ConvertFrom-Json -AsHashTable
+            $settings = Get-Content -LiteralPath $settingsOutput -Raw | ConvertFrom-Json -AsHashTable
             if (-not $operations.packaged -or -not $settings.packaged) { throw 'Clean-runner smoke was not executed by a packaged application.' }
             foreach ($key in @('health','smartScan','disks','processes','installedApps','networkDiagnostics','hardwareInventory','hash','large','duplicates','preview','apply','undo','cleanupPreview','cleanupApply','cleanupUndo','startupDisable','startupRestore','automationRun','adminDryRun')) {
               if (-not $operations.evidence.$key.success) { throw "Clean-runner operation failed: $key" }
