@@ -6,7 +6,7 @@ import {
 import type { ClipboardItem, ClipboardStatus } from '../vite-env';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
 import { useStore } from '../state/store';
-import { EmptyState, SectionTitle } from '../components/common';
+import { EmptyState } from '../components/common';
 
 type Filter = 'all' | 'text' | 'image' | 'files';
 
@@ -118,35 +118,32 @@ export default function ClipboardVaultPage() {
 
   return (
     <section className="clipboard-page">
-      <SectionTitle
-        title={t('clipboard.title')}
-        subtitle={t('clipboard.subtitle')}
-        action={(
-          <div className="automation-actions">
-            <button className={policy?.enabled ? 'secondary' : 'primary'} onClick={() => { void toggleCapture(); }}>
-              {policy?.enabled ? <Pause size={14} /> : <Play size={14} />}
-              {policy?.enabled ? t('clipboard.disableCapture') : t('clipboard.enableCapture')}
-            </button>
-          </div>
-        )}
-      />
-
-      <div className="clipboard-status" role="status">
-        <span className={`pill ${monitoring ? 'ok' : 'muted'}`}>
-          {monitoring ? <Play size={11} /> : <Pause size={11} />}
-          {monitoring ? t('clipboard.monitoring') : (policy?.enabled ? t('clipboard.paused') : t('clipboard.captureOff'))}
-        </span>
-        {status?.privateMode && <span className="pill warn"><Lock size={11} />{t('clipboard.privateMode')}</span>}
-        <span className="pill ghost">
-          <ShieldAlert size={11} />
-          {storageMode === 'encrypted' ? t('clipboard.encrypted') : t('clipboard.memoryOnly')}
-        </span>
-        <span className="muted small">
-          {t('clipboard.storageUsage')}: {formatBytes(status?.storageBytes ?? 0, locale)}
-        </span>
-        <span className="muted small">
-          {t('clipboard.itemCount')}: {formatCount(status?.items ?? 0, locale)}
-        </span>
+      {/* The shell header already carries the page title and subtitle, so this
+          page opens straight into its own controls. */}
+      <div className="clipboard-toolbar">
+        <div className="clipboard-status" role="status">
+          <span className={`pill ${monitoring ? 'ok' : 'muted'}`}>
+            {monitoring ? <Play size={11} /> : <Pause size={11} />}
+            {monitoring ? t('clipboard.monitoring') : (policy?.enabled ? t('clipboard.paused') : t('clipboard.captureOff'))}
+          </span>
+          {status?.privateMode && <span className="pill warn"><Lock size={11} />{t('clipboard.privateMode')}</span>}
+          <span className="pill ghost">
+            <ShieldAlert size={11} />
+            {storageMode === 'encrypted' ? t('clipboard.encrypted') : t('clipboard.memoryOnly')}
+          </span>
+          <span className="muted small">
+            {t('clipboard.storageUsage')}: {formatBytes(status?.storageBytes ?? 0, locale)}
+          </span>
+          <span className="muted small">
+            {t('clipboard.itemCount')}: {formatCount(status?.items ?? 0, locale)}
+          </span>
+        </div>
+        <div className="automation-actions">
+          <button className={policy?.enabled ? 'secondary' : 'primary'} onClick={() => { void toggleCapture(); }}>
+            {policy?.enabled ? <Pause size={14} /> : <Play size={14} />}
+            {policy?.enabled ? t('clipboard.disableCapture') : t('clipboard.enableCapture')}
+          </button>
+        </div>
       </div>
 
       {!policy?.enabled && (

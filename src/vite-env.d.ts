@@ -94,10 +94,11 @@ declare global {
       runAutomation: (id: string) => Promise<ToolResult>;
       chooseFolder: () => Promise<string | null>;
       chooseFile: () => Promise<string | null>;
-      runTool: (request: { toolId: string; inputs: Record<string, unknown> }) => Promise<ToolResult>;
+      runTool: (request: { toolId: string; inputs: Record<string, unknown>; silent?: boolean }) => Promise<ToolResult>;
       cancelOperation: (operationId: string) => Promise<boolean>;
       openPath: (target: string) => Promise<string>;
       exportDiagnostics: () => Promise<string | null>;
+      codeSigning: () => Promise<NonNullable<AppInfo['codeSigning']>>;
       clipboardStatus: () => Promise<ClipboardStatus>;
       clipboardList: (request?: { query?: string; type?: 'all' | 'text' | 'image' | 'files'; pinnedOnly?: boolean }) => Promise<ClipboardItem[]>;
       clipboardGet: (id: string) => Promise<ClipboardItem | null>;

@@ -50,6 +50,8 @@ jobs:
         run: npm run smoke:installer
       - name: Offline packaged smoke
         run: npm run smoke:offline
+      - name: Visual acceptance from the packaged application
+        run: npm run smoke:visual
       - name: Report the Authenticode state of the built artifacts
         run: npm run signing:verify
       - name: Generate the artifact manifest

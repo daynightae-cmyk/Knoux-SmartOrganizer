@@ -53,6 +53,9 @@ jobs:
       - name: Baseline offline packaged smoke
         run: npm run smoke:offline
 
+      - name: Baseline visual acceptance
+        run: npm run smoke:visual
+
       - name: Existing repository release gate
         run: npm run verify:release
 
@@ -94,6 +97,9 @@ jobs:
 
       - name: Final offline packaged smoke
         run: npm run smoke:offline
+
+      - name: Final visual acceptance
+        run: npm run smoke:visual
 
       - name: Verify the Authenticode state of the final artifacts
         run: npm run signing:verify

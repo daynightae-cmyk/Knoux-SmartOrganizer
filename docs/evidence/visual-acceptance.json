@@ -1,0 +1,134 @@
+{
+  "capturedAt": "2026-10-22T05:07:04.486Z",
+  "packaged": true,
+  "scope": "Real screenshots of the packaged application window. Window-size coverage only; Windows display-scaling behaviour across a DPI matrix is not claimed.",
+  "scenarios": [
+    {
+      "name": "en-home-1366x768",
+      "locale": "en",
+      "page": "home",
+      "width": 1366,
+      "height": 768,
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "Device overview",
+        "Your PC today",
+        "Workspaces",
+        "Recent operations",
+        "Available tools"
+      ],
+      "file": "en-home-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-home-1366x768",
+      "locale": "ar",
+      "page": "home",
+      "width": 1366,
+      "height": 768,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "نظرة عامة على الجهاز",
+        "حالة جهازك اليوم",
+        "مساحات العمل",
+        "آخر العمليات",
+        "الأدوات المتاحة"
+      ],
+      "file": "ar-home-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "en-clipboard-1366x768",
+      "locale": "en",
+      "page": "clipboard",
+      "width": 1366,
+      "height": 768,
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "Clipboard Vault"
+      ],
+      "file": "en-clipboard-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-clipboard-1366x768",
+      "locale": "ar",
+      "page": "clipboard",
+      "width": 1366,
+      "height": 768,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "خزنة الحافظة"
+      ],
+      "file": "ar-clipboard-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "en-clipboard-860x600",
+      "locale": "en",
+      "page": "clipboard",
+      "width": 860,
+      "height": 600,
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 829,
+      "scrollWidth": 829,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "Clipboard Vault"
+      ],
+      "file": "en-clipboard-860x600.png",
+      "captured": true
+    },
+    {
+      "name": "ar-home-860x600",
+      "locale": "ar",
+      "page": "home",
+      "width": 860,
+      "height": 600,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 829,
+      "scrollWidth": 829,
+      "horizontalOverflow": false,
+      "focusable": 47,
+      "headings": [
+        "نظرة عامة على الجهاز",
+        "حالة جهازك اليوم",
+        "مساحات العمل",
+        "آخر العمليات",
+        "الأدوات المتاحة"
+      ],
+      "file": "ar-home-860x600.png",
+      "captured": true
+    }
+  ],
+  "failures": []
+}

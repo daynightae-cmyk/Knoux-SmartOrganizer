@@ -115,3 +115,7 @@ html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#
 .shortcut-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:18px 0 12px; }.shortcut-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:42px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:10px; background:var(--surface-raised); }.shortcut-row span { color:var(--muted); font-size:11px; text-align:end; }.shortcut-row kbd { min-width:112px; padding:5px 7px; border:1px solid var(--border-strong); border-radius:7px; background:var(--bg); color:var(--primary-bright); font-family:Consolas,monospace; font-size:10px; text-align:center; }.shortcut-help-foot { margin:0; padding-top:10px; border-top:1px solid var(--border); color:var(--muted); font-family:Consolas,monospace; font-size:10px; }
 @media(max-width:700px){ .shortcut-help-backdrop{padding:12px}.shortcut-help{padding:18px}.shortcut-list{grid-template-columns:1fr}.shortcut-row span{text-align:end} }
 @media(prefers-reduced-motion:reduce){.page-transition{transform:none}.shortcut-help-backdrop,.shortcut-help{backdrop-filter:none}}
+/* The product name is a Latin brand mark. Inside an RTL sidebar the
+   truncation ellipsis must still fall at the end of the Latin text, so the
+   brand is isolated as its own left-to-right run. */
+.brand-text strong { direction: ltr; unicode-bidi: isolate; text-align: start; }

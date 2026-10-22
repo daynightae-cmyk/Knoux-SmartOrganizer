@@ -78,6 +78,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [file, setFile] = useState('');
   const startedAt = useRef(Date.now());
   const noticeTimer = useRef<number | undefined>(undefined);
+  const persistedPage = useRef<string | null>(null);
 
   const locale: Locale = settings?.localization.locale || 'ar';
   const t = useCallback<Translate>((key: string) => translate(locale, key), [locale]);
@@ -198,7 +199,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setBooted(true);
       const healthTool = toolList.find(tool => tool.id === 'system-health');
       if (healthTool?.availability.available) {
-        window.knoux.runTool({ toolId: 'system-health', inputs: {} })
+        // The dashboard measures health in the background. It is a silent
+        // operation so it never takes over the operation drawer.
+        window.knoux.runTool({ toolId: 'system-health', inputs: {}, silent: true })
           .then(completed => { if (!cancelled && completed.success) setHealth(completed.summary); })
           .catch(() => {});
       }
@@ -218,17 +221,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ]);
         if (next.toolId === 'system-health' && next.result.success) setHealth(next.result.summary);
       }
-      if (isActivePhase(next.phase)) setOperationOpen(true);
+      if (isActivePhase(next.phase) && next.silent !== true) setOperationOpen(true);
     });
     return () => { cancelled = true; removeSettings(); removeOperation(); };
   }, []);
 
   useEffect(() => {
-    if (settings?.general.restorePreviousPage && settings.window.lastPage !== page) {
-      window.knoux.updateSettings({ window: { ...settings.window, lastPage: page } })
-        .then(setSettings)
-        .catch(() => {});
-    }
+    if (!settings?.general.restorePreviousPage) return;
+    // Only a navigation the user actually made is persisted. A settings
+    // change that arrived from elsewhere (a reset, an import, another
+    // process) must not be overwritten by the page the window happens to show.
+    if (persistedPage.current === page) return;
+    persistedPage.current = page;
+    if (settings.window.lastPage === page) return;
+    window.knoux.updateSettings({ window: { ...settings.window, lastPage: page } })
+      .then(setSettings)
+      .catch(() => {});
   }, [page, settings]);
 
   const active: ActiveOperation | null = useMemo(() => {

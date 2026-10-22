@@ -58,7 +58,8 @@ if (!isHeadlessProcess) {
 
 const runRequestSchema = z.object({
   toolId: z.string().min(1).max(64),
-  inputs: z.record(z.unknown()).default({})
+  inputs: z.record(z.unknown()).default({}),
+  silent: z.boolean().optional()
 }).strict();
 
 function appDataPath(name) { return path.join(app.getPath('userData'), name); }
@@ -123,6 +124,9 @@ function phase(operationId, toolId, phaseName, message, more = {}) {
     progress: context?.progressValue ?? null, phase: phaseName, summary: more.result?.summary || {},
     warnings: more.result?.warnings || context?.warnings || [], errors: more.result?.errors || [],
     cancelRequested: Boolean(context?.cancelRequested), undoMetadata: more.result?.undoMetadata || null,
+    // A silent operation is the application measuring something for itself.
+    // The renderer must not open the operation drawer for it.
+    silent: Boolean(context?.silent),
     message, at: updatedAt, ...more
   });
 }
@@ -132,6 +136,24 @@ function applyRuntimeSettings(settings) {
   // pausing capture is a real runtime change, not a stored preference.
   if (clipboardVault) clipboardVault.updateSettings(settings).catch(() => {});
 }
+let signingInfoCache = null;
+let signingInfoPromise = null;
+/**
+ * The Authenticode state, computed once and served from a cache.
+ *
+ * Reading the signature starts a PowerShell process, which can take seconds.
+ * Doing that on the boot path delayed the first paint of the whole
+ * application, so the value is computed in the background and the About
+ * section asks for it explicitly.
+ */
+function resolveSigningInfo() {
+  if (signingInfoPromise) return signingInfoPromise;
+  signingInfoPromise = codeSigningInfo()
+    .then(value => { signingInfoCache = value; return value; })
+    .finally(() => { signingInfoPromise = null; });
+  return signingInfoPromise;
+}
+
 /**
  * Reports the real Authenticode state of the running executable.
  *
@@ -243,7 +265,8 @@ function requireTemporaryPath(target, label) { const tempRoot = path.resolve(os.
 async function runPackagedSmoke() {
   const settingsTarget = smokeArgument('knoux-settings-smoke-output');
   const operationTarget = smokeArgument('knoux-operation-smoke-output');
-  if (!settingsTarget && !operationTarget) return;
+  const visualTarget = smokeArgument('knoux-visual-smoke-output');
+  if (!settingsTarget && !operationTarget && !visualTarget) return;
   if (settingsTarget) {
     requireTemporaryPath(settingsTarget, 'Packaged settings smoke output');
     const evidence = await mainWindow.webContents.executeJavaScript(`(async () => {
@@ -277,6 +300,11 @@ async function runPackagedSmoke() {
     await fsp.mkdir(path.dirname(operationTarget), { recursive: true });
     const clipboardEvidence = await verifyClipboardVault().catch(error => ({ error: String(error?.message || error) }));
     await fsp.writeFile(operationTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, fixture, evidence, clipboard: clipboardEvidence }, null, 2), 'utf8');
+  }
+  if (visualTarget) {
+    requireTemporaryPath(visualTarget, 'Packaged visual smoke output');
+    const scenarios = await captureVisualEvidence(path.dirname(visualTarget)).catch(error => [{ error: String(error?.message || error) }]);
+    await fsp.writeFile(visualTarget, JSON.stringify({ capturedAt: new Date().toISOString(), packaged: app.isPackaged, scenarios }, null, 2), 'utf8');
   }
   app.isQuiting = true; app.quit();
 }
@@ -916,9 +944,12 @@ async function execute(request) {
   if (!availability.available) return recordFailure(operationId, tool.id, startedAt, availability.reason || 'Tool is unavailable.');
   const inputs = tool.inputSchema.safeParse(parsed.data.inputs);
   if (!inputs.success) return recordFailure(operationId, tool.id, startedAt, zodIssues(inputs.error));
-  const context = { cancelled: false, cancelRequested: false, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
+  const context = { cancelled: false, cancelRequested: false, silent: parsed.data.silent === true, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
   operations.set(operationId, context); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request, schema, handler, and local availability');
   if (tool.riskLevel !== 'read-only') phase(operationId, tool.id, 'awaiting-confirmation', 'Validated the explicit confirmation supplied for this write operation');
+  // A silent operation is one the application started for itself, such as the
+  // dashboard's background health measurement. It must not take over the
+  // operation drawer the user was looking at.
   try {
     if (tool.requiresAdmin && !inputs.data.dryRun) { if ((await getSettings()).security.elevationPolicy === 'deny') throw new Error('Elevation is disabled in Security settings.'); phase(operationId, tool.id, 'awaiting-admin', 'Waiting for Windows administrator approval'); }
     phase(operationId, tool.id, 'running', 'Performing local Windows operation'); const output = tool.outputSchema.parse(await tool.handler(context, inputs.data));
@@ -990,6 +1021,87 @@ async function verifyClipboardVault() {
   };
 }
 
+/**
+ * Captures visual acceptance evidence FROM THE RUNNING APPLICATION.
+ *
+ * Nothing here is drawn or simulated: each PNG is a real `capturePage()` of the
+ * packaged window, and each measurement is read from the live document.
+ */
+async function captureVisualEvidence(outputDirectory) {
+  const fsPromises = fsp;
+  await fsPromises.mkdir(outputDirectory, { recursive: true });
+  const originalBounds = mainWindow.getBounds();
+  const originalSettings = await getSettings();
+  const scenarios = [
+    { name: 'en-home-1366x768', locale: 'en', page: 'home', width: 1366, height: 768 },
+    { name: 'ar-home-1366x768', locale: 'ar', page: 'home', width: 1366, height: 768 },
+    { name: 'en-clipboard-1366x768', locale: 'en', page: 'clipboard', width: 1366, height: 768 },
+    { name: 'ar-clipboard-1366x768', locale: 'ar', page: 'clipboard', width: 1366, height: 768 },
+    { name: 'en-clipboard-860x600', locale: 'en', page: 'clipboard', width: 860, height: 600 },
+    { name: 'ar-home-860x600', locale: 'ar', page: 'home', width: 860, height: 600 }
+  ];
+  const results = [];
+  const settle = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const progressPath = path.join(outputDirectory, 'visual-progress.log');
+  const progress = async (message) => { await fsp.appendFile(progressPath, `${new Date().toISOString()} ${message}\n`, 'utf8').catch(() => {}); };
+  await progress('capture-started');
+  const waitForLoad = async () => {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      if (!mainWindow.webContents.isLoading()) return true;
+      await settle(100);
+    }
+    return false;
+  };
+  try {
+    mainWindow.show();
+    mainWindow.focus();
+    for (const scenario of scenarios) {
+      await progress(`scenario-start ${scenario.name}`);
+      mainWindow.setBounds({ x: originalBounds.x, y: originalBounds.y, width: scenario.width, height: scenario.height });
+      await progress(`bounds-set ${scenario.name}`);
+      await updateSettings({
+        localization: { ...originalSettings.localization, locale: scenario.locale },
+        window: { ...originalSettings.window, lastPage: scenario.page }
+      });
+      await progress(`settings-updated ${scenario.name}`);
+      mainWindow.reload();
+      await settle(400);
+      await waitForLoad();
+      // The document metadata is applied by the renderer once its settings have
+      // loaded, so the capture waits for the expected language and direction
+      // instead of a fixed delay.
+      const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false })`).catch(() => null);
+        if (state && state.lang === scenario.locale && state.dir === expectedDirection) break;
+        await settle(200);
+      }
+      await settle(700);
+      await progress(`loaded ${scenario.name}`);
+      const metrics = await mainWindow.webContents.executeJavaScript(`(() => ({
+        lang: document.documentElement.lang,
+        dir: document.documentElement.dir,
+        theme: document.documentElement.dataset.theme,
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        focusable: document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').length,
+        headings: Array.from(document.querySelectorAll('h1, h2')).slice(0, 6).map(node => (node.textContent || '').trim()).filter(Boolean)
+      }))()`);
+      const image = await mainWindow.capturePage();
+      await progress(`captured ${scenario.name}`);
+      const file = path.join(outputDirectory, `${scenario.name}.png`);
+      await fsPromises.writeFile(file, image.toPNG());
+      results.push({ ...scenario, ...metrics, file: path.basename(file), captured: true });
+    }
+  } finally {
+    await progress('capture-finished');
+    mainWindow.setBounds(originalBounds);
+    await updateSettings({ localization: originalSettings.localization, window: originalSettings.window });
+  }
+  return results;
+}
+
 function createWindow() {
   const bounds = settingsCache?.general.rememberWindowBounds ? settingsCache.window.bounds : null;
   mainWindow = new BrowserWindow({
@@ -1027,10 +1139,13 @@ app.whenReady().then(async () => {
   });
   await clipboardVault.init();
   clipboardVault.start();
+  // Warm the Authenticode state in the background; it must never delay the
+  // first paint of the application.
+  void resolveSigningInfo().catch(() => {});
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
-  ipcMain.handle('knoux:app-info', async () => ({ version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', codeSigning: await codeSigningInfo() }));
+  ipcMain.handle('knoux:app-info', async () => ({ version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', codeSigning: signingInfoCache }));
   ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
   ipcMain.handle('knoux:settings-get', getSettings);
   ipcMain.handle('knoux:settings-update', (_event, patch) => updateSettings(z.record(z.unknown()).parse(patch)));
@@ -1053,6 +1168,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('knoux:diagnostics-export', async () => { const result = await dialog.showSaveDialog(mainWindow, { defaultPath: 'knoux-diagnostics.json', filters: [{ name: 'JSON', extensions: ['json'] }] }); if (result.canceled || !result.filePath) return null; const diagnostics = await buildDiagnostics(); await fsp.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2), 'utf8'); return result.filePath; });
   // KNOuX Clipboard Vault. Capture stays off until the user enables it in the
   // vault page or in Settings.
+  ipcMain.handle('knoux:code-signing', () => resolveSigningInfo());
   ipcMain.handle('knoux:clipboard-status', () => clipboardVault.status());
   ipcMain.handle('knoux:clipboard-list', (_event, request) => {
     const parsed = z.object({ query: z.string().max(500).optional(), type: z.enum(['all', 'text', 'image', 'files']).optional(), pinnedOnly: z.boolean().optional() }).strict().parse(request || {});

@@ -64,6 +64,8 @@ export interface OperationEvent {
   warnings: string[];
   errors: string[];
   cancelRequested: boolean;
+  /** The application started this operation for itself; it must not take over the operation drawer. */
+  silent?: boolean;
   undoMetadata: Record<string, unknown> | null;
   message: string;
   current?: number;

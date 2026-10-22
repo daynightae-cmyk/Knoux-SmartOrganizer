@@ -32,3 +32,4 @@
 .clipboard-card-actions { display:flex; gap:5px; flex:none; }
 .clipboard-card-actions .icon-button { padding:8px; }
 @media(max-width:900px){ .clipboard-card { flex-direction:column; } .clipboard-card-actions { align-self:flex-end; } }
+.clipboard-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; }

@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
   cancelOperation: (operationId) => ipcRenderer.invoke('knoux:operation-cancel', operationId),
   openPath: (target) => ipcRenderer.invoke('knoux:open-path', target),
   exportDiagnostics: () => ipcRenderer.invoke('knoux:diagnostics-export'),
+  codeSigning: () => ipcRenderer.invoke('knoux:code-signing'),
   clipboardStatus: () => ipcRenderer.invoke('knoux:clipboard-status'),
   clipboardList: (request) => ipcRenderer.invoke('knoux:clipboard-list', request),
   clipboardGet: (id) => ipcRenderer.invoke('knoux:clipboard-get', id),

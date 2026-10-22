@@ -1,10 +1,17 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { AppSettings } from '@shared/contracts';
 import type { Locale } from '../locales';
+import type { AppInfo } from '../state/types';
 import { useStore } from '../state/store';
 
 export default function SettingsPage() {
   const { settings, appInfo, update, t, setNotice } = useStore();
+  const [signing, setSigning] = useState<AppInfo['codeSigning'] | null>(appInfo?.codeSigning ?? null);
+  useEffect(() => {
+    let cancelled = false;
+    window.knoux.codeSigning().then(value => { if (!cancelled) setSigning(value); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   if (!settings) return <p>{t('common.loading')}</p>;
 
   const change = <K extends Exclude<keyof AppSettings, 'settingsVersion'>>(section: K, value: AppSettings[K]) => {
@@ -130,9 +137,9 @@ export default function SettingsPage() {
         <Setting label="Chromium"><output>{appInfo?.chromium || '—'}</output></Setting>
         <Setting label={t('settings.license')}><output>MIT</output></Setting>
         <Setting label={t('settings.build')}><output>{appInfo?.isPackaged ? t('settings.value.packaged') : t('settings.value.development')}</output></Setting>
-        <Setting label={t('settings.signing')}><output>{appInfo?.codeSigning?.state ? t(`settings.signingState.${appInfo.codeSigning.state}`) : t('settings.value.unavailable')}</output></Setting>
-        {appInfo?.codeSigning?.publisher && <Setting label={t('settings.publisher')}><output dir="ltr">{appInfo.codeSigning.publisher}</output></Setting>}
-        {appInfo?.codeSigning?.timestamped && <Setting label={t('settings.timestamped')}><output>{t('settings.value.yes')}</output></Setting>}
+        <Setting label={t('settings.signing')}><output>{signing?.state ? t(`settings.signingState.${signing.state}`) : t('settings.value.unavailable')}</output></Setting>
+        {signing?.publisher && <Setting label={t('settings.publisher')}><output dir="ltr">{signing.publisher}</output></Setting>}
+        {signing?.timestamped && <Setting label={t('settings.timestamped')}><output>{t('settings.value.yes')}</output></Setting>}
       </SettingsSection>
       <div className="settings-actions">
         <button className="secondary" onClick={() => window.knoux.exportSettings()}>{t('settings.export')}</button>
