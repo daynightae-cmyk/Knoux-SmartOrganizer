@@ -30,9 +30,16 @@ const applicationName = 'KNOuX SmartOrganizer.exe';
 const persistedFiles = ['settings.json', 'history.json', 'automations.json'];
 
 function run(file, args, options = {}) {
+  const { timeoutMs = 240000, ...spawnOptions } = options;
   return new Promise((resolve, reject) => {
-    const child = spawn(file, args, { windowsHide: true, stdio: 'ignore', ...options });
-    const timer = setTimeout(() => { child.kill(); reject(new Error(`Timed out while running ${path.basename(file)}.`)); }, 240000);
+    const child = spawn(file, args, { windowsHide: true, stdio: 'ignore', ...spawnOptions });
+    const timer = setTimeout(() => {
+      // Kill the whole tree: a timed-out Node wrapper can leave the packaged
+      // application running and holding the disposable install directory.
+      if (process.platform === 'win32' && child.pid) { try { spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); } catch {} }
+      child.kill();
+      reject(new Error(`Timed out while running ${path.basename(file)}.`));
+    }, timeoutMs);
     child.once('error', error => { clearTimeout(timer); reject(error); });
     child.once('exit', code => { clearTimeout(timer); resolve(code); });
   });
@@ -67,7 +74,8 @@ async function install(installDirectory) {
 
 async function runPackagedSmoke(executable, userDataDirectory, evidenceTarget) {
   const exit = await run(process.execPath, [path.join(root, 'scripts', 'packaged-operations-smoke.cjs')], {
-    env: { ...process.env, KNOUX_SMOKE_EXECUTABLE: executable, KNOUX_SMOKE_EVIDENCE: evidenceTarget, KNOUX_SMOKE_USER_DATA_DIR: userDataDirectory }
+    env: { ...process.env, KNOUX_SMOKE_EXECUTABLE: executable, KNOUX_SMOKE_EVIDENCE: evidenceTarget, KNOUX_SMOKE_USER_DATA_DIR: userDataDirectory },
+    timeoutMs: 900000
   });
   if (exit !== 0) throw new Error(`Packaged operations smoke exited with code ${exit}.`);
   return JSON.parse(await fs.readFile(evidenceTarget, 'utf8'));
