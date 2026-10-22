@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-22T17:37:49.020Z",
-  "gitSha": "aaeff9bffa793b58a050bccab4059f2ea3122731",
+  "generatedAt": "2026-10-22T18:25:51.850Z",
+  "gitSha": "1a65c236039ef8cad0fb80e0fcfdc66d61fb5bf6",
   "version": "0.4.0",
   "signingState": "UNSIGNED_PRODUCTION_CANDIDATE",
   "toolchain": {
@@ -15,17 +15,17 @@
       "role": "installer",
       "file": "release\\KNOuX-SmartOrganizer-Setup-x64.exe",
       "present": true,
-      "bytes": 115622163,
-      "sha256": "9a4e4376fc2330caf76aa00247af8825a725644b72991d133e73c383407453e5",
-      "builtAt": "2026-10-22T17:30:06.365Z"
+      "bytes": 115622856,
+      "sha256": "d7d9535b90858bfde07c84f5603baa6de2a3152ae7c01a5c2e04b206663e23b0",
+      "builtAt": "2026-10-22T18:17:11.176Z"
     },
     {
       "role": "installed-executable",
       "file": "release\\win-unpacked\\KNOuX SmartOrganizer.exe",
       "present": true,
       "bytes": 235566592,
-      "sha256": "61df545ab82f0dd44939306f27da562945fcf146f06f3f4c066b17167c7b57ec",
-      "builtAt": "2026-10-22T17:37:38.252Z"
+      "sha256": "e3f7a1b20a395a04f4d9455f1915e99dc61717e8df6f2ba0d42a969493acac2e",
+      "builtAt": "2026-10-22T18:25:41.780Z"
     }
   ]
 }
