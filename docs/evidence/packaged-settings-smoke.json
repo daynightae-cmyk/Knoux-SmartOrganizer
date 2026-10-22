@@ -1,15 +1,21 @@
 {
-  "capturedAt": "2026-08-24T10:25:53.794Z",
+  "capturedAt": "2026-10-22T17:57:06.463Z",
   "packaged": true,
-  "isolatedUserData": true,
-  "executable": "release/win-unpacked/KNOuX SmartOrganizer.exe",
-  "exitCode": 0,
   "evidence": {
     "beforeVersion": 2,
-    "toolCount": 17,
+    "toolCount": 34,
     "handlersAvailable": true,
     "marker": "blue",
     "writeObserved": true,
-    "sectionResetObserved": true
+    "sectionResetObserved": true,
+    "accessibility": {
+      "applied": true,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "high-contrast",
+      "motion": "reduced",
+      "fontScale": "1.5",
+      "keyboardFocusable": true
+    }
   }
 }

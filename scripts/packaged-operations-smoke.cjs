@@ -8,6 +8,7 @@ const { promisify } = require('node:util');
 const projectRoot = path.resolve(__dirname, '..');
 const executable = process.env.KNOUX_SMOKE_EXECUTABLE ? path.resolve(process.env.KNOUX_SMOKE_EXECUTABLE) : path.join(projectRoot, 'release', 'win-unpacked', 'KNOuX SmartOrganizer.exe');
 const evidencePath = process.env.KNOUX_SMOKE_EVIDENCE ? path.resolve(process.env.KNOUX_SMOKE_EVIDENCE) : path.join(projectRoot, 'docs', 'evidence', 'packaged-operations-smoke.json');
+const settingsEvidencePath = path.join(projectRoot, 'docs', 'evidence', 'packaged-settings-smoke.json');
 const execFileAsync = promisify(execFile);
 const currentUserRunKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run';
 // The smoke drives roughly two dozen real Windows operations back to back.
@@ -132,6 +133,7 @@ async function main() {
     assert(restoredStartup.stdout.includes(startupValue), 'Startup value is absent after restore.');
     await fs.access(agedFile);
     await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+    await fs.writeFile(settingsEvidencePath, JSON.stringify(settingsReport, null, 2), 'utf8');
     await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true, clipboardVaultVerified: true, clipboardVault: { captured: vault.captured, capturedDuringPause: vault.capturedDuringPause, capturedAfterResume: vault.capturedAfterResume, pinned: vault.pinned, deleted: vault.deleted, clearedItems: vault.clearedItems, storageMode: vault.storageMode, encryptionAvailable: vault.encryptionAvailable } } }, null, 2), 'utf8');
     console.log('Packaged operations smoke PASS: cleanup preview, quarantine, and undo were verified in a disposable temporary fixture.');
     completed = true;
