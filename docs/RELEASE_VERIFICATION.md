@@ -87,7 +87,7 @@ Executed by the packaged application against the **real Windows clipboard**, in 
 | Storage at rest | `storageMode` | `encrypted` (Electron `safeStorage`, operating-system backed) |
 | OS key present | `encryptionAvailable` | `true` |
 
-Unit coverage in `tests/clipboard-vault.test.ts` (17 cases) additionally proves: nothing is captured before opt-in, no plaintext is ever written to disk, the memory-only fallback writes nothing at all, entries survive a restart, undecryptable entries are reported instead of silently emptying the vault, item and payload limits are enforced, a password-like item is skipped, and a copied-back item is not re-captured.
+Unit coverage in `tests/clipboard-vault.test.ts` (18 cases) additionally proves: nothing is captured before opt-in, no plaintext is ever written to disk, the memory-only fallback writes nothing at all, entries survive a restart, undecryptable entries are reported instead of silently emptying the vault, item and payload limits are enforced, a password-like item is skipped, and a copied-back item is not re-captured.
 
 **Not claimed:** the vault does not attempt to read password fields, does not scrape windows, and does not pretend Windows can distinguish every private application. Its own page states this.
 
@@ -99,12 +99,14 @@ Unit coverage in `tests/clipboard-vault.test.ts` (17 cases) additionally proves:
 |---|---|---|
 | TypeScript | `npm run check` | PASS |
 | ESLint | `npm run lint` | PASS |
-| Unit and contract tests | `npm test` | PASS — 215 tests, 17 files |
+| Unit and contract tests | `npm test` | PASS — 225 tests, 18 files |
 | Production build | `npm run build` | PASS |
 | NSIS distribution | `npm run desktop:dist` | PASS |
 | Packaged operation smoke | `npm run smoke:packaged-operations` | PASS |
 | Installer lifecycle smoke | `npm run smoke:installer` | PASS |
 | Offline packaged smoke | `npm run smoke:offline` | PASS |
+| Visual acceptance | `npm run smoke:visual` | PASS — 10 captured scenarios at the claimed sizes, no horizontal overflow |
+| Reinstall / user-data preservation | `npm run smoke:reinstall` | PASS — install, run, uninstall, reinstall and run, with the user stores intact |
 | Release evidence gate | `node scripts/verify-release.cjs` | PASS |
 | Authenticode truth | `npm run signing:verify` | `UNSIGNED_PRODUCTION_CANDIDATE` — see §5 |
 | Artifact manifest | `npm run artifact:manifest` | PASS |
@@ -119,6 +121,8 @@ Unit coverage in `tests/clipboard-vault.test.ts` (17 cases) additionally proves:
 | `docs/evidence/packaged-settings-smoke.json` | Settings write/read/reset and the accessibility (RTL, high-contrast, reduced motion, 150% font scale, keyboard focus) transition. |
 | `docs/evidence/installer-smoke.json` | Silent NSIS install exit code, installed application smoke exit code, uninstaller exit code and removal of the install directory. |
 | `docs/evidence/offline-smoke.json` | The same operation sequence executed with Chromium host rules mapping every host to `0.0.0.0`. |
+| `docs/evidence/visual-acceptance.json` and `docs/evidence/visual-acceptance/*.png` | Ten real packaged-application captures (Arabic and English; 860×600, 1024×768, 1366×768 and 1920×1080) with the captured window size and overflow measurements recorded per scenario. |
+| `docs/evidence/reinstall-smoke.json` | Install → run → uninstall → reinstall → run, with the surviving `settings.json`, `history.json` and `automations.json` hashes. |
 | `docs/evidence/code-signing.json` | The real Authenticode status of both artifacts. |
 | `docs/evidence/FINAL_ARTIFACT_MANIFEST.json` | SHA-256, size, source SHA and toolchain versions of the delivered files. |
 
@@ -130,4 +134,4 @@ Unit coverage in `tests/clipboard-vault.test.ts` (17 cases) additionally proves:
 2. **Fresh-Windows-runner verification — `PENDING EXTERNAL`.** The installer was installed, launched, exercised and uninstalled on this machine, but not on a second, independent Windows installation. The CI workflow `clean-machine-verification` performs exactly that on `windows-latest` and must pass for the final SHA.
 3. **`service-startup-undo` live execution — `UNTESTED`.** See the matrix row 34.
 4. **Administrator-class repair execution — `PARTIAL`.** All eight repair services were executed in dry-run mode and their allowlisted plans verified. Performing the real repairs against the owner's live Windows installation was not authorized and is not claimed.
-5. **Multi-DPI visual acceptance — `PARTIAL`.** The visual review in this cycle covers the rendered application at the window sizes the local session provides. Windows display-scaling behaviour across a DPI matrix was not verified.
+5. **Multi-DPI visual acceptance — `PARTIAL`.** Ten real packaged-application captures now cover Arabic and English at 860×600, 1024×768, 1366×768 and 1920×1080, with the measured window size asserted against the claim. Windows display-scaling behaviour across a DPI matrix is still not verified, and the evidence file states that scope.

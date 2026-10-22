@@ -19,7 +19,7 @@
 | Global tool registry | 34 handlers with risk, schemas, capability probes and lifecycle metadata | registry consistency, rejection and renderer-safety tests | 34 serialized tools verified in package | PASS | `electron/tool-registry.cjs`, `tests/tool-registry.test.ts` |
 | Local settings | Complete schema v2 with a `clipboard` section, strict validation, migration, atomic writes and backups | load/save/restart/import/reset/invalid/migration/unknown-key tests | write/read/reset through packaged preload IPC | PASS | `electron/settings.cjs`, `tests/settings.test.ts` |
 | Operation lifecycle/history/logs | Full phase contract, cancellation token, history, undo metadata and a redacted, rotated NDJSON log | renderer contract | packaged IPC smoke observed queued, preflight, running, progress and cancelled phases from an isolated cancellation fixture | PASS | `scripts/packaged-operations-smoke.cjs` |
-| Read-only Windows tools | 19 bounded read-only handlers across system, files, applications, network and hardware | localization and registry contracts | packaged smoke exercised health, disks, hash, large files, duplicates, processes, battery, startup, applications, network, hardware, events, empty folders and downloads inventory | PASS | `docs/evidence/packaged-operations-smoke.json` |
+| Read-only Windows tools | 18 bounded read-only handlers across system, files, applications, network and hardware | localization and registry contracts | packaged smoke exercised health, disks, hash, large files, duplicates, processes, battery, startup, applications, network, hardware, events, empty folders and downloads inventory | PASS | `docs/evidence/packaged-operations-smoke.json` |
 | Smart Scan | real non-destructive local collection over three real traversals | code review | packaged smoke completed Smart Scan through the preload contract | PASS | `docs/evidence/packaged-operations-smoke.json` |
 | KNOuX Clipboard Vault | opt-in local clipboard history with operating-system-backed encryption, pause/resume, private mode, search, pin, delete, clear and copy-back | 17 vault tests | the packaged application captured a **real Windows clipboard** entry, honoured pause and resume, pinned, deleted and cleared it | PASS | `docs/evidence/packaged-operations-smoke.json` → `clipboard` |
 | Arabic / English / RTL | AR/EN dictionaries, full settings copy, document direction switch | parity test | packaged setting transition set Arabic `lang=ar` and `dir=rtl` | PASS | `src/locales.ts` |
@@ -33,7 +33,7 @@
 | History export | JSON and CSV serialization with a proven round trip | 7 export tests including Arabic, quotes, commas, newlines, empty history and failure entries | packaged smoke exercised the same code path | PASS | `electron/history-export.cjs`, `tests/history-export.test.ts` |
 | Diagnostics export | local support bundle with redacted paths and no clipboard content | static review | reachable from Settings | PASS | `electron/main.cjs` → `buildDiagnostics` |
 | NSIS setup | Electron Builder NSIS configuration | installer build | install/launch/uninstall smoke recorded | PASS | `docs/evidence/installer-smoke.json` |
-| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Workflow definitions are committed and the local gates pass on the final SHA; the signed-release completion still requires a trusted Authenticode identity and a real workflow result | PENDING EXTERNAL | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
+| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Workflow definitions are committed. The Linux CI job is green on the pushed source; the Windows release-closure result on the final SHA is recorded in §Verification evidence | PENDING EXTERNAL | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
 
 ## Release position
 
@@ -49,14 +49,17 @@ The status must not change to a signed production release until the exact final 
 |---|---|---|
 | TypeScript | PASS | `npm run check` |
 | Lint | PASS | `npm run lint` |
-| Unit and contract tests | PASS | 215 tests across 17 files |
+| Unit and contract tests | PASS | 225 tests across 18 files |
 | Production build | PASS | `npm run build` |
-| Packaged operation smoke | PASS | `docs/evidence/packaged-operations-smoke.json` |
-| Packaged settings and accessibility smoke | PASS | `docs/evidence/packaged-settings-smoke.json` |
-| Installer smoke | PASS | silent install exit 0; installed app started; uninstaller exit 0; install directory removed |
-| Offline core | PASS | packaged application ran with Chromium host mapping `MAP * 0.0.0.0` |
+| Packaged operation smoke | PASS | `docs/evidence/packaged-operations-smoke.json` — 34 operations, including the real Windows Clipboard Vault round trip |
+| Installer smoke | PASS | `docs/evidence/installer-smoke.json` — silent install, installed-app launch and uninstall all exit 0; install directory removed |
+| Packaged settings and accessibility smoke | PASS | `docs/evidence/packaged-settings-smoke.json` — settings write/read/reset plus the RTL, high-contrast, reduced-motion, font-scale and keyboard-focus transition |
+| Offline core | PASS | `docs/evidence/offline-smoke.json` — the same operation sequence with Chromium host mapping `MAP * 0.0.0.0` |
+| Reinstall / user-data preservation | PASS | `docs/evidence/reinstall-smoke.json` — install, run, uninstall, reinstall and run again; `settings.json`, `history.json` and `automations.json` survived the uninstall with matching SHA-256 |
+| Visual acceptance | PASS | `docs/evidence/visual-acceptance.json` — 10 real packaged-application captures (AR/EN, 860×600 to 1920×1080) with the measured window size matching each claim and no horizontal overflow |
 | Release evidence gate | PASS | `node scripts/verify-release.cjs` |
-| Trusted Authenticode | BLOCKED EXTERNAL | Requires a trusted certificate outside the repository. No self-signed substitute is accepted. |
+| Artifact manifest | PASS | `npm run artifact:manifest`; SHA-256 independently re-hashed from the delivered files |
+| Trusted Authenticode | BLOCKED EXTERNAL | Requires a trusted certificate outside the repository. No self-signed substitute is accepted. `docs/evidence/code-signing.json` records `UNSIGNED_PRODUCTION_CANDIDATE`. |
 | Signed-artifact Windows closure | PENDING EXTERNAL | `.github/workflows/release-closure.yml` must pass for the exact final source SHA. |
 | Fresh Windows runner | PENDING EXTERNAL | `clean-machine-verification` job; installs and launches the candidate on a machine with no checkout and no `node_modules`. |
 
