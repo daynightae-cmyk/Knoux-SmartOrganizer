@@ -72,6 +72,7 @@ async function main() {
       `--knoux-operation-smoke-fixture=${fixture}`,
       `--knoux-temp-cleanup-smoke-fixture=${cleanupFixture}`,
       `--knoux-cancel-smoke-fixture=${cancelFixture}`,
+      '--knoux-cancel-hold-ms=1000',
       `--knoux-startup-smoke-value=${startupValue}`
     ];
     if (process.env.KNOUX_SMOKE_OFFLINE === '1') appArgs.push('--host-rules=MAP * 0.0.0.0');

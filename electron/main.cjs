@@ -250,6 +250,7 @@ async function buildDiagnostics() {
 }
 function argumentValue(name) { const prefix = `--${name}=`; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 function smokeArgument(name) { const value = argumentValue(name); return value ? path.resolve(value) : null; }
+const cancelSmokeHoldMs = Math.min(Math.max(Number(argumentValue('knoux-cancel-hold-ms')) || 0, 0), 10000);
 function automationArgument() { const prefix = '--automation-run='; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 /**
  * Runs the Windows Task Scheduler.
@@ -404,7 +405,7 @@ async function walk(root, context, options = {}) {
       try { stat = await fsp.lstat(full); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
       // Progress is reported on a fixed cadence so a long scan stays
       // cancellable and the drawer keeps moving.
-      if (inspected % 50 === 0) context.progress(inspected, Math.max(inspected + queue.length, inspected), `Inspected ${inspected.toLocaleString()} filesystem items`);
+      if (inspected % 50 === 0) { context.progress(inspected, Math.max(inspected + queue.length, inspected), `Inspected ${inspected.toLocaleString()} filesystem items`); if (context.cancelHoldMs && !context.cancelHoldDone) { context.cancelHoldDone = true; await new Promise(resolve => setTimeout(resolve, context.cancelHoldMs)); isCancelled(context); } }
       let classified;
       try { classified = await classifyEntry(full, stat, { root, reparsePointPolicy: policy }); } catch (error) { totals.accessDenied += 1; context.warnings.push(`${full}: ${error.code || 'unavailable'}`); continue; }
       if (classified.entryKind === 'reparse') {
@@ -996,7 +997,7 @@ async function execute(request) {
   if (!availability.available) return recordFailure(operationId, tool.id, startedAt, availability.reason || 'Tool is unavailable.');
   const inputs = tool.inputSchema.safeParse(parsed.data.inputs);
   if (!inputs.success) return recordFailure(operationId, tool.id, startedAt, zodIssues(inputs.error));
-  const context = { cancelled: false, cancelRequested: false, silent: parsed.data.silent === true, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
+  const context = { cancelled: false, cancelRequested: false, cancelHoldMs: tool.engine === 'largeFiles' ? cancelSmokeHoldMs : 0, cancelHoldDone: false, silent: parsed.data.silent === true, warnings: [], startedAt, updatedAt: startedAt, phase: 'idle', progressValue: null, progress: (current, total, message) => phase(operationId, tool.id, 'progress', message, { current, total, percent: Math.min(100, Math.round((current / Math.max(total, 1)) * 100)) }) };
   operations.set(operationId, context); phase(operationId, tool.id, 'queued', 'Operation queued'); phase(operationId, tool.id, 'preflight', 'Validated request, schema, handler, and local availability');
   if (tool.riskLevel !== 'read-only') phase(operationId, tool.id, 'awaiting-confirmation', 'Validated the explicit confirmation supplied for this write operation');
   // A silent operation is one the application started for itself, such as the
