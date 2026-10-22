@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-10-22T16:02:27.473Z",
+  "environment": "Windows host; isolated temporary user-data directory",
+  "firstInstallExit": 0,
+  "firstSmokeExit": 0,
+  "uninstallExit": 0,
+  "installDirectoryRemoved": true,
+  "userDataAfterUninstall": {
+    "settings.json": {
+      "exists": true,
+      "sha256": "0ba9d5302ae7ce091a4f20dfae740133a031727b663bc4c250c70a9f6f358d17"
+    },
+    "history.json": {
+      "exists": true,
+      "sha256": "45206f286ec578fe4fd7d6cf25d9f0fb0912330130f530e23400c4d7acd3403b"
+    },
+    "automations.json": {
+      "exists": true,
+      "sha256": "0ea32282df63eceee12ff0c85f80040a2837216727bfeda23af2f1f2cbbd8ded"
+    }
+  },
+  "reinstallExit": 0,
+  "secondSmokeExit": 0,
+  "finalUninstallExit": 0,
+  "finalInstallDirectoryRemoved": true,
+  "userDataAfterReinstall": {
+    "settings.json": {
+      "exists": true,
+      "sha256": "0ba9d5302ae7ce091a4f20dfae740133a031727b663bc4c250c70a9f6f358d17"
+    },
+    "history.json": {
+      "exists": true,
+      "sha256": "26b9db2346723cbdb9fec9d3f102d693ab4c8f484db79b6876ee67412d93a252"
+    },
+    "automations.json": {
+      "exists": true,
+      "sha256": "0ea32282df63eceee12ff0c85f80040a2837216727bfeda23af2f1f2cbbd8ded"
+    }
+  },
+  "reloadedDataValid": {
+    "settingsVersion": 2,
+    "historyRecords": 72,
+    "automationStoreVersion": 1,
+    "automationSchedules": 0
+  }
+}

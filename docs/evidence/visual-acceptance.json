@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T13:09:15.525Z",
+  "capturedAt": "2026-10-22T16:01:49.824Z",
   "packaged": true,
   "scope": "Real screenshots of the packaged application window. Window-size coverage only; Windows display-scaling behaviour across a DPI matrix is not claimed.",
   "scenarios": [
@@ -74,7 +74,7 @@
       "scrollWidth": 1335,
       "horizontalOverflow": false,
       "overflowingElements": [],
-      "focusable": 140,
+      "focusable": 196,
       "headings": [
         "Clipboard Vault"
       ],
@@ -99,7 +99,7 @@
       "scrollWidth": 1335,
       "horizontalOverflow": false,
       "overflowingElements": [],
-      "focusable": 140,
+      "focusable": 196,
       "headings": [
         "خزنة الحافظة"
       ],
@@ -137,7 +137,7 @@
           "parentWidth": 59
         }
       ],
-      "focusable": 134,
+      "focusable": 190,
       "headings": [
         "Clipboard Vault"
       ],
@@ -262,7 +262,7 @@
       "scrollWidth": 1889,
       "horizontalOverflow": false,
       "overflowingElements": [],
-      "focusable": 140,
+      "focusable": 196,
       "headings": [
         "Clipboard Vault"
       ],
@@ -287,7 +287,7 @@
       "scrollWidth": 1889,
       "horizontalOverflow": false,
       "overflowingElements": [],
-      "focusable": 140,
+      "focusable": 196,
       "headings": [
         "خزنة الحافظة"
       ],
