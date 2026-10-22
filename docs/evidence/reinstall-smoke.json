@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T16:02:27.473Z",
+  "capturedAt": "2026-10-22T17:34:25.210Z",
   "environment": "Windows host; isolated temporary user-data directory",
   "firstInstallExit": 0,
   "firstSmokeExit": 0,
@@ -12,7 +12,7 @@
     },
     "history.json": {
       "exists": true,
-      "sha256": "45206f286ec578fe4fd7d6cf25d9f0fb0912330130f530e23400c4d7acd3403b"
+      "sha256": "c7b85128673c9d52ddda09121373f5a92ec7b35a3bc44893fabc1538b0c4913b"
     },
     "automations.json": {
       "exists": true,
@@ -30,7 +30,7 @@
     },
     "history.json": {
       "exists": true,
-      "sha256": "26b9db2346723cbdb9fec9d3f102d693ab4c8f484db79b6876ee67412d93a252"
+      "sha256": "d1992542811aa839e4fe40a06e15423fca041a03472603a66be4debb491a4d3a"
     },
     "automations.json": {
       "exists": true,
