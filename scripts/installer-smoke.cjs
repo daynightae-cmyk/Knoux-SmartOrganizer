@@ -24,6 +24,23 @@ function run(file, args, options = {}) {
   });
 }
 
+async function runCaptured(file, args, options = {}) {
+  const { timeoutMs = 240000, ...spawnOptions } = options;
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], ...spawnOptions });
+    let output = '';
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stderr.on('data', chunk => { output += chunk; });
+    const timer = setTimeout(() => {
+      if (process.platform === 'win32' && child.pid) { try { spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); } catch {} }
+      child.kill();
+      reject(new Error(`Timed out while running ${path.basename(file)}.\n${output.slice(-4000)}`));
+    }, timeoutMs);
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('exit', code => { clearTimeout(timer); resolve({ code, output }); });
+  });
+}
+
 async function main() {
   await fs.access(setup);
   const installDirectory = path.join(os.tmpdir(), `knoux-installer-smoke-${process.pid}-${Date.now()}`);
@@ -36,8 +53,9 @@ async function main() {
     if (setupExit !== 0) throw new Error(`NSIS installer exited with code ${setupExit}.`);
     const installedExecutable = path.join(installDirectory, 'KNOuX SmartOrganizer.exe');
     await fs.access(installedExecutable);
-    smokeExit = await run(process.execPath, [path.join(root, 'scripts', 'packaged-operations-smoke.cjs')], { env: { ...process.env, KNOUX_SMOKE_EXECUTABLE: installedExecutable, KNOUX_SMOKE_EVIDENCE: installedEvidence }, timeoutMs: 900000 });
-    if (smokeExit !== 0) throw new Error(`Installed application smoke exited with code ${smokeExit}.`);
+    const smoke = await runCaptured(process.execPath, [path.join(root, 'scripts', 'packaged-operations-smoke.cjs')], { env: { ...process.env, KNOUX_SMOKE_EXECUTABLE: installedExecutable, KNOUX_SMOKE_EVIDENCE: installedEvidence }, timeoutMs: 900000 });
+    smokeExit = smoke.code;
+    if (smokeExit !== 0) throw new Error(`Installed application smoke exited with code ${smokeExit}.\n${smoke.output.trim().slice(-4000)}`);
     const uninstall = await uninstallApplication(installDirectory, run);
     uninstallExit = uninstall.exit;
     const removed = uninstall.removed;

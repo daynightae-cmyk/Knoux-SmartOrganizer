@@ -45,6 +45,23 @@ function run(file, args, options = {}) {
   });
 }
 
+async function runCaptured(file, args, options = {}) {
+  const { timeoutMs = 240000, ...spawnOptions } = options;
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], ...spawnOptions });
+    let output = '';
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stderr.on('data', chunk => { output += chunk; });
+    const timer = setTimeout(() => {
+      if (process.platform === 'win32' && child.pid) { try { spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); } catch {} }
+      child.kill();
+      reject(new Error(`Timed out while running ${path.basename(file)}.\n${output.slice(-4000)}`));
+    }, timeoutMs);
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('exit', code => { clearTimeout(timer); resolve({ code, output }); });
+  });
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -73,11 +90,11 @@ async function install(installDirectory) {
 }
 
 async function runPackagedSmoke(executable, userDataDirectory, evidenceTarget) {
-  const exit = await run(process.execPath, [path.join(root, 'scripts', 'packaged-operations-smoke.cjs')], {
+  const { code, output } = await runCaptured(process.execPath, [path.join(root, 'scripts', 'packaged-operations-smoke.cjs')], {
     env: { ...process.env, KNOUX_SMOKE_EXECUTABLE: executable, KNOUX_SMOKE_EVIDENCE: evidenceTarget, KNOUX_SMOKE_USER_DATA_DIR: userDataDirectory },
     timeoutMs: 900000
   });
-  if (exit !== 0) throw new Error(`Packaged operations smoke exited with code ${exit}.`);
+  if (code !== 0) throw new Error(`Packaged operations smoke exited with code ${code}.\n${output.trim().slice(-4000)}`);
   return JSON.parse(await fs.readFile(evidenceTarget, 'utf8'));
 }
 

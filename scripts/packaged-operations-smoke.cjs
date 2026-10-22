@@ -47,6 +47,7 @@ async function main() {
   const settingsOutput = path.join(root, 'settings-evidence.json');
   const applicationLog = path.join(root, 'application.log');
   let completed = false;
+  let failureMessage = null;
   try {
     await fs.mkdir(fixture, { recursive: true });
     await execFileAsync('reg.exe', ['add', currentUserRunKey, '/v', startupValue, '/t', 'REG_SZ', '/d', 'cmd.exe /c exit 0', '/f'], { windowsHide: true, timeout: 10000 });
@@ -133,12 +134,18 @@ async function main() {
     await fs.writeFile(evidencePath, JSON.stringify({ ...report, smokeAssertions: { cleanupFixtureIsolated: true, permanentDeletionObserved: false, cleanupFileRestored: true, startupFixtureIsolated: true, startupValueRestored: true, cancellationObserved: true, lifecyclePhases: evidence.lifecyclePhases, accessibilityVerified: true, accessibility, automationVerified: true, servicesDryRunVerified: true, repairsDryRunVerified: true, clipboardVaultVerified: true, clipboardVault: { captured: vault.captured, capturedDuringPause: vault.capturedDuringPause, capturedAfterResume: vault.capturedAfterResume, pinned: vault.pinned, deleted: vault.deleted, clearedItems: vault.clearedItems, storageMode: vault.storageMode, encryptionAvailable: vault.encryptionAvailable } } }, null, 2), 'utf8');
     console.log('Packaged operations smoke PASS: cleanup preview, quarantine, and undo were verified in a disposable temporary fixture.');
     completed = true;
+  } catch (error) {
+    failureMessage = error?.message || String(error);
+    throw error;
   } finally {
     if (!completed) {
       const failureTarget = path.join(projectRoot, 'docs', 'evidence', 'packaged-operations-smoke-failure.json');
       const report = await fs.readFile(output, 'utf8').then(text => JSON.parse(text)).catch(error => ({ capturedAt: new Date().toISOString(), error: String(error?.message || error) }));
+      const settingsReport = await fs.readFile(settingsOutput, 'utf8').then(text => JSON.parse(text)).catch(error => ({ error: String(error?.message || error) }));
       const applicationOutput = await fs.readFile(applicationLog, 'utf8').catch(() => '');
-      await fs.writeFile(failureTarget, JSON.stringify({ ...report, applicationOutput: applicationOutput.slice(-8000) }, null, 2), 'utf8').catch(() => {});
+      const failure = JSON.stringify({ ...report, failure: failureMessage, startupValue, settingsReport, applicationOutput: applicationOutput.slice(-8000) }, null, 2);
+      await fs.writeFile(failureTarget, failure, 'utf8').catch(() => {});
+      if (path.resolve(evidencePath) !== path.resolve(failureTarget)) await fs.writeFile(evidencePath, failure, 'utf8').catch(() => {});
     }
     await execFileAsync('reg.exe', ['delete', currentUserRunKey, '/v', startupValue, '/f'], { windowsHide: true, timeout: 10000 }).catch(() => {});
     await fs.rm(root, { recursive: true, force: true });
