@@ -1,14 +1,14 @@
 /* KNOuX SmartOrganizer unified shell — no Tailwind, additive CSS primitives. */
 .workspace-scroll { min-height: 40vh; }
-.app-shell.collapsed .main { width:min(1480px,calc(100vw - 76px)); }
-.sidebar { transition:width .25s ease,transform .25s ease; overflow-y:auto; }
+.app-shell.collapsed .main { width:min(1480px,calc(100% - 76px)); }
+.sidebar { transition:width .25s ease,transform .25s ease; overflow-y:auto; overflow-x:hidden; }
 .sidebar.collapsed { width:76px; padding-inline:8px; }
 .sidebar.collapsed .brand { justify-content:center; padding-inline:0; }
 .sidebar.collapsed .brand-text,.sidebar.collapsed .sidebar-foot .version { display:none; }
 .sidebar.collapsed .nav-item { justify-content:center; padding-inline:0; }
 .collapse-button { margin-inline-start:auto; padding:7px; }
 .sidebar.collapsed .collapse-button { margin-inline-start:0; }
-.sidebar-nav { display:grid; gap:15px; overflow-y:auto; }
+.sidebar-nav { display:grid; gap:15px; overflow-y:auto; overflow-x:hidden; }
 .nav-group { display:grid; gap:5px; }
 .nav-group-head { border:0; background:transparent; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.3px; display:flex; justify-content:space-between; align-items:center; width:100%; padding:5px 11px; cursor:pointer; }
 .nav-group-head:hover { color:var(--primary-bright); }
@@ -44,7 +44,7 @@
 button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible { outline:2px solid var(--primary-bright); outline-offset:3px; }
 @media(max-width:1180px){ .hero-side{grid-template-columns:repeat(2,1fr)} .scan-hero{grid-template-columns:1fr}.catalog-layout{grid-template-columns:1fr}.service-inputs{grid-template-columns:1fr}.app-shell.collapsed .main{width:auto} }
 @media(max-width:900px){ .app-shell.collapsed .sidebar{transform:translateX(-110%)} html[dir="rtl"] .app-shell.collapsed .sidebar{transform:translateX(110%)} .shell-backdrop{display:block}.operation-drawer{inset-block:auto 0;inset-inline:0;width:auto;border-radius:18px 18px 0 0;max-height:82dvh;overflow:auto}.workspace-grid{grid-template-columns:1fr}.kv-grid>div{grid-template-columns:1fr}.service-inputs{grid-template-columns:1fr} }
-html[dir="rtl"] .collapse-button svg{transform:scaleX(-1)} html[dir="rtl"] .caret{transform:rotate(180deg)} html[dir="rtl"] .caret.open{transform:rotate(0)} html[dir="rtl"] .nav-item.active{box-shadow:inset -3px 0 0 var(--primary-bright)}
+html[dir="rtl"] .collapse-button svg{transform:scaleX(-1)} html[dir="rtl"] .caret{transform:rotate(180deg)} html[dir="rtl"] .caret.open{transform:rotate(0)} html[dir="rtl"] .nav-item:hover{transform:translateX(-2px)} html[dir="rtl"] .nav-item.active{box-shadow:inset -3px 0 0 var(--primary-bright)}
 
 /* Premium workspace shell: depth, atmosphere and motion */
 .app-shell { isolation:isolate; perspective:1800px; }

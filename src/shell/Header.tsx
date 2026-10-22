@@ -1,10 +1,10 @@
-import { ListChecks, Search } from 'lucide-react';
+import { ListChecks, Menu, Search } from 'lucide-react';
 import { pageSubtitleKey, pageTitleKey } from '../lib/pages';
 import { localeLabel } from '../lib/pages';
 import { useStore } from '../state/store';
 
 export default function Header() {
-  const { page, t, locale, settings, update, setPaletteOpen, setOperationOpen, active } = useStore();
+  const { page, t, locale, settings, update, setPaletteOpen, setOperationOpen, active, sidebarCollapsed, setSidebarCollapsed } = useStore();
   const subtitleKey = pageSubtitleKey(page);
 
   return (
@@ -15,6 +15,15 @@ export default function Header() {
         {subtitleKey && <p className="page-description">{t(subtitleKey)}</p>}
       </div>
       <div className="top-actions">
+        <button
+          className="icon-button narrow-menu-button"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          aria-label={t('shell.toggleSidebar')}
+          title={t('shell.toggleSidebar')}
+          aria-expanded={!sidebarCollapsed}
+        >
+          <Menu size={19} />
+        </button>
         <button
           className="search search-trigger"
           onClick={() => setPaletteOpen(true)}

@@ -62,7 +62,11 @@
   box-sizing: border-box;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html, body, #root { margin: 0; min-width: 1024px; min-height: 100vh; }
+/* The minimum width matches the smallest window the application itself
+   allows. A larger minimum forces the document wider than the window once
+   the scrollbar is subtracted, which produces a horizontal scrollbar on a
+   window that is already at its smallest supported size. */
+html, body, #root { margin: 0; min-width: 860px; min-height: 100vh; }
 html { background: var(--bg); }
 html[data-theme="light"] { --bg:#f5f5fb; --surface:#fff; --surface-raised:#f0eff8; --surface-hover:#e9e7f4; --surface-glass:#ffffffd9; --text:#171522; --muted:#626078; --border:#dfdceb; --border-soft:#17152212; --border-strong:#c8c3db; --shadow:0 24px 60px #4a3b781c; --shadow-soft:0 14px 36px #4a3b7815; --status-success-surface:#dff5e9; --status-success-text:#0f5132; --status-warning-surface:#fff1d7; --status-warning-text:#6b4708; --status-danger-surface:#fde5ea; --status-danger-text:#8a1030; }
 html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#111; --surface-hover:#222; --text:#fff; --muted:#eee; --border:#fff; --primary:#ff0; --primary-bright:#ff0; --primary-strong:#fc0; --blue:#0ff; --green:#0f0; --amber:#ff0; --red:#f66; }
@@ -84,7 +88,7 @@ nav { display:grid; gap:4px; }
 .nav-item.active { background:linear-gradient(100deg,#8b3dff35,#5b5ff812); color:var(--text); border-color:#a855f733; box-shadow:inset 3px 0 0 var(--primary-bright), 0 8px 24px #00000018; }
 .sidebar-foot { margin-top:auto; padding:18px 10px 2px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .muted { color:var(--muted); font-size:11px; } .local-badge { display:inline-flex; align-items:center; gap:6px; color:var(--status-success-text); background:var(--status-success-surface); border:1px solid var(--status-success-border); padding:5px 9px; border-radius:var(--radius-pill); font-size:10px; }
-.main { width:min(1480px,calc(100vw - 264px)); padding:28px 46px 48px; margin-inline:auto; position:relative; }
+.main { width:min(1480px,calc(100% - 264px)); padding:28px 46px 48px; margin-inline:auto; position:relative; }
 .topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; }
 .eyebrow { margin:0 0 8px; color:var(--primary-bright); text-transform:uppercase; letter-spacing:2px; font-size:10px; font-weight:800; }
 .topbar h1 { font-size:32px; line-height:1.05; letter-spacing:-.8px; margin:0; } .top-actions { display:flex; gap:9px; align-items:center; }
@@ -93,6 +97,10 @@ nav { display:grid; gap:4px; }
 .icon-button, .locale-button { position:relative; border:1px solid var(--border); color:var(--text); background:var(--surface-glass); border-radius:12px; padding:10px; cursor:pointer; transition:background .2s,border-color .2s,transform .2s; }
 .icon-button:hover,.locale-button:hover { background:var(--surface-hover); border-color:var(--accent-border); transform:translateY(-1px); } .locale-button { min-width:43px; font-weight:800; }
 .icon-button i { position:absolute; top:5px; inset-inline-end:5px; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px #5ee1a51c; }
+/* The sidebar toggle only exists in the header while the sidebar is an
+   overlay, because the sidebar's own toggle is unreachable once it has been
+   moved off screen. */
+.narrow-menu-button { display:none; }
 .notice { margin:-10px 0 18px; border:1px solid var(--status-success-border); background:var(--status-success-surface); color:var(--status-success-text); padding:10px 13px; border-radius:11px; font-size:12px; }
 .hero { min-height:260px; background:linear-gradient(116deg,#18172ae8,#13182be8 58%,#1b1630e8); border:1px solid #a855f744; border-radius:var(--radius-xl); padding:34px 38px; display:flex; justify-content:space-between; align-items:center; gap:24px; box-shadow:var(--shadow), inset 0 1px #ffffff10; position:relative; overflow:hidden; }
 .hero::before { content:""; position:absolute; width:420px; height:420px; inset-inline-end:-130px; top:-180px; border-radius:50%; background:radial-gradient(circle,#8b3dff55,transparent 67%); pointer-events:none; }
@@ -120,8 +128,8 @@ nav { display:grid; gap:4px; }
 .settings-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; position:sticky; bottom:12px; padding:12px; background:var(--surface-glass); border:1px solid var(--border); border-radius:13px; backdrop-filter:blur(16px); } .text-button { border:0; background:transparent; color:var(--primary-bright); cursor:pointer; padding:6px; font-weight:700; }
 .tool-advisory { display:grid; gap:0; margin:16px 0; border:1px solid var(--status-warning-border); border-radius:11px; background:var(--status-warning-surface); } .tool-advisory>div { display:grid; grid-template-columns:140px 1fr; gap:12px; padding:9px 11px; border-top:1px solid var(--border); } .tool-advisory>div:first-child { border-top:0; } .tool-advisory dt { font-size:10px; color:var(--status-warning-text); font-weight:700; } .tool-advisory dd { margin:0; font-size:11px; color:var(--text); line-height:1.45; }
 @media(max-width:1366px){ .main{padding-inline:32px}.hero{padding:28px}.workspace-grid{grid-template-columns:repeat(3,1fr)} }
-@media(max-width:1180px){ .main{padding-inline:26px;width:calc(100vw - 220px)} .sidebar{width:220px}.metric-grid{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:repeat(2,1fr)}.workspace{grid-template-columns:1fr}.runner{position:relative;top:0}.panel{min-height:auto}.hero-side{grid-template-columns:repeat(2,1fr)} }
-@media(max-width:900px){ html,body,#root{min-width:0}.app-shell{display:block}.sidebar{position:fixed;inset-block:0;inset-inline-start:0;z-index:12;width:min(300px,84vw);height:100dvh}.main{width:100%;padding:18px}.topbar{gap:12px;flex-wrap:wrap}.top-actions{width:100%;flex-wrap:wrap;justify-content:flex-end}.search{flex:1;width:auto}.metric-grid,.quick-grid,.settings-grid,.workspace-grid{grid-template-columns:1fr}.hero{padding:23px;flex-direction:column;align-items:stretch}.hero h2{font-size:30px}.hero-side{grid-template-columns:repeat(2,1fr)}.operation-drawer{inset-inline:10px;width:auto} }
+@media(max-width:1180px){ .main{padding-inline:26px;width:calc(100% - 220px)} .sidebar{width:220px}.metric-grid{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:repeat(2,1fr)}.workspace{grid-template-columns:1fr}.runner{position:relative;top:0}.panel{min-height:auto}.hero-side{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:900px){ html,body,#root{min-width:0}.app-shell{display:block}.sidebar{position:fixed;inset-block:0;inset-inline-start:0;z-index:12;width:min(300px,84vw);height:100dvh}.narrow-menu-button{display:inline-flex}.main{width:100%;padding:18px}.topbar{gap:12px;flex-wrap:wrap}.top-actions{width:100%;flex-wrap:wrap;justify-content:flex-end}.search{flex:1;width:auto}.metric-grid,.quick-grid,.settings-grid,.workspace-grid{grid-template-columns:1fr}.hero{padding:23px;flex-direction:column;align-items:stretch}.hero h2{font-size:30px}.hero-side{grid-template-columns:repeat(2,1fr)}.operation-drawer{inset-inline:10px;width:auto} }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}body::before{display:none}}
 html[dir="rtl"] .result pre{direction:ltr;text-align:left}
 html[data-transparency="off"] .sidebar,html[data-transparency="off"] .operation-drawer,html[data-transparency="off"] .settings-actions,html[data-transparency="off"] .topbar{backdrop-filter:none;background:var(--surface)}

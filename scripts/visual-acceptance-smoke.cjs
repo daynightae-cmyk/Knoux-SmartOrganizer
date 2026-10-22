@@ -9,6 +9,7 @@
  */
 
 const fs = require('node:fs/promises');
+const fsSync = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { spawn } = require('node:child_process');
@@ -25,12 +26,16 @@ const screenshotDirectory = path.join(evidenceDirectory, 'visual-acceptance');
 // the budget has to cover real work rather than a fixed guess.
 const SMOKE_TIMEOUT_MS = Number(process.env.KNOUX_SMOKE_TIMEOUT_MS || 900000);
 
-function run(exe, args) {
+function run(exe, args, logPath) {
   return new Promise((resolve, reject) => {
-    const child = spawn(exe, args, { windowsHide: true, stdio: 'ignore' });
+    // The application's own output is kept, so a failure names its cause.
+    const stream = fsSync.createWriteStream(logPath, { flags: 'a' });
+    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    child.stdout.pipe(stream);
+    child.stderr.pipe(stream);
     const timer = setTimeout(() => { child.kill(); reject(new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`)); }, SMOKE_TIMEOUT_MS);
     child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('exit', code => { clearTimeout(timer); resolve(code); });
+    child.once('exit', code => { clearTimeout(timer); stream.end(); resolve(code); });
   });
 }
 
@@ -38,27 +43,47 @@ async function main() {
   await fs.access(executable);
   const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'knoux-visual-'));
   const output = path.join(workDirectory, 'visual.json');
+  const applicationLog = path.join(workDirectory, 'application.log');
   try {
-    const code = await run(executable, [`--knoux-visual-smoke-output=${output}`]);
-    if (code !== 0) throw new Error(`Visual acceptance smoke exited with code ${code}.`);
+    let code;
+    try {
+      code = await run(executable, [`--knoux-visual-smoke-output=${output}`], applicationLog);
+    } catch (error) {
+      // The harness records its own progress, so a run that stops tells where
+      // it stopped instead of only that it stopped.
+      const progress = await fs.readFile(path.join(workDirectory, 'visual-progress.log'), 'utf8').catch(() => '');
+      const tail = progress.trim().split(/\r?\n/).slice(-12).join('\n');
+      throw new Error(`${error.message}\nHarness progress:\n${tail || '(no progress was recorded)'}`);
+    }
+    if (code !== 0) {
+      const tail = await fs.readFile(applicationLog, 'utf8').catch(() => '');
+      throw new Error(`Visual acceptance smoke exited with code ${code}. Application output:\n${tail.trim().split(/\r?\n/).slice(-25).join('\n') || '(the application produced no output)'}`);
+    }
     const report = JSON.parse(await fs.readFile(output, 'utf8'));
     if (report.packaged !== true) throw new Error('Visual acceptance did not run in a packaged application.');
     const scenarios = Array.isArray(report.scenarios) ? report.scenarios : [];
-    if (scenarios.length < 6) throw new Error(`Expected six visual scenarios, got ${scenarios.length}.`);
     await fs.mkdir(screenshotDirectory, { recursive: true });
     const failures = [];
     const records = [];
     for (const scenario of scenarios) {
       if (scenario.error) { failures.push(`${scenario.name}: ${scenario.error}`); continue; }
-      if (scenario.horizontalOverflow === true) failures.push(`${scenario.name}: the layout overflows horizontally.`);
+      if (scenario.horizontalOverflow === true) failures.push(`${scenario.name}: the layout overflows horizontally (${scenario.clientWidth} visible, ${scenario.scrollWidth} needed).`);
+      // The elements that escape their parent are recorded as evidence. They
+      // are not a gate on their own, because a decoration or a hover movement
+      // can also cross a boundary without anything being unreadable.
       if (!scenario.focusable || scenario.focusable < 3) failures.push(`${scenario.name}: only ${scenario.focusable} focusable elements were found.`);
       const expectedDir = scenario.locale === 'ar' ? 'rtl' : 'ltr';
       if (scenario.dir !== expectedDir) failures.push(`${scenario.name}: document direction is ${scenario.dir}, expected ${expectedDir}.`);
       if (scenario.lang !== scenario.locale) failures.push(`${scenario.name}: document language is ${scenario.lang}, expected ${scenario.locale}.`);
+      // The image has to show the size it claims. A capture taken at another
+      // size proves nothing about the layout it is filed under.
+      if (scenario.captureSizeMatches === false) failures.push(`${scenario.name}: the window was ${scenario.capturedWidth}x${scenario.capturedHeight} instead of the requested ${scenario.requestedWidth}x${scenario.requestedHeight}.`);
+      if (!scenario.headings?.length) failures.push(`${scenario.name}: the page rendered no heading.`);
       const source = path.join(workDirectory, scenario.file);
       await fs.copyFile(source, path.join(screenshotDirectory, scenario.file));
       records.push(scenario);
     }
+    if (records.length < 10) failures.push(`Expected ten captured scenarios, got ${records.length}.`);
     const evidence = {
       capturedAt: report.capturedAt,
       packaged: report.packaged,

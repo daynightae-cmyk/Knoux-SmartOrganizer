@@ -13,6 +13,29 @@ const shortcutPages: PageId[] = ['home', 'scan', 'storage', 'files', 'applicatio
 export default function AppShell({ children }: { children: ReactNode }) {
   const { notice, sidebarCollapsed, operationOpen, setOperationOpen, t, booted, page, setPage, setPaletteOpen, setSidebarCollapsed, runById, locale, settings, update } = useStore();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [narrow, setNarrow] = useState(false);
+
+  /**
+   * At the narrow width the sidebar becomes an overlay above the content.
+   *
+   * It has to start closed, because an overlay that covers the content with no
+   * way to dismiss it leaves the application unusable at its smallest
+   * supported window size. The header carries the toggle that opens it, and
+   * the backdrop closes it again.
+   */
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 900px)');
+    const apply = () => {
+      setNarrow(query.matches);
+      if (query.matches) setSidebarCollapsed(true);
+    };
+    apply();
+    query.addEventListener('change', apply);
+    return () => query.removeEventListener('change', apply);
+  }, [setSidebarCollapsed]);
+
+  // Navigating from the overlay closes it, so the chosen page is visible.
+  useEffect(() => { if (narrow) setSidebarCollapsed(true); }, [page, narrow, setSidebarCollapsed]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -76,6 +99,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <SkipLink href="#main" label={t('shell.skipToContent')} />
       <Sidebar />
       {operationOpen && <div className="shell-backdrop" onClick={() => setOperationOpen(false)} aria-hidden="true" />}
+      {narrow && !sidebarCollapsed && <div className="shell-backdrop" onClick={() => setSidebarCollapsed(true)} aria-hidden="true" />}
       <main className="main" id="main" tabIndex={-1}>
         <Header />
         {notice && <div className="notice" role="status">{notice}</div>}

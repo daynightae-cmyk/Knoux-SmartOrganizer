@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T05:21:04.659Z",
+  "capturedAt": "2026-10-22T13:09:15.525Z",
   "packaged": true,
   "scope": "Real screenshots of the packaged application window. Window-size coverage only; Windows display-scaling behaviour across a DPI matrix is not claimed.",
   "scenarios": [
@@ -15,7 +15,8 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "overflowingElements": [],
+      "focusable": 48,
       "headings": [
         "Device overview",
         "Your PC today",
@@ -23,6 +24,11 @@
         "Recent operations",
         "Available tools"
       ],
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
       "file": "en-home-1366x768.png",
       "captured": true
     },
@@ -38,7 +44,8 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "overflowingElements": [],
+      "focusable": 48,
       "headings": [
         "نظرة عامة على الجهاز",
         "حالة جهازك اليوم",
@@ -46,6 +53,11 @@
         "آخر العمليات",
         "الأدوات المتاحة"
       ],
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
       "file": "ar-home-1366x768.png",
       "captured": true
     },
@@ -61,10 +73,16 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "overflowingElements": [],
+      "focusable": 140,
       "headings": [
         "Clipboard Vault"
       ],
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
       "file": "en-clipboard-1366x768.png",
       "captured": true
     },
@@ -80,10 +98,16 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "overflowingElements": [],
+      "focusable": 140,
       "headings": [
         "خزنة الحافظة"
       ],
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
       "file": "ar-clipboard-1366x768.png",
       "captured": true
     },
@@ -96,14 +120,32 @@
       "lang": "en",
       "dir": "ltr",
       "theme": "dark",
-      "clientWidth": 1920,
-      "scrollWidth": 1920,
+      "clientWidth": 829,
+      "scrollWidth": 829,
       "horizontalOverflow": false,
-      "focusable": 38,
-      "headings": [
-        "Available tools",
-        "Empty folders"
+      "overflowingElements": [
+        {
+          "tag": "span",
+          "className": "brand-symbol",
+          "width": 42,
+          "parentWidth": 59
+        },
+        {
+          "tag": "button",
+          "className": "icon-button collapse-button",
+          "width": 32,
+          "parentWidth": 59
+        }
       ],
+      "focusable": 134,
+      "headings": [
+        "Clipboard Vault"
+      ],
+      "requestedWidth": 860,
+      "requestedHeight": 600,
+      "capturedWidth": 860,
+      "capturedHeight": 600,
+      "captureSizeMatches": true,
       "file": "en-clipboard-860x600.png",
       "captured": true
     },
@@ -116,10 +158,24 @@
       "lang": "ar",
       "dir": "rtl",
       "theme": "dark",
-      "clientWidth": 1905,
-      "scrollWidth": 1905,
+      "clientWidth": 829,
+      "scrollWidth": 829,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "overflowingElements": [
+        {
+          "tag": "span",
+          "className": "brand-symbol",
+          "width": 42,
+          "parentWidth": 59
+        },
+        {
+          "tag": "button",
+          "className": "icon-button collapse-button",
+          "width": 32,
+          "parentWidth": 59
+        }
+      ],
+      "focusable": 42,
       "headings": [
         "نظرة عامة على الجهاز",
         "حالة جهازك اليوم",
@@ -127,7 +183,120 @@
         "آخر العمليات",
         "الأدوات المتاحة"
       ],
+      "requestedWidth": 860,
+      "requestedHeight": 600,
+      "capturedWidth": 860,
+      "capturedHeight": 600,
+      "captureSizeMatches": true,
       "file": "ar-home-860x600.png",
+      "captured": true
+    },
+    {
+      "name": "en-home-1024x768",
+      "locale": "en",
+      "page": "home",
+      "width": 1024,
+      "height": 768,
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 993,
+      "scrollWidth": 993,
+      "horizontalOverflow": false,
+      "overflowingElements": [],
+      "focusable": 48,
+      "headings": [
+        "Device overview",
+        "Your PC today",
+        "Workspaces",
+        "Recent operations",
+        "Available tools"
+      ],
+      "requestedWidth": 1024,
+      "requestedHeight": 768,
+      "capturedWidth": 1024,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
+      "file": "en-home-1024x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-home-1024x768",
+      "locale": "ar",
+      "page": "home",
+      "width": 1024,
+      "height": 768,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 993,
+      "scrollWidth": 993,
+      "horizontalOverflow": false,
+      "overflowingElements": [],
+      "focusable": 48,
+      "headings": [
+        "نظرة عامة على الجهاز",
+        "حالة جهازك اليوم",
+        "مساحات العمل",
+        "آخر العمليات",
+        "الأدوات المتاحة"
+      ],
+      "requestedWidth": 1024,
+      "requestedHeight": 768,
+      "capturedWidth": 1024,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
+      "file": "ar-home-1024x768.png",
+      "captured": true
+    },
+    {
+      "name": "en-clipboard-1920x1080",
+      "locale": "en",
+      "page": "clipboard",
+      "width": 1920,
+      "height": 1080,
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 1889,
+      "scrollWidth": 1889,
+      "horizontalOverflow": false,
+      "overflowingElements": [],
+      "focusable": 140,
+      "headings": [
+        "Clipboard Vault"
+      ],
+      "requestedWidth": 1920,
+      "requestedHeight": 1080,
+      "capturedWidth": 1920,
+      "capturedHeight": 1080,
+      "captureSizeMatches": true,
+      "file": "en-clipboard-1920x1080.png",
+      "captured": true
+    },
+    {
+      "name": "ar-clipboard-1920x1080",
+      "locale": "ar",
+      "page": "clipboard",
+      "width": 1920,
+      "height": 1080,
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1889,
+      "scrollWidth": 1889,
+      "horizontalOverflow": false,
+      "overflowingElements": [],
+      "focusable": 140,
+      "headings": [
+        "خزنة الحافظة"
+      ],
+      "requestedWidth": 1920,
+      "requestedHeight": 1080,
+      "capturedWidth": 1920,
+      "capturedHeight": 1080,
+      "captureSizeMatches": true,
+      "file": "ar-clipboard-1920x1080.png",
       "captured": true
     }
   ],
