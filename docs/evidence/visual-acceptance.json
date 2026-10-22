@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T05:07:04.486Z",
+  "capturedAt": "2026-10-22T05:21:04.659Z",
   "packaged": true,
   "scope": "Real screenshots of the packaged application window. Window-size coverage only; Windows display-scaling behaviour across a DPI matrix is not claimed.",
   "scenarios": [
@@ -96,12 +96,13 @@
       "lang": "en",
       "dir": "ltr",
       "theme": "dark",
-      "clientWidth": 829,
-      "scrollWidth": 829,
+      "clientWidth": 1920,
+      "scrollWidth": 1920,
       "horizontalOverflow": false,
-      "focusable": 47,
+      "focusable": 38,
       "headings": [
-        "Clipboard Vault"
+        "Available tools",
+        "Empty folders"
       ],
       "file": "en-clipboard-860x600.png",
       "captured": true
@@ -115,8 +116,8 @@
       "lang": "ar",
       "dir": "rtl",
       "theme": "dark",
-      "clientWidth": 829,
-      "scrollWidth": 829,
+      "clientWidth": 1905,
+      "scrollWidth": 1905,
       "horizontalOverflow": false,
       "focusable": 47,
       "headings": [

@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T04:54:53.756Z",
+  "capturedAt": "2026-10-22T05:16:31.118Z",
   "setupExit": 0,
   "installedAppSmokeExit": 0,
   "uninstallExit": 0,
@@ -16,6 +16,14 @@
       "queued",
       "preflight",
       "running",
+      "progress",
+      "progress",
+      "progress",
+      "progress",
+      "progress",
+      "progress",
+      "progress",
+      "progress",
       "progress",
       "cancelled"
     ],
