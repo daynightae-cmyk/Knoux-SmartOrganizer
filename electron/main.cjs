@@ -1291,6 +1291,8 @@ app.whenReady().then(async () => {
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
+  // Read-only Smart Organization Studio: native-granted source registry and bounded library index.
+  require('./studio/register-studio-ipc.cjs').registerStudioIpc({ ipcMain, dialog, shell, windowProvider: () => mainWindow, settingsProvider: getSettings });
   ipcMain.handle('knoux:app-info', async () => ({ version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', codeSigning: signingInfoCache }));
   ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
   ipcMain.handle('knoux:settings-get', getSettings);

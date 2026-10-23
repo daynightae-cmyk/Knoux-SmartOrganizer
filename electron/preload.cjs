@@ -39,3 +39,24 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
     return () => ipcRenderer.removeListener('knoux:operation-event', listener);
   }
 }));
+
+/* Studio is an explicit, narrowly scoped bridge. No raw ipcRenderer exposure. */
+const studioChannels = Object.freeze({
+  pick:'knoux:studio:pick', sources:'knoux:studio:sources', remove:'knoux:studio:remove',
+  scan:'knoux:studio:scan', cancel:'knoux:studio:cancel', query:'knoux:studio:query',
+  reveal:'knoux:studio:reveal', event:'knoux:studio:event'
+});
+contextBridge.exposeInMainWorld('knouxStudio', Object.freeze({
+  pickSource: () => ipcRenderer.invoke(studioChannels.pick),
+  listSources: () => ipcRenderer.invoke(studioChannels.sources),
+  removeSource: id => ipcRenderer.invoke(studioChannels.remove,id),
+  scan: request => ipcRenderer.invoke(studioChannels.scan,request),
+  cancel: operationId => ipcRenderer.invoke(studioChannels.cancel,operationId),
+  query: request => ipcRenderer.invoke(studioChannels.query,request),
+  reveal: request => ipcRenderer.invoke(studioChannels.reveal,request),
+  onEvent: callback => {
+    const listener = (_event,data) => callback(data);
+    ipcRenderer.on(studioChannels.event,listener);
+    return () => ipcRenderer.removeListener(studioChannels.event,listener);
+  }
+}));

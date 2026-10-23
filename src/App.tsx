@@ -6,6 +6,7 @@ import HistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import SettingsPage from './pages/SettingsPage';
 import SmartScanPage from './pages/SmartScanPage';
+import StudioPage from './studio/StudioPage';
 import { StoreProvider, useStore } from './state/store';
 import { isCatalogPage } from './lib/pages';
 
@@ -15,6 +16,7 @@ function RoutedPage() {
   if (bootError) return <div className="notice" role="alert">{bootError}</div>;
   if (page === 'home') return <HomePage />;
   if (page === 'scan') return <SmartScanPage />;
+  if (page === 'studio') return <StudioPage />;
   if (page === 'clipboard') return <ClipboardVaultPage />;
   if (page === 'automation') return <AutomationPage />;
   if (page === 'history') return <HistoryPage />;

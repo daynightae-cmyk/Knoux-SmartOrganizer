@@ -1,4 +1,4 @@
-import { Activity, ClipboardCopy, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer } from 'lucide-react';
+import { Activity, ClipboardCopy, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer, FolderOpen } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
 import { filterToolsByPage } from '../lib/guards';
@@ -32,7 +32,8 @@ export default function HomePage() {
           <h2>{t('home.today')}</h2>
           <p>{t('home.subtitle')}</p>
           <div className="hero-actions">
-            <button className="primary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
+            <button className="primary" onClick={() => setPage('studio')}><FolderOpen size={18} />{t('studio.title')}</button>
+            <button className="secondary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
             <button className="secondary" onClick={() => setPage('clipboard')}><ClipboardCopy size={16} />{t('nav.clipboard')}</button>
             <button className="secondary" onClick={() => setPage('history')}><History size={16} />{t('home.recent')}</button>
           </div>
@@ -57,7 +58,7 @@ export default function HomePage() {
               <motion.button key={item.id} className="workspace-card" variants={cardMotion} onClick={() => setPage(item.id)}>
                 <span className="workspace-icon" aria-hidden="true"><item.icon size={18} /></span>
                 <strong>{t(item.nameKey)}</strong>
-                <small>{formatCount(count, locale)} {t('home.entries')}</small>
+                <small>{item.id === 'studio' ? t('studio.subtitle') : formatCount(count, locale) + ' ' + t('home.entries')}</small>
               </motion.button>
             );
           })}
