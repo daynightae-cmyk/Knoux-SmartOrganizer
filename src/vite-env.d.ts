@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { AppSettings, OperationEvent, OperationRecord, ToolDefinition, ToolResult } from '@shared/contracts';
+import type { StudioBridge } from './studio/types';
 
 type AutomationTrigger =
   | { kind: 'daily'; time: string }
@@ -111,6 +112,7 @@ declare global {
       onSettingsChanged: (callback: (settings: AppSettings) => void) => () => void;
       onOperationEvent: (callback: (event: OperationEvent) => void) => () => void;
     };
+    knouxStudio?: StudioBridge;
   }
 }
 export {};

@@ -44,7 +44,13 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
 const studioChannels = Object.freeze({
   pick:'knoux:studio:pick', sources:'knoux:studio:sources', remove:'knoux:studio:remove',
   scan:'knoux:studio:scan', cancel:'knoux:studio:cancel', query:'knoux:studio:query',
-  reveal:'knoux:studio:reveal', event:'knoux:studio:event'
+  reveal:'knoux:studio:reveal', event:'knoux:studio:event',
+  pickDestination:'knoux:studio:destination-pick', destinations:'knoux:studio:destinations', listDestination:'knoux:studio:destination-list',
+  validateFolder:'knoux:studio:folder-validate', createFolder:'knoux:studio:folder-create',
+  buildPlan:'knoux:studio:plan-build', executePlan:'knoux:studio:plan-execute',
+  cancelExecution:'knoux:studio:execution-cancel', history:'knoux:studio:history',
+  undoPreview:'knoux:studio:undo-preview', undoApply:'knoux:studio:undo-apply',
+  thumbnail:'knoux:studio:thumbnail'
 });
 contextBridge.exposeInMainWorld('knouxStudio', Object.freeze({
   pickSource: () => ipcRenderer.invoke(studioChannels.pick),
@@ -54,6 +60,18 @@ contextBridge.exposeInMainWorld('knouxStudio', Object.freeze({
   cancel: operationId => ipcRenderer.invoke(studioChannels.cancel,operationId),
   query: request => ipcRenderer.invoke(studioChannels.query,request),
   reveal: request => ipcRenderer.invoke(studioChannels.reveal,request),
+  pickDestination: () => ipcRenderer.invoke(studioChannels.pickDestination),
+  listDestinations: () => ipcRenderer.invoke(studioChannels.destinations),
+  listDestination: request => ipcRenderer.invoke(studioChannels.listDestination,request),
+  validateFolder: request => ipcRenderer.invoke(studioChannels.validateFolder,request),
+  createFolder: request => ipcRenderer.invoke(studioChannels.createFolder,request),
+  buildPlan: request => ipcRenderer.invoke(studioChannels.buildPlan,request),
+  executePlan: request => ipcRenderer.invoke(studioChannels.executePlan,request),
+  cancelExecution: request => ipcRenderer.invoke(studioChannels.cancelExecution,request),
+  listHistory: () => ipcRenderer.invoke(studioChannels.history),
+  previewUndo: request => ipcRenderer.invoke(studioChannels.undoPreview,request),
+  applyUndo: request => ipcRenderer.invoke(studioChannels.undoApply,request),
+  thumbnail: request => ipcRenderer.invoke(studioChannels.thumbnail,request),
   onEvent: callback => {
     const listener = (_event,data) => callback(data);
     ipcRenderer.on(studioChannels.event,listener);
