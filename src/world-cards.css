@@ -502,3 +502,12 @@ html[dir="rtl"] .svc-preview { --svc-dir: -1; }
 .portal-legend i.live { background: var(--green); }
 .portal-legend i.partial { background: var(--amber); }
 .portal-legend i:not(:first-child) { margin-inline-start: 10px; }
+
+.splash__lockup em { color: var(--primary-bright); font-size: var(--text-md); font-style: normal; letter-spacing: .4px; margin-top: 2px; }
+.splash__badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.splash__badges span {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border-soft); background: var(--surface-raised);
+  color: var(--muted); font-size: 10px;
+}

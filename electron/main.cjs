@@ -1190,7 +1190,7 @@ const EMPTIES_WAITS = [
  * and the capture is evidence of that, not of a world that is simply loading.
  */
 const WORLD_WAITS = [
-  { selector: '.world-page__hero', min: 1, ms: 90000 },
+  { selector: '.stage__head', min: 1, ms: 90000 },
   { selector: '.svc-card', min: 12, ms: 45000 }
 ];
 
@@ -1311,6 +1311,8 @@ async function captureVisualEvidence(outputDirectory) {
     { name: 'en-services-1366x768', locale: 'en', page: 'services', width: 1366, height: 768, waits: WORLD_WAITS },
     { name: 'en-network-1366x768', locale: 'en', page: 'network', width: 1366, height: 768, waits: WORLD_WAITS },
     { name: 'en-hardware-1366x768', locale: 'en', page: 'hardware', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'ar-startup-1366x768', locale: 'ar', page: 'startup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-repair-860x600', locale: 'en', page: 'repair', width: 860, height: 600, waits: WORLD_WAITS, scrollTo: '.stage__flow' },
     { name: 'en-automation-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS },
     { name: 'en-home-portal-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: PORTAL_WAITS, scrollTo: '.portal-grid' },
     { name: 'en-repair-preview-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=repair-component-scan] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS },

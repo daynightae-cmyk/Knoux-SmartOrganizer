@@ -1,3 +1,4 @@
+import { Cpu, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useStore } from '../state/store';
 
 /**
@@ -16,9 +17,15 @@ export default function Splash() {
       <div className="splash__lockup">
         <strong>KNOuX</strong>
         <small>SmartOrganizer</small>
+        <em>{t('stage.splash.tagline')}</em>
       </div>
       <span className="splash__bar" aria-hidden="true"><i /></span>
-      <p className="muted small">{t('common.loading')}</p>
+      <p className="muted small">{t('stage.splash.working')}</p>
+      <div className="splash__badges">
+        <span><LockKeyhole size={13} aria-hidden="true" />{t('common.local')}</span>
+        <span><ShieldCheck size={13} aria-hidden="true" />{t('stage.splash.private')}</span>
+        <span><Cpu size={13} aria-hidden="true" />{t('stage.splash.powerful')}</span>
+      </div>
     </div>
   );
 }

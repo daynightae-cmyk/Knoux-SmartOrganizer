@@ -1,4 +1,5 @@
 import { serviceCopy } from './lib/service-copy';
+import { stageCopy } from './lib/stage-copy';
 import { applicationsCopy } from './lib/applications-copy';
 import { filesCopy } from './lib/files-copy';
 import { storageCopy } from './lib/storage-copy';
@@ -753,6 +754,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
 for (const [key, value] of Object.entries(shellCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 
 for (const [key, value] of Object.entries(serviceCopy) ) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+for (const [key, value] of Object.entries(stageCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(applicationsCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(filesCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(storageCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }

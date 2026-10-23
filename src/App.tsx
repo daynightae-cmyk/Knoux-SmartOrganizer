@@ -9,11 +9,34 @@ import SettingsPage from './pages/SettingsPage';
 import SmartScanPage from './pages/SmartScanPage';
 import StoragePage from './pages/StoragePage';
 import WorldPage from './pages/WorldPage';
+import CleanupPage from './pages/CleanupPage';
+import StartupPage from './pages/StartupPage';
+import SystemPage from './pages/SystemPage';
+import RepairPage from './pages/RepairPage';
+import ServicesPage from './pages/ServicesPage';
+import NetworkPage from './pages/NetworkPage';
+import HardwarePage from './pages/HardwarePage';
 import StudioPage from './studio/StudioPage';
 import { StoreProvider, useStore } from './state/store';
 import Splash from './shell/Splash';
 import { isCatalogPage } from './lib/pages';
 import type { WorldId } from './lib/service-catalog';
+import type { ReactElement } from 'react';
+
+/**
+ * The seven worlds that used to share one generic catalogue route. Each has
+ * its own composition now; `WorldPage` stays as the landing any future service
+ * world gets before it has a page of its own.
+ */
+const specialistWorlds: Record<string, () => ReactElement> = {
+  cleanup: CleanupPage,
+  startup: StartupPage,
+  system: SystemPage,
+  repair: RepairPage,
+  services: ServicesPage,
+  network: NetworkPage,
+  hardware: HardwarePage
+};
 
 function RoutedPage() {
   const { page, booted, bootError } = useStore();
@@ -29,7 +52,10 @@ function RoutedPage() {
   if (page === 'automation') return <AutomationPage />;
   if (page === 'history') return <HistoryPage />;
   if (page === 'settings') return <SettingsPage />;
-  if (isCatalogPage(page)) return <WorldPage page={page as WorldId} />;
+  if (isCatalogPage(page)) {
+    const Specialist = specialistWorlds[page];
+    return Specialist ? <Specialist /> : <WorldPage page={page as WorldId} />;
+  }
   return <HomePage />;
 }
 

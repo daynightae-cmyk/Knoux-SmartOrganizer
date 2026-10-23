@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-23T22:17:27.909Z",
+  "capturedAt": "2026-10-23T23:06:10.961Z",
   "packaged": true,
   "scope": "Real screenshots of the packaged application window: window size, locale direction, theme and populated-inventory coverage. The window is anchored inside the primary display work area, so a request larger than the monitor is captured at the largest achievable size and recorded as clamped. Windows display-scaling behaviour across a DPI matrix is not claimed.",
   "scenarios": [
@@ -878,7 +878,7 @@
       "scrollWidth": 1846,
       "horizontalOverflow": false,
       "rows": 150,
-      "nativeIcons": 32,
+      "nativeIcons": 16,
       "dossierOpen": false,
       "deckPresent": false,
       "stagedTicks": 0,
@@ -986,7 +986,7 @@
       "scrollWidth": 1846,
       "horizontalOverflow": false,
       "rows": 150,
-      "nativeIcons": 99,
+      "nativeIcons": 97,
       "dossierOpen": false,
       "deckPresent": false,
       "stagedTicks": 0,
@@ -1280,7 +1280,7 @@
       "scrollWidth": 1340,
       "horizontalOverflow": false,
       "rows": 150,
-      "nativeIcons": 97,
+      "nativeIcons": 110,
       "dossierOpen": false,
       "deckPresent": false,
       "stagedTicks": 0,
@@ -1478,7 +1478,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": false,
       "fileGlanceRows": 6,
@@ -1542,7 +1542,7 @@
           "parentWidth": 77
         }
       ],
-      "focusable": 226,
+      "focusable": 230,
       "headings": [
         "The Downloads Bench"
       ],
@@ -1610,7 +1610,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": false,
       "fileGlanceRows": 6,
@@ -1637,7 +1637,7 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 226,
+      "focusable": 230,
       "headings": [
         "مَنضدة الملفات"
       ],
@@ -1708,7 +1708,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": true,
       "fileGlanceRows": 0,
@@ -1735,7 +1735,7 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 218,
+      "focusable": 222,
       "headings": [
         "The Downloads Bench"
       ],
@@ -1821,7 +1821,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": false,
       "fileGlanceRows": 6,
@@ -1848,7 +1848,7 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 228,
+      "focusable": 232,
       "headings": [
         "The Downloads Bench"
       ],
@@ -1934,7 +1934,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": true,
       "fileGlanceRows": 0,
@@ -1961,7 +1961,7 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 214,
+      "focusable": 218,
       "headings": [
         "مَنضدة الملفات"
       ],
@@ -2037,7 +2037,7 @@
       "stagedTicks": 0,
       "deckOnScreen": false,
       "deckBox": null,
-      "fileRows": 108,
+      "fileRows": 112,
       "fileSegments": 10,
       "fileInspectorOpen": false,
       "fileGlanceRows": 6,
@@ -2064,7 +2064,7 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 226,
+      "focusable": 230,
       "headings": [
         "The Downloads Bench"
       ],
@@ -3211,7 +3211,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3261,9 +3261,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 76,
+      "focusable": 75,
       "headings": [
-        "Cleanup",
+        "Clean Room",
         "Temporary files preview"
       ],
       "expectedTheme": null,
@@ -3307,7 +3307,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3357,9 +3357,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 76,
+      "focusable": 75,
       "headings": [
-        "التنظيف",
+        "غرفة التنظيف",
         "معاينة الملفات المؤقتة"
       ],
       "expectedTheme": null,
@@ -3403,7 +3403,7 @@
       "height": 600,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3453,9 +3453,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 70,
+      "focusable": 69,
       "headings": [
-        "Cleanup",
+        "Clean Room",
         "Temporary files preview"
       ],
       "expectedTheme": null,
@@ -3499,7 +3499,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3549,9 +3549,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 75,
+      "focusable": 74,
       "headings": [
-        "Startup",
+        "Boot Control",
         "Startup items"
       ],
       "expectedTheme": null,
@@ -3595,7 +3595,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3645,9 +3645,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 75,
+      "focusable": 74,
       "headings": [
-        "System",
+        "Live Pulse",
         "System health"
       ],
       "expectedTheme": null,
@@ -3691,7 +3691,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3740,10 +3740,35 @@
       "atlasCaveat": false,
       "atlasDestructive": 0,
       "lowContrast": [],
-      "overflowingElements": [],
-      "focusable": 87,
+      "overflowingElements": [
+        {
+          "tag": "div",
+          "className": "stage__panel-head",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "div",
+          "className": "runner-body",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "div",
+          "className": "stage__empty",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "p",
+          "className": "muted small",
+          "width": 619,
+          "parentWidth": 617
+        }
+      ],
+      "focusable": 86,
       "headings": [
-        "Repair",
+        "Recovery Lab",
         "DISM CheckHealth"
       ],
       "expectedTheme": null,
@@ -3787,7 +3812,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3837,9 +3862,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 75,
+      "focusable": 74,
       "headings": [
-        "Services",
+        "Service Commander",
         "Windows services inventory"
       ],
       "expectedTheme": null,
@@ -3883,7 +3908,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -3933,9 +3958,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 71,
+      "focusable": 69,
       "headings": [
-        "Network",
+        "Network Radar",
         "Network diagnostics"
       ],
       "expectedTheme": null,
@@ -3979,7 +4004,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -4029,9 +4054,9 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 73,
+      "focusable": 72,
       "headings": [
-        "Hardware",
+        "Device Atlas",
         "Hardware inventory"
       ],
       "expectedTheme": null,
@@ -4065,6 +4090,207 @@
       "scrolledTo": null,
       "captureSizeMatches": true,
       "file": "en-hardware-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-startup-1366x768",
+      "locale": "ar",
+      "page": "startup",
+      "width": 1366,
+      "height": 768,
+      "waits": [
+        {
+          "selector": ".stage__head",
+          "min": 1,
+          "ms": 90000
+        },
+        {
+          "selector": ".svc-card",
+          "min": 12,
+          "ms": 45000
+        }
+      ],
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1340,
+      "scrollWidth": 1340,
+      "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "fileRows": 0,
+      "fileSegments": 0,
+      "fileInspectorOpen": false,
+      "fileGlanceRows": 0,
+      "fileGlanceTiles": 0,
+      "filePlanPresent": false,
+      "filePlanLanes": 0,
+      "filePlanApplied": false,
+      "fileConfirmPresent": false,
+      "fileConfirmChecked": false,
+      "fileApplyEnabled": false,
+      "atlasBays": 0,
+      "atlasRails": 0,
+      "atlasTicks": 0,
+      "atlasDisks": 0,
+      "atlasLanes": 0,
+      "atlasRows": 0,
+      "atlasRungs": 0,
+      "atlasMetrics": 0,
+      "atlasInspectorOpen": false,
+      "atlasReadLanes": 0,
+      "atlasReadVolume": false,
+      "atlasFolderRecord": false,
+      "atlasCaveat": false,
+      "atlasDestructive": 0,
+      "lowContrast": [],
+      "overflowingElements": [],
+      "focusable": 74,
+      "headings": [
+        "التحكم في الإقلاع",
+        "عناصر بدء التشغيل"
+      ],
+      "expectedTheme": null,
+      "documentPage": "startup",
+      "pageReached": true,
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "targetWidth": 1366,
+      "targetHeight": 768,
+      "clampedToWorkArea": false,
+      "workArea": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1050
+      },
+      "displayScale": 1,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "viewportWidth": 1350,
+      "viewportHeight": 703,
+      "boundsAfterCaptureWidth": 1366,
+      "boundsAfterCaptureHeight": 768,
+      "frameWidth": 1350,
+      "frameHeight": 703,
+      "frameMatches": true,
+      "boundsReasserts": 0,
+      "surfaceNudges": 1,
+      "maximizeRecoveries": 0,
+      "minimizeRecoveries": 0,
+      "scrolledTo": null,
+      "captureSizeMatches": true,
+      "file": "ar-startup-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "en-repair-860x600",
+      "locale": "en",
+      "page": "repair",
+      "width": 860,
+      "height": 600,
+      "waits": [
+        {
+          "selector": ".stage__head",
+          "min": 1,
+          "ms": 90000
+        },
+        {
+          "selector": ".svc-card",
+          "min": 12,
+          "ms": 45000
+        }
+      ],
+      "scrollTo": ".stage__flow",
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 834,
+      "scrollWidth": 834,
+      "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "fileRows": 0,
+      "fileSegments": 0,
+      "fileInspectorOpen": false,
+      "fileGlanceRows": 0,
+      "fileGlanceTiles": 0,
+      "filePlanPresent": false,
+      "filePlanLanes": 0,
+      "filePlanApplied": false,
+      "fileConfirmPresent": false,
+      "fileConfirmChecked": false,
+      "fileApplyEnabled": false,
+      "atlasBays": 0,
+      "atlasRails": 0,
+      "atlasTicks": 0,
+      "atlasDisks": 0,
+      "atlasLanes": 0,
+      "atlasRows": 0,
+      "atlasRungs": 0,
+      "atlasMetrics": 0,
+      "atlasInspectorOpen": false,
+      "atlasReadLanes": 0,
+      "atlasReadVolume": false,
+      "atlasFolderRecord": false,
+      "atlasCaveat": false,
+      "atlasDestructive": 0,
+      "lowContrast": [],
+      "overflowingElements": [],
+      "focusable": 80,
+      "headings": [
+        "Recovery Lab",
+        "DISM CheckHealth"
+      ],
+      "expectedTheme": null,
+      "documentPage": "repair",
+      "pageReached": true,
+      "requestedWidth": 860,
+      "requestedHeight": 600,
+      "targetWidth": 860,
+      "targetHeight": 600,
+      "clampedToWorkArea": false,
+      "workArea": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1050
+      },
+      "displayScale": 1,
+      "capturedWidth": 860,
+      "capturedHeight": 600,
+      "viewportWidth": 844,
+      "viewportHeight": 535,
+      "boundsAfterCaptureWidth": 860,
+      "boundsAfterCaptureHeight": 600,
+      "frameWidth": 844,
+      "frameHeight": 535,
+      "frameMatches": true,
+      "boundsReasserts": 0,
+      "surfaceNudges": 1,
+      "maximizeRecoveries": 0,
+      "minimizeRecoveries": 0,
+      "scrolledTo": {
+        "selector": ".stage__flow",
+        "found": true,
+        "offset": 88,
+        "scrollY": 2249,
+        "height": 224,
+        "viewport": 535,
+        "topInView": true
+      },
+      "captureSizeMatches": true,
+      "file": "en-repair-860x600.png",
       "captured": true
     },
     {
@@ -4270,7 +4496,7 @@
       "height": 768,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -4332,12 +4558,37 @@
       "atlasCaveat": false,
       "atlasDestructive": 0,
       "lowContrast": [],
-      "overflowingElements": [],
-      "focusable": 91,
+      "overflowingElements": [
+        {
+          "tag": "div",
+          "className": "stage__panel-head",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "div",
+          "className": "runner-body",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "div",
+          "className": "stage__empty",
+          "width": 619,
+          "parentWidth": 617
+        },
+        {
+          "tag": "p",
+          "className": "muted small",
+          "width": 619,
+          "parentWidth": 617
+        }
+      ],
+      "focusable": 90,
       "headings": [
-        "Repair",
-        "DISM ScanHealth",
-        "DISM CheckHealth"
+        "Recovery Lab",
+        "DISM CheckHealth",
+        "DISM ScanHealth"
       ],
       "expectedTheme": null,
       "documentPage": "repair",
@@ -4380,7 +4631,7 @@
       "height": 600,
       "waits": [
         {
-          "selector": ".world-page__hero",
+          "selector": ".stage__head",
           "min": 1,
           "ms": 90000
         },
@@ -4443,11 +4694,11 @@
       "atlasDestructive": 0,
       "lowContrast": [],
       "overflowingElements": [],
-      "focusable": 75,
+      "focusable": 74,
       "headings": [
-        "التنظيف",
-        "نقل المؤقت إلى الحجر",
-        "معاينة الملفات المؤقتة"
+        "غرفة التنظيف",
+        "معاينة الملفات المؤقتة",
+        "نقل المؤقت إلى الحجر"
       ],
       "expectedTheme": null,
       "documentPage": "cleanup",
@@ -4485,7 +4736,7 @@
   ],
   "notes": [
     "8 scenario(s) asked for a window larger than this machine's work area (1920x1050 at scale 1) and were captured at the largest size the display can show: en-clipboard-1920x1080 1920x1080 -> 1872x1002, ar-clipboard-1920x1080 1920x1080 -> 1872x1002, en-applications-1920x1080 1920x1080 -> 1872x1002, ar-applications-1920x1080 1920x1080 -> 1872x1002, en-files-1920x1080 1920x1080 -> 1872x1002, ar-files-1920x1080 1920x1080 -> 1872x1002, en-storage-1920x1080 1920x1080 -> 1872x1002, ar-storage-1920x1080 1920x1080 -> 1872x1002.",
-    "45 capture(s) had to wake the window surface with a geometry change before the compositor answered: en-home-1366x768 (1x), ar-home-1366x768 (1x), en-clipboard-1366x768 (1x), ar-clipboard-1366x768 (1x), en-clipboard-860x600 (1x), ar-home-860x600 (1x), en-home-1024x768 (1x), ar-home-1024x768 (1x), en-clipboard-1920x1080 (1x), ar-clipboard-1920x1080 (1x), en-applications-1920x1080 (1x), ar-applications-1920x1080 (1x), en-applications-dossier-1366x768 (1x), ar-applications-deck-1366x768 (1x), en-applications-light-1366x768 (1x), ar-applications-860x600 (1x), en-files-1920x1080 (1x), ar-files-1920x1080 (1x), en-files-inspector-1366x768 (1x), en-files-plan-1366x768 (1x), ar-files-plan-860x600 (1x), en-files-light-1366x768 (1x), en-storage-1920x1080 (1x), ar-storage-1920x1080 (1x), en-storage-walked-1366x768 (1x), en-storage-inspector-1366x768 (1x), en-storage-readboard-1366x768 (1x), ar-storage-readboard-860x600 (1x), ar-storage-walked-860x600 (1x), en-storage-folder-1366x768 (1x), ar-storage-folder-860x600 (1x), en-storage-light-1366x768 (1x), en-cleanup-1366x768 (1x), ar-cleanup-1366x768 (1x), en-cleanup-860x600 (1x), en-startup-1366x768 (1x), en-system-1366x768 (1x), en-repair-1366x768 (1x), en-services-1366x768 (1x), en-network-1366x768 (1x), en-hardware-1366x768 (1x), en-automation-1366x768 (1x), en-home-portal-1366x768 (1x), en-repair-preview-1366x768 (1x), ar-cleanup-preview-860x600 (1x). The frame filed for each is the one taken after the wake-up.",
+    "47 capture(s) had to wake the window surface with a geometry change before the compositor answered: en-home-1366x768 (1x), ar-home-1366x768 (1x), en-clipboard-1366x768 (1x), ar-clipboard-1366x768 (1x), en-clipboard-860x600 (1x), ar-home-860x600 (1x), en-home-1024x768 (1x), ar-home-1024x768 (1x), en-clipboard-1920x1080 (1x), ar-clipboard-1920x1080 (1x), en-applications-1920x1080 (1x), ar-applications-1920x1080 (1x), en-applications-dossier-1366x768 (1x), ar-applications-deck-1366x768 (1x), en-applications-light-1366x768 (1x), ar-applications-860x600 (1x), en-files-1920x1080 (1x), ar-files-1920x1080 (1x), en-files-inspector-1366x768 (1x), en-files-plan-1366x768 (1x), ar-files-plan-860x600 (1x), en-files-light-1366x768 (1x), en-storage-1920x1080 (1x), ar-storage-1920x1080 (1x), en-storage-walked-1366x768 (1x), en-storage-inspector-1366x768 (1x), en-storage-readboard-1366x768 (1x), ar-storage-readboard-860x600 (1x), ar-storage-walked-860x600 (1x), en-storage-folder-1366x768 (1x), ar-storage-folder-860x600 (1x), en-storage-light-1366x768 (1x), en-cleanup-1366x768 (1x), ar-cleanup-1366x768 (1x), en-cleanup-860x600 (1x), en-startup-1366x768 (1x), en-system-1366x768 (1x), en-repair-1366x768 (1x), en-services-1366x768 (1x), en-network-1366x768 (1x), en-hardware-1366x768 (1x), ar-startup-1366x768 (1x), en-repair-860x600 (1x), en-automation-1366x768 (1x), en-home-portal-1366x768 (1x), en-repair-preview-1366x768 (1x), ar-cleanup-preview-860x600 (1x). The frame filed for each is the one taken after the wake-up.",
     "1 element kind(s) measure between 2:1 and 3.2:1 against their surface — legible, but listed for review: button.svc-card__run at 2.05 in 3 capture(s)."
   ],
   "failures": []

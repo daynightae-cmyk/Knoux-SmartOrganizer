@@ -1,0 +1,154 @@
+/* ------------------------------------------------------------------ world stage
+   The shared chrome every specialist world is built on: a horizon band, a
+   headline with its measured readout, a strip of real statistics, panels that
+   hold the working surface of that world, and a rail beside them. One product,
+   eleven functions. */
+
+.stage { display: grid; gap: 18px; position: relative; }
+
+.stage__horizon {
+  position: absolute;
+  inset-inline: 0;
+  top: -18px;
+  height: 262px;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(120% 78% at 78% 0%, color-mix(in srgb, var(--world-hue) 26%, transparent), transparent 62%),
+    radial-gradient(90% 60% at 8% 4%, #1b2a6b55, transparent 58%);
+}
+.stage__horizon::after {
+  content: "";
+  position: absolute;
+  inset-inline: -10%;
+  bottom: 96px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--world-hue) 30%, transparent), transparent 72%);
+  filter: blur(6px);
+}
+.stage > *:not(.stage__horizon) { position: relative; }
+
+.stage__head {
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(158deg, color-mix(in srgb, var(--world-hue) 9%, var(--surface-raised)), var(--surface));
+}
+.stage__head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.stage__identity { display: flex; gap: 14px; align-items: flex-start; min-width: 0; }
+.stage__glyph {
+  display: grid; place-items: center; flex: none;
+  width: 46px; height: 46px; border-radius: 15px;
+  color: color-mix(in srgb, var(--world-hue) 78%, white 22%);
+  background: color-mix(in srgb, var(--world-hue) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--world-hue) 34%, transparent);
+  box-shadow: inset 0 1px 0 #ffffff1f;
+}
+.stage__head h2 { margin: 0; font-size: var(--text-3xl); line-height: 1.04; letter-spacing: -.9px; font-weight: 800; }
+.stage__lead { margin: 6px 0 0; max-width: 78ch; color: var(--muted); font-size: var(--text-md); line-height: 1.55; }
+.stage__readout { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.stage__stamp { color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+
+.stage__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 10px; }
+.stage__stat {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 13px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.stage__stat > svg { flex: none; margin-top: 3px; color: color-mix(in srgb, var(--world-hue) 72%, white 28%); }
+.stage__stat b { display: block; font-size: var(--text-xl); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stage__stat span { display: block; color: var(--muted); font-size: var(--text-sm); margin-top: 2px; }
+.stage__stat small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+.stage__stat--warn b { color: var(--status-warning-text); }
+.stage__stat--danger b { color: var(--status-danger-text); }
+.stage__stat--good b { color: var(--status-success-text); }
+
+/* Panels: the working surface plus the rail that explains it. */
+.stage__split { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(272px, 1fr); gap: 14px; align-items: start; }
+.stage__panel {
+  display: grid; gap: 12px; align-content: start;
+  padding: 16px 17px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  min-width: 0;
+}
+.stage__panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.stage__panel-head h3 { margin: 0; font-size: var(--text-lg); letter-spacing: -.2px; }
+.stage__panel-head p { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+.stage__panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.stage__stack { display: grid; gap: 14px; align-content: start; }
+
+.stage__rows { display: grid; gap: 1px; background: var(--border-soft); border: 1px solid var(--border-soft); border-radius: var(--radius-md); overflow: hidden; }
+.stage__row {
+  display: grid; align-items: center; gap: 10px;
+  padding: 9px 11px; background: var(--surface); border: 0; text-align: start; color: var(--text);
+  font-size: var(--text-body);
+}
+button.stage__row:hover { background: var(--surface-hover); }
+.stage__row--on { background: color-mix(in srgb, var(--world-hue) 12%, var(--surface)); }
+.stage__row strong { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage__row .cell-muted { color: var(--muted); font-size: var(--text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage__row .cell-num { font-variant-numeric: tabular-nums; text-align: end; }
+.stage__thead { color: var(--muted); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; background: var(--surface-raised); }
+
+/* Step flow: how the world behaves, drawn as a line. */
+.stage__flow { display: flex; flex-wrap: wrap; align-items: stretch; }
+.stage__step { display: flex; gap: 9px; align-items: flex-start; padding: 4px 16px 4px 0; min-width: 168px; }
+.stage__step b {
+  flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px;
+  font-size: 11px; font-weight: 800;
+  color: color-mix(in srgb, var(--world-hue) 80%, white 20%);
+  background: color-mix(in srgb, var(--world-hue) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--world-hue) 34%, transparent);
+}
+.stage__step span { display: block; font-size: var(--text-md); font-weight: 700; }
+.stage__step small { display: block; color: var(--muted); font-size: var(--text-sm); line-height: 1.4; }
+
+/* Honest empty state: an axis with no line beats a line with no axis. */
+.stage__empty {
+  display: grid; gap: 6px; justify-items: center; text-align: center;
+  padding: 26px 18px; border: 1px dashed var(--border); border-radius: var(--radius-md);
+  background: var(--surface-raised); color: var(--muted);
+}
+.stage__empty strong { color: var(--text); font-size: var(--text-body); }
+.stage__empty p { margin: 0; font-size: var(--text-sm); line-height: 1.5; max-width: 46ch; }
+.stage__empty > svg { color: var(--border-strong); }
+
+.stage__kv { display: grid; gap: 7px; margin: 0; }
+.stage__kv > div { display: flex; justify-content: space-between; gap: 12px; font-size: var(--text-md); }
+.stage__kv dt { color: var(--muted); }
+.stage__kv dd { margin: 0; text-align: end; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 62%; }
+
+.stage__note {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 9px 11px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); background: var(--surface-raised);
+  color: var(--muted); font-size: var(--text-sm); line-height: 1.5;
+}
+.stage__note > svg { flex: none; margin-top: 1px; }
+.stage__note--good { border-color: var(--status-success-border); background: var(--status-success-surface); color: var(--status-success-text); }
+.stage__note--warn { border-color: var(--status-warning-border); background: var(--status-warning-surface); color: var(--status-warning-text); }
+
+.stage__chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.stage__chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border); background: var(--surface-raised);
+  font-size: 10px; color: var(--muted);
+}
+.stage__chip--live { color: var(--status-success-text); border-color: var(--status-success-border); background: var(--status-success-surface); }
+.stage__chip--warn { color: var(--status-warning-text); border-color: var(--status-warning-border); background: var(--status-warning-surface); }
+
+@media (max-width: 1180px) { .stage__split { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .stage__head { padding: 16px; }
+  .stage__head h2 { font-size: var(--text-2xl); }
+  .stage__flow { flex-direction: column; }
+}
