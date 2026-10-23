@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -18,11 +18,11 @@ const { createAutomationStore, safeError } = require('../electron/automation.cjs
 
 interface AutomationSchedule { id: string; toolId: string; label: string; enabled: boolean; trigger: Record<string, unknown>; lastRun: Record<string, unknown> | null; }
 let userDataPath = '';
-let runTask: ReturnType<typeof vi.fn>;
+let runTask: Mock<(args: string[]) => Promise<{ stdout: string; stderr: string }>>;
 
 beforeEach(async () => {
   userDataPath = await mkdtemp(join(tmpdir(), 'knoux-automations-'));
-  runTask = vi.fn(async () => ({ stdout: '', stderr: '' }));
+  runTask = vi.fn<(args: string[]) => Promise<{ stdout: string; stderr: string }>>(async () => ({ stdout: '', stderr: '' }));
 });
 afterEach(async () => { await rm(userDataPath, { recursive: true, force: true }); });
 

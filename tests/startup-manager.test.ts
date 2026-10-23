@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -12,12 +12,12 @@ const RUN_KEY_OUTPUT = `
 HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
     OneDrive    REG_SZ    C:\\Windows\\System32\\OneDriveSetup.exe /background
 `;
-let execute: ReturnType<typeof vi.fn>;
+let execute: Mock<(file: string, args: string[], options: Record<string, unknown>) => Promise<{ stdout: string }>>;
 let journals: Map<string, Record<string, unknown>>;
 
 beforeEach(() => {
   journals = new Map();
-  execute = vi.fn(async (_file: string, args: string[]) => {
+  execute = vi.fn<(file: string, args: string[], options: Record<string, unknown>) => Promise<{ stdout: string }>>(async (_file: string, args: string[]) => {
     if (args[0] === 'query') return { stdout: RUN_KEY_OUTPUT };
     return { stdout: '' };
   });
