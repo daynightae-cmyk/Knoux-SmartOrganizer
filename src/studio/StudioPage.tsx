@@ -1,210 +1,832 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  FolderPlus, FolderOpen, ScanSearch, Images, Film, FileText, Music2, Archive,
-  Code2, PackageOpen, Layers3, Search, LayoutGrid, List, ChevronLeft, ChevronRight,
-  RefreshCcw, Ban, Eye, ShieldCheck, FolderX, Sparkles
-} from 'lucide-react';
 import { useStore } from '../state/store';
-import { formatBytes, formatCount } from '../lib/format';
-import type { Category, FileInfo, PageResult, ScanEvent, ScanSummary, Source } from './types';
+import { CATEGORY_ORDER, describeError, studioCopy } from './copy';
+import {
+  StudioContext,
+  type BasketAll,
+  type BasketCategory,
+  type BasketCategoryInfo,
+  type BasketFile,
+  type BasketItem,
+  type CategoryDestinationChoice,
+  type DestinationChoice,
+  type ExecutionLive,
+  type FocusedFile,
+  type InsightState,
+  type LibraryFilters,
+  type ScanRunning,
+  type StudioContextValue,
+  type StudioSurface
+} from './context';
+import { StudioBanners, StudioHero, StudioStage, SurfaceRail } from './panels';
+import type {
+  DestinationAuthorization,
+  ExecutionResult,
+  FileInfo,
+  JournalOperation,
+  OrganizationMode,
+  OrganizationPlan,
+  PageResult,
+  PlanRequest,
+  PlanSelection,
+  ScanSummary,
+  Source,
+  StudioBridge,
+  StudioCategoryKey,
+  StudioView,
+  CollisionPolicy
+} from './types';
 import './styles/studio.css';
 
-const meta: Array<{key:Category;Icon:typeof Images}> = [
- {key:'image',Icon:Images},{key:'video',Icon:Film},{key:'document',Icon:FileText},
- {key:'audio',Icon:Music2},{key:'archive',Icon:Archive},{key:'code',Icon:Code2},
- {key:'installer',Icon:PackageOpen},{key:'other',Icon:Layers3}
-];
-const texts = {
- ar:{
-  title:'ملفاتك. منظمة بذكاء.',subtitle:'اختر المجلدات، شاهد المحتويات مجمّعة أمامك، وقرر بنفسك. الفهرسة لا تنقل أو تحذف أي ملف.',
-  heroLabel:'KNOuX  /  SMART ORGANIZATION STUDIO',add:'إضافة مجلد',source:'مصادر التنظيم',none:'لم تختر أي مجلد بعد',choose:'ابدأ بإضافة مجلد من جهازك',
-  files:'الملفات',size:'الحجم الإجمالي',folders:'المجلدات',all:'الكل',scan:'فحص المجلد',rescan:'إعادة الفحص',
-  cancel:'إلغاء الفحص',scanning:'جارٍ فهرسة الملفات محليًا…',library:'مكتبة ملفاتك',
-  search:'ابحث بالاسم أو المسار النسبي',name:'الاسم',biggest:'الأكبر حجمًا',newest:'الأحدث تعديلًا',
-  grid:'عرض شبكي',list:'عرض قائمة',open:'إظهار في المستكشف',remove:'إزالة من المتابعة',
-  empty:'لا توجد ملفات مطابقة للبحث',clear:'مسح البحث',previous:'السابق',next:'التالي',page:'صفحة',of:'من',
-  virtual:'التجميع الحالي افتراضي وآمن؛ ملفاتك بقيت في أماكنها. لن يُنفَّذ أي نقل دون خطة معتمدة.',
-  images:'صور',video:'فيديوهات',document:'مستندات',audio:'صوتيات',archive:'أرشيفات',code:'أكواد',installer:'برامج',other:'أخرى',
-  partial:'بعض الملفات لم تُفهرس. النتيجة جزئية؛ راجع التحذيرات أدناه.',cancelled:'تم إلغاء الفحص دون تغيير الملفات.',
-  removed:'المجلد أُزيل من المتابعة فقط، دون المساس بمحتوياته.',unavailable:'جسر Studio غير متاح؛ شغّل نسخة Electron المدمجة.',
-  noScan:'اختر مصدرًا ثم ابدأ الفحص لرؤية فئاته الحقيقية.',scanned:'مفهرس',security:'محلي · قراءة فقط',error:'تعذر تنفيذ الطلب',
-  refreshed:'يمكنك إعادة الفحص لمراجعة تغييرات الملفات على القرص.',review:'اقتراح مراجعة',hint:'الملفات المصنفة لا تُنقل تلقائيًا'
- },
- en:{
-  title:'Your files. Beautifully organized.',subtitle:'Choose folders, see your files grouped instantly, and stay in control. Indexing never moves or deletes files.',
-  heroLabel:'KNOuX  /  SMART ORGANIZATION STUDIO',add:'Add folder',source:'Organization sources',none:'No sources selected yet',choose:'Start by adding a folder from your PC',
-  files:'Files',size:'Total size',folders:'Folders',all:'All files',scan:'Index folder',rescan:'Rescan',
-  cancel:'Cancel scan',scanning:'Indexing files locally…',library:'Your file library',
-  search:'Search name or relative path',name:'Name',biggest:'Largest first',newest:'Recently modified',
-  grid:'Grid view',list:'List view',open:'Reveal in Explorer',remove:'Stop tracking',
-  empty:'No matching files',clear:'Clear search',previous:'Previous',next:'Next',page:'Page',of:'of',
-  virtual:'Grouping is currently virtual and safe. Your original files have not moved. No files are moved without a separately approved plan.',
-  images:'Images',video:'Videos',document:'Documents',audio:'Audio',archive:'Archives',code:'Code',installer:'Installers',other:'Other',
-  partial:'Some entries could not be indexed. This is a partial result; see warnings.',cancelled:'Scan cancelled; no files were modified.',
-  removed:'The source was untracked, without changing its files.',unavailable:'Studio bridge unavailable; run the integrated Electron application.',
-  noScan:'Select a source and scan it to see real file groups.',scanned:'Indexed',security:'Private · Read-only',error:'Operation failed',
-  refreshed:'Rescan to reconcile files changed on disk.',review:'Review suggestion',hint:'Indexed files are not automatically moved'
- }
-} as const;
+const DEFAULT_FILTERS: LibraryFilters = {
+  search: '',
+  category: 'all',
+  ext: '',
+  size: 'any',
+  date: 'any',
+  sort: 'name',
+  desc: false,
+  offset: 0,
+  limit: 48
+};
 
-export default function StudioPage(){
- const {locale}=useStore(),t=texts[locale],bridge=typeof window!=='undefined'?window.knouxStudio:undefined;
- const [sources,setSources]=useState<Source[]>([]);
- const [sourceId,setSourceId]=useState<string|null>(null);
- const [saved,setSaved]=useState<Record<string,ScanSummary>>({});
- const [category,setCategory]=useState<Category|'all'>('all');
- const [search,setSearch]=useState('');
- const [sort,setSort]=useState<'name'|'size'|'modified'>('name');
- const [layout,setLayout]=useState<'grid'|'list'>('grid');
- const [offset,setOffset]=useState(0);
- const [page,setPage]=useState<PageResult|null>(null);
- const [loadingPage,setLoadingPage]=useState(false);
- const [error,setError]=useState('');
- const [notice,setNotice]=useState('');
- const [running,setRunning]=useState<{sourceId:string;operationId:string}|null>(null);
- const [progress,setProgress]=useState<{files:number;folders:number}>({files:0,folders:0});
- const operation=useRef<{sourceId:string;operationId:string}|null>(null);
- const selectedSourceRef=useRef<string|null>(null);
- selectedSourceRef.current=sourceId;
- const generation=useRef(0);
- const inventory=saved[sourceId||'']||null;
- const source=sources.find(x=>x.id===sourceId)||null;
- const currentBusy=running?.sourceId===sourceId;
+const EMPTY_INSIGHT: InsightState = { loading: false, largeCount: 0, largeBytes: 0, largestName: null };
 
- useEffect(()=>{
-  if(!bridge)return;
-  let valid=true;
-  bridge.listSources().then(items=>{if(valid){setSources(items);setSourceId(id=>id||items[0]?.id||null)}}).catch(e=>{if(valid)setError(String(e?.message||e))});
-  const off=bridge.onEvent((event:ScanEvent)=>{
-   if(!valid||!operation.current||event.operationId!==operation.current.operationId)return;
-   if(event.phase==='progress')setProgress({files:event.files||0,folders:event.folders||0});
-  });
-  return()=>{valid=false;off()};
- },[bridge]);
- const choose=async()=>{
-  if(!bridge)return;
-  setError('');
-  try{const picked=await bridge.pickSource();if(!picked)return;
-   setSources(prev=>prev.some(s=>s.id===picked.id)?prev:[...prev,picked]);
-   setSourceId(picked.id);setCategory('all');setOffset(0);setSearch('');
-  }catch(e){setError(String((e as Error)?.message||e))}
- };
- const scan=useCallback(async(id:string)=>{
-  if(!bridge||operation.current)return;
-  const operationId=crypto.randomUUID();
-  operation.current={sourceId:id,operationId};setRunning({sourceId:id,operationId});
-  setError('');setNotice('');setProgress({files:0,folders:0});
-  try{
-   const result=await bridge.scan({sourceId:id,operationId});
-   if('cancelled' in result&&result.cancelled===true){setNotice(t.cancelled);return}
-   if(!('inventoryId' in result))throw Error('Invalid inventory result');
-   setSaved(old=>({...old,[id]:result as ScanSummary}));
-   setNotice(result.partial?t.partial:t.refreshed);
-   if(selectedSourceRef.current===id){setCategory('all');setSearch('');setOffset(0)}
-  }catch(e){setError(String((e as Error)?.message||e))}
-  finally{if(operation.current?.operationId===operationId)operation.current=null;setRunning(null)}
- },[bridge,t.cancelled,t.partial,t.refreshed]);
- const cancel=async()=>{if(!bridge||!operation.current)return;try{await bridge.cancel(operation.current.operationId)}catch(e){setError(String((e as Error)?.message||e))}};
- const remove=async(id:string)=>{
-  if(!bridge)return;try{await bridge.removeSource(id);setSources(xs=>xs.filter(x=>x.id!==id));
-   setSaved(xs=>{const next={...xs};delete next[id];return next});
-   if(sourceId===id){setSourceId(sources.find(x=>x.id!==id)?.id||null);setCategory('all')}
-   setNotice(t.removed);
-  }catch(e){setError(String((e as Error)?.message||e))}
- };
- useEffect(()=>{
-  generation.current++;
-  const seq=generation.current;
-  if(!bridge||!inventory){setPage(null);return}
-  setLoadingPage(true);setPage(null);
-  bridge.query({inventoryId:inventory.inventoryId,category,search,sort,desc:sort!=='name',offset,limit:48})
-   .then(data=>{if(seq===generation.current)setPage(data)})
-   .catch(e=>{if(seq===generation.current)setError(String(e?.message||e))})
-   .finally(()=>{if(seq===generation.current)setLoadingPage(false)});
-  return()=>{generation.current++};
- },[bridge,inventory?.inventoryId,category,search,sort,offset]);
- const chooseCategory=(cat:Category|'all')=>{setCategory(cat);setOffset(0)};
- const visibleCategories=useMemo(()=>meta.map(o=>({...o,stat:inventory?.categories.find(x=>x.key===o.key)||{key:o.key,count:0,bytes:0}})),[inventory]);
- const pagination=page?Math.ceil(page.total/48):0;
- const pageIndex=Math.floor(offset/48)+1;
- const reveal=async(file:FileInfo)=>{if(!bridge||!inventory)return;
-  try{const ok=await bridge.reveal({inventoryId:inventory.inventoryId,fileId:file.id});if(!ok)throw Error('File was changed or is no longer available; rescan first')}
-  catch(e){setError(String((e as Error)?.message||e))}
- };
- const selectedLabel=category==='all'?t.all:t[category==='image'?'images':category];
- if(!bridge)return <div className="st-root"><div className="st-warning st-error">{t.unavailable}</div></div>;
- return <div className="st-root">
-  <section className="st-hero">
-   <span className="st-kicker"><Sparkles size={15}/>{t.heroLabel}</span>
-   <h2 className="st-title">{t.title}</h2><p className="st-sub">{t.subtitle}</p>
-   <div className="st-actions"><button className="st-btn st-btn-primary" onClick={()=>void choose()}><FolderPlus size={17}/>{t.add}</button>
-    {source&&<button className="st-btn" onClick={()=>void scan(source.id)} disabled={!!running}><ScanSearch size={16}/>{inventory?t.rescan:t.scan}</button>}
-    {currentBusy&&<button className="st-btn" onClick={()=>void cancel()}><Ban size={16}/>{t.cancel}</button>}
-   </div>
-  </section>
-  {error&&<div className="st-warning st-error" role="alert">{t.error}: {error}</div>}
-  {notice&&<div className="st-warning" role="status">{notice}</div>}
-  <div className="st-layout">
-   <aside className="st-panel"><h2><FolderOpen size={16}/>{t.source}</h2>
-    {sources.length===0&&<p className="st-muted">{t.none}</p>}
-    {sources.map(s=><div className="st-source-row" key={s.id}>
-     <button className={'st-source'+(sourceId===s.id?' is-active':'')} onClick={()=>{setSourceId(s.id);setCategory('all');setSearch('');setOffset(0);setError('')}} aria-current={sourceId===s.id?'true':undefined}>
-      <strong>{s.name}</strong><small title={s.folder}>{s.folder}</small>
-      <small>{saved[s.id]?t.scanned+' · '+formatCount(saved[s.id].totalFiles,locale):t.noScan}</small></button>
-     <button className="st-source-remove" onClick={()=>void remove(s.id)} title={t.remove} aria-label={t.remove+' '+s.name}><FolderX size={17}/></button>
-    </div>)}
-    <p className="st-muted"><ShieldCheck size={13}/> {t.security}</p>
-   </aside>
-   <div style={{display:'grid',gap:16,minWidth:0}}>
-    {!source?<section className="st-panel st-empty"><FolderPlus size={34}/><p>{t.choose}</p><button className="st-btn st-btn-primary" onClick={()=>void choose()}>{t.add}</button></section>:
-    !inventory&&!currentBusy?<section className="st-panel st-empty"><ScanSearch size={36}/><p>{t.noScan}</p><button className="st-btn st-btn-primary" onClick={()=>void scan(source.id)} disabled={!!running}>{t.scan}</button></section>:<>
-     {currentBusy&&<section className="st-panel" role="status" aria-live="polite">
-      <h2><RefreshCcw size={16}/>{t.scanning}</h2><div className="st-progress"/><p className="st-muted">{formatCount(progress.files,locale)} {t.files} · {formatCount(progress.folders,locale)} {t.folders}</p>
-     </section>}
-     {inventory&&<>
-      <div className="st-summary">
-       <div className="st-metric"><small>{t.files}</small><strong>{formatCount(inventory.totalFiles,locale)}</strong></div>
-       <div className="st-metric"><small>{t.size}</small><strong>{formatBytes(inventory.totalBytes,locale)}</strong></div>
-       <div className="st-metric"><small>{t.folders}</small><strong>{formatCount(inventory.counts.folders,locale)}</strong></div>
+export default function StudioPage() {
+  const { locale } = useStore();
+  const t = studioCopy[locale];
+  const bridge = typeof window !== 'undefined' ? window.knouxStudio : undefined;
+  if (!bridge) {
+    return (
+      <div className="st-root st-root--unavailable">
+        <div className="st-unavailable">
+          <strong>{t.bridgeUnavailable}</strong>
+          <p>{t.bridgeHint}</p>
+        </div>
       </div>
-      {inventory.partial&&<div role="status" className="st-warning">{t.partial} {inventory.warnings.join(' · ')}</div>}
-      {!inventory.partial&&inventory.warnings.length>0&&<div className="st-warning">{inventory.warnings.join(' · ')}</div>}
-      <section className="st-panel">
-       <div className="st-section-title"><h2><Layers3 size={18}/>{t.library}</h2><small className="st-muted">{t.hint}</small></div>
-       <div className="st-categories">
-        {visibleCategories.map(({key,Icon,stat})=><button key={key} className={'st-category'+(category===key?' is-active':'')} onClick={()=>chooseCategory(key)} aria-pressed={category===key}>
-         <span className="st-category-icon"><Icon size={23}/></span><strong>{t[key==='image'?'images':key]}</strong>
-         <b>{formatCount(stat.count,locale)}</b><small>{formatBytes(stat.bytes,locale)}</small>
-        </button>)}
-       </div>
-       <div className="st-toolbar">
-        <button className="st-btn" aria-pressed={category==='all'} onClick={()=>chooseCategory('all')}>{t.all}</button>
-        <Search size={16}/>
-        <input className="st-input" value={search} aria-label={t.search} placeholder={t.search} onChange={e=>{setSearch(e.target.value);setOffset(0)}}/>
-        <select className="st-select" value={sort} onChange={e=>{setSort(e.target.value as typeof sort);setOffset(0)}} aria-label={t.name}>
-         <option value="name">{t.name}</option><option value="size">{t.biggest}</option><option value="modified">{t.newest}</option>
-        </select>
-        <button className="st-btn" aria-label={t.grid} title={t.grid} aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/></button>
-        <button className="st-btn" aria-label={t.list} title={t.list} aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/></button>
-       </div>
-       <div className="st-section-title"><h2>{selectedLabel}</h2><span className="st-muted">{formatCount(page?.total||0,locale)} {t.files}</span></div>
-       {loadingPage?<div className="st-muted" role="status">{t.scanning}</div>:page?.rows.length===0?<div className="st-empty">{t.empty}</div>:<div className={layout==='grid'?'st-file-grid':'st-list'}>
-        {page?.rows.map(file=>{const Icon=meta.find(c=>c.key===file.category)?.Icon||FileText;return <article className="st-file" key={file.id}>
-         <div className="st-file-art"><Icon size={34}/></div>
-         <div><strong title={file.name}>{file.name}</strong><small title={file.relative}>{file.relative}</small></div>
-         <div className="st-file-footer"><small>{formatBytes(file.size,locale)}</small><button className="st-btn" onClick={()=>void reveal(file)} aria-label={t.open+' '+file.name}><Eye size={15}/></button></div>
-        </article>})}
-       </div>}
-       {pagination>1&&<div className="st-pager">
-        <button className="st-btn" disabled={offset===0} onClick={()=>setOffset(o=>Math.max(0,o-48))}><ChevronLeft size={16}/>{t.previous}</button>
-        <span className="st-muted">{t.page} {formatCount(pageIndex,locale)} {t.of} {formatCount(pagination,locale)}</span>
-        <button className="st-btn" disabled={pageIndex>=pagination} onClick={()=>setOffset(o=>o+48)}>{t.next}<ChevronRight size={16}/></button>
-       </div>}
-      </section>
-      <div className="st-warning"><ShieldCheck size={15}/> {t.virtual}</div>
-     </>}
-    </>}
-   </div>
-  </div>
- </div>;
+    );
+  }
+  return <StudioWorkspace bridge={bridge} locale={locale} />;
+}
+
+function StudioWorkspace({ bridge, locale }: { bridge: StudioBridge; locale: 'ar' | 'en' }) {
+  const t = studioCopy[locale];
+
+  const [surface, setSurface] = useState<StudioSurface>('sources');
+  const [sources, setSources] = useState<Source[]>([]);
+  const [saved, setSaved] = useState<Record<string, ScanSummary>>({});
+  const [sourcesLoading, setSourcesLoading] = useState(true);
+  const [activeSourceId, setActiveSourceIdState] = useState<string | null>(null);
+  const [scanRunning, setScanRunning] = useState<ScanRunning | null>(null);
+  const scanOperation = useRef<{ sourceId: string; operationId: string } | null>(null);
+
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const [filters, setFilters] = useState<LibraryFilters>(DEFAULT_FILTERS);
+  const [page, setPage] = useState<PageResult | null>(null);
+  const [pageLoading, setPageLoading] = useState(false);
+  const queryGeneration = useRef(0);
+
+  const [view, setView] = useState<StudioView>('grid');
+  const [focused, setFocused] = useState<FocusedFile | null>(null);
+  const [basket, setBasket] = useState<BasketItem[]>([]);
+
+  const [destinations, setDestinations] = useState<DestinationAuthorization[]>([]);
+  const [destination, setDestinationState] = useState<DestinationChoice | null>(null);
+
+  const [mode, setMode] = useState<OrganizationMode>('copy');
+  const [structure, setStructure] = useState<'categorized' | 'flat'>('categorized');
+  const [collisionPolicy, setCollisionPolicy] = useState<CollisionPolicy>('review');
+  const [folderNames, setFolderNames] = useState<Record<string, string>>({});
+  const [categoryDestinations, setCategoryDestinations] = useState<Partial<Record<StudioCategoryKey, CategoryDestinationChoice>>>({});
+  const [planBuilding, setPlanBuilding] = useState(false);
+  const [plan, setPlan] = useState<OrganizationPlan | null>(null);
+
+  const [executing, setExecuting] = useState(false);
+  const [executionLive, setExecutionLive] = useState<ExecutionLive | null>(null);
+  const [lastExecution, setLastExecution] = useState<ExecutionResult | null>(null);
+
+  const [history, setHistory] = useState<JournalOperation[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [insight, setInsight] = useState<InsightState>(EMPTY_INSIGHT);
+
+  const activeSource = useMemo(() => sources.find((source) => source.id === activeSourceId) ?? null, [sources, activeSourceId]);
+  const inventory = activeSourceId ? saved[activeSourceId] ?? null : null;
+  const inventoryId = inventory?.inventoryId ?? null;
+
+  const notify = useCallback((message: string) => {
+    setNotice(message);
+    setError('');
+  }, []);
+
+  const dismissBanner = useCallback(() => {
+    setNotice('');
+    setError('');
+  }, []);
+
+  const goto = useCallback((next: StudioSurface) => {
+    setSurface(next);
+    window.requestAnimationFrame(() => {
+      document.getElementById('studio-stage')?.scrollIntoView({ block: 'nearest' });
+    });
+  }, []);
+
+  const setActiveSourceId = useCallback((id: string) => {
+    setActiveSourceIdState(id);
+    setPage(null);
+    setError('');
+  }, []);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const records = await bridge.listHistory();
+      setHistory(records);
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [bridge, locale, t.errorTitle]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const [sourceList, destinationList] = await Promise.all([
+          bridge.listSources(),
+          bridge.listDestinations()
+        ]);
+        if (!alive) return;
+        setSources(sourceList);
+        const seeded: Record<string, ScanSummary> = {};
+        for (const source of sourceList) {
+          if (source.inventory) seeded[source.id] = source.inventory;
+        }
+        setSaved((previous) => ({ ...seeded, ...previous }));
+        setDestinations(destinationList);
+        setActiveSourceIdState((previous) => previous ?? sourceList[0]?.id ?? null);
+      } catch (cause) {
+        if (!alive) return;
+        const detail = describeError(cause, locale);
+        setError(`${t.errorTitle}: ${detail.message}`);
+      } finally {
+        if (alive) setSourcesLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [bridge, locale, t.errorTitle]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(''), 4800);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
+    const remove = bridge.onEvent((event) => {
+      if (event.type === 'scan') {
+        const current = scanOperation.current;
+        if (current && event.operationId === current.operationId) {
+          setScanRunning((previous) => previous && previous.operationId === current.operationId
+            ? {
+                ...previous,
+                files: Number(event.files ?? previous.files) || 0,
+                folders: Number(event.folders ?? previous.folders) || 0,
+                bytes: Number(event.bytes ?? previous.bytes) || 0
+              }
+            : previous);
+        }
+        return;
+      }
+      if (event.type !== 'execution') return;
+      const terminal = ['completed', 'partial', 'cancelled', 'failed'].includes(event.phase);
+      setExecutionLive((previous) => {
+        const base: ExecutionLive = previous && previous.operationId === event.operationId
+          ? previous
+          : {
+              operationId: event.operationId,
+              planId: event.planId ?? null,
+              phase: 'started',
+              processed: 0,
+              total: 0,
+              bytes: 0,
+              totalBytes: 0,
+              completed: 0,
+              failed: 0,
+              cancelled: 0,
+              currentName: null,
+              message: null
+            };
+        return {
+          ...base,
+          operationId: event.operationId,
+          planId: event.planId ?? base.planId,
+          phase: event.phase,
+          processed: Number(event.processed ?? (terminal && event.summary && 'totalFiles' in event.summary ? event.summary.completedFiles + event.summary.failedFiles + event.summary.cancelledFiles : base.processed)) || 0,
+          total: Number(event.total ?? event.totalFiles ?? base.total) || 0,
+          bytes: Number(event.bytes ?? base.bytes) || 0,
+          totalBytes: Number(event.totalBytes ?? base.totalBytes) || 0,
+          completed: Number(event.completed ?? base.completed) || 0,
+          failed: Number(event.failed ?? base.failed) || 0,
+          cancelled: Number(event.cancelled ?? base.cancelled) || 0,
+          currentName: event.currentName ?? (terminal ? null : base.currentName),
+          message: event.message ?? base.message,
+          summary: event.summary && 'totalFiles' in event.summary ? event.summary : base.summary
+        };
+      });
+      if (terminal) void loadHistory();
+    });
+    return remove;
+  }, [bridge, loadHistory]);
+
+  useEffect(() => {
+    setFilters(DEFAULT_FILTERS);
+    setPage(null);
+  }, [activeSourceId]);
+
+  useEffect(() => {
+    if (!inventoryId) {
+      setPage(null);
+      setPageLoading(false);
+      return;
+    }
+    const generation = ++queryGeneration.current;
+    setPageLoading(true);
+    const timer = window.setTimeout(() => {
+      const now = Date.now();
+      let minBytes: number | undefined;
+      let maxBytes: number | undefined;
+      if (filters.size === 'tiny') maxBytes = 1024 * 1024 - 1;
+      if (filters.size === 'small') { minBytes = 1024 * 1024; maxBytes = 50 * 1024 * 1024; }
+      if (filters.size === 'medium') { minBytes = 50 * 1024 * 1024; maxBytes = 500 * 1024 * 1024; }
+      if (filters.size === 'large') minBytes = 500 * 1024 * 1024;
+      if (filters.size === 'from50') minBytes = 50 * 1024 * 1024;
+      let modifiedAfter: number | undefined;
+      if (filters.date === 'week') modifiedAfter = now - 7 * 86400000;
+      if (filters.date === 'month') modifiedAfter = now - 30 * 86400000;
+      if (filters.date === 'year') modifiedAfter = now - 365 * 86400000;
+      bridge.query({
+        inventoryId,
+        category: filters.category,
+        search: filters.search,
+        sort: filters.sort,
+        desc: filters.desc,
+        offset: filters.offset,
+        limit: filters.limit,
+        extensions: filters.ext ? [filters.ext] : [],
+        minBytes,
+        maxBytes,
+        modifiedAfter
+      }).then((result) => {
+        if (generation === queryGeneration.current) {
+          setPage(result);
+          setPageLoading(false);
+        }
+      }).catch((cause) => {
+        if (generation !== queryGeneration.current) return;
+        const detail = describeError(cause, locale);
+        setError(`${t.errorTitle}: ${detail.message}`);
+        setPage(null);
+        setPageLoading(false);
+        if (detail.code === 'STUDIO_INDEX_NOT_FOUND' || detail.code === 'STUDIO_INDEX_EXPIRED') {
+          queryGeneration.current += 1;
+        }
+      });
+    }, 180);
+    return () => { window.clearTimeout(timer); queryGeneration.current += 1; };
+  }, [bridge, inventoryId, filters, locale, t.errorTitle]);
+
+  useEffect(() => {
+    if (!inventoryId) {
+      setInsight(EMPTY_INSIGHT);
+      return;
+    }
+    let alive = true;
+    setInsight((previous) => ({ ...previous, loading: true }));
+    Promise.all([
+      bridge.query({ inventoryId, minBytes: 50 * 1024 * 1024, limit: 1, sort: 'size', desc: true }),
+      bridge.query({ inventoryId, limit: 1, sort: 'size', desc: true })
+    ]).then(([large, largest]) => {
+      if (!alive) return;
+      setInsight({
+        loading: false,
+        largeCount: large.total,
+        largeBytes: large.bytes,
+        largestName: largest.rows[0]?.name ?? null
+      });
+    }).catch(() => {
+      if (alive) setInsight(EMPTY_INSIGHT);
+    });
+    return () => { alive = false; };
+  }, [bridge, inventoryId]);
+
+  const beginScan = useCallback(async (sourceId: string) => {
+    if (scanOperation.current) return;
+    const operationId = crypto.randomUUID();
+    scanOperation.current = { sourceId, operationId };
+    setScanRunning({ sourceId, operationId, files: 0, folders: 0, bytes: 0 });
+    setError('');
+    try {
+      const result = await bridge.scan({ sourceId, operationId });
+      if ('cancelled' in result && result.cancelled === true) {
+        setNotice(t.scanCancelledNotice);
+        return;
+      }
+      if (!('inventoryId' in result)) throw new Error('Invalid scan result');
+      const summary = result as ScanSummary;
+      setSaved((previous) => ({ ...previous, [sourceId]: summary }));
+      setSources((previous) => previous.map((source) => source.id === sourceId ? { ...source, inventory: summary } : source));
+      setBasket((previous) => previous.filter((item) => item.sourceId !== sourceId));
+      setFocused((previous) => previous?.source.id === sourceId ? null : previous);
+      setPlan(null);
+      setNotice(summary.partial ? t.scanPartialNotice : t.sourceIndexedNow);
+      setSurface('library');
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    } finally {
+      if (scanOperation.current?.operationId === operationId) scanOperation.current = null;
+      setScanRunning(null);
+    }
+  }, [bridge, locale, t]);
+
+  const pickSource = useCallback(async () => {
+    try {
+      const picked = await bridge.pickSource();
+      if (!picked) return;
+      setSources((previous) => previous.some((source) => source.id === picked.id) ? previous : [...previous, picked]);
+      setActiveSourceIdState(picked.id);
+      setSurface('library');
+      if (!saved[picked.id] && !picked.inventory) await beginScan(picked.id);
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    }
+  }, [beginScan, bridge, locale, saved, t.errorTitle]);
+
+  const cancelScan = useCallback(async () => {
+    if (!scanRunning) return;
+    try {
+      await bridge.cancel(scanRunning.operationId);
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    }
+  }, [bridge, locale, scanRunning, t.errorTitle]);
+
+  const removeSource = useCallback(async (sourceId: string) => {
+    try {
+      if (scanRunning?.sourceId === sourceId) {
+        await bridge.cancel(scanRunning.operationId).catch(() => false);
+      }
+      await bridge.removeSource(sourceId);
+      setSources((previous) => previous.filter((source) => source.id !== sourceId));
+      setSaved((previous) => {
+        const next = { ...previous };
+        delete next[sourceId];
+        return next;
+      });
+      setBasket((previous) => previous.filter((item) => item.sourceId !== sourceId));
+      setFocused((previous) => previous?.source.id === sourceId ? null : previous);
+      setPlan(null);
+      setActiveSourceIdState((previous) => {
+        if (previous !== sourceId) return previous;
+        return sources.find((source) => source.id !== sourceId)?.id ?? null;
+      });
+      setNotice(t.sourceRemoved);
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    }
+  }, [bridge, locale, scanRunning, sources, t.errorTitle, t.sourceRemoved]);
+
+  const updateFilters = useCallback((patch: Partial<LibraryFilters>) => {
+    setFilters((previous) => ({
+      ...previous,
+      ...patch,
+      offset: Object.prototype.hasOwnProperty.call(patch, 'offset') ? patch.offset ?? 0 : 0
+    }));
+  }, []);
+
+  const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
+
+  const focusFile = useCallback((source: Source, file: FileInfo) => {
+    setFocused({ source, file });
+    setSurface('details');
+  }, []);
+
+  const isFileCovered = useCallback((inventoryIdValue: string, category: StudioCategoryKey) => (
+    basket.some((item) => item.inventoryId === inventoryIdValue
+      && (item.kind === 'all' || (item.kind === 'category' && item.category === category)))
+  ), [basket]);
+
+  const isFileSelected = useCallback((inventoryIdValue: string, file: FileInfo) => {
+    if (basket.some((item) => item.kind === 'file' && item.inventoryId === inventoryIdValue && item.file.id === file.id)) return true;
+    return isFileCovered(inventoryIdValue, file.category);
+  }, [basket, isFileCovered]);
+
+  const toggleFile = useCallback((source: Source, file: FileInfo) => {
+    const index = saved[source.id];
+    if (!index) {
+      notify(t.notScanned);
+      return;
+    }
+    const key = `f:${index.inventoryId}:${file.id}`;
+    if (isFileCovered(index.inventoryId, file.category)) {
+      notify(t.inPlan);
+      return;
+    }
+    setBasket((previous) => {
+      if (previous.some((item) => item.key === key)) return previous.filter((item) => item.key !== key);
+      const item: BasketFile = {
+        kind: 'file',
+        key,
+        sourceId: source.id,
+        sourceName: source.name,
+        inventoryId: index.inventoryId,
+        file
+      };
+      return [...previous, item];
+    });
+  }, [isFileCovered, notify, saved, t.inPlan]);
+
+  const addCategory = useCallback((source: Source, category: StudioCategoryKey) => {
+    const index = saved[source.id];
+    const stat = index?.categories.find((entry) => entry.key === category);
+    if (!index || !stat) {
+      notify(t.noFiles);
+      return;
+    }
+    if (basket.some((item) => item.inventoryId === index.inventoryId && item.kind === 'all')) {
+      notify(t.groupAlready);
+      return;
+    }
+    if (basket.some((item) => item.inventoryId === index.inventoryId && item.kind === 'category' && item.category === category)) {
+      notify(t.groupAlready);
+      return;
+    }
+    const item: BasketCategory = {
+      kind: 'category',
+      key: `c:${index.inventoryId}:${category}`,
+      sourceId: source.id,
+      sourceName: source.name,
+      inventoryId: index.inventoryId,
+      category,
+      count: stat.count,
+      bytes: stat.bytes
+    };
+    setBasket((previous) => [
+      ...previous.filter((entry) => !(entry.inventoryId === index.inventoryId && entry.kind === 'file' && entry.file.category === category)),
+      item
+    ]);
+    notify(t.groupAdded);
+  }, [basket, notify, saved, t]);
+
+  const addAll = useCallback((source: Source) => {
+    const index = saved[source.id];
+    if (!index) {
+      notify(t.notScanned);
+      return;
+    }
+    if (basket.some((item) => item.inventoryId === index.inventoryId && item.kind === 'all')) {
+      notify(t.groupAlready);
+      return;
+    }
+    const item: BasketAll = {
+      kind: 'all',
+      key: `a:${index.inventoryId}`,
+      sourceId: source.id,
+      sourceName: source.name,
+      inventoryId: index.inventoryId,
+      count: index.totalFiles,
+      bytes: index.totalBytes,
+      categories: index.categories
+    };
+    setBasket((previous) => [
+      ...previous.filter((entry) => entry.inventoryId !== index.inventoryId),
+      item
+    ]);
+    notify(t.groupAdded);
+  }, [basket, notify, saved, t.groupAlready, t.groupAdded, t.notScanned]);
+
+  const removeBasketItem = useCallback((key: string) => {
+    setBasket((previous) => previous.filter((item) => item.key !== key));
+  }, []);
+
+  const clearBasket = useCallback(() => {
+    setBasket([]);
+    notify(t.basketCleared);
+  }, [notify, t.basketCleared]);
+
+  const basketCategories = useMemo<BasketCategoryInfo[]>(() => {
+    const map = new Map<StudioCategoryKey, { count: number; bytes: number; sources: Set<string> }>();
+    const allInventory = new Set<string>();
+    const categoryGroups = new Set<string>();
+    for (const item of basket) {
+      if (item.kind === 'all') allInventory.add(item.inventoryId);
+      if (item.kind === 'category') categoryGroups.add(`${item.inventoryId}:${item.category}`);
+    }
+    const add = (category: StudioCategoryKey, count: number, bytes: number, sourceId: string) => {
+      const current = map.get(category) ?? { count: 0, bytes: 0, sources: new Set<string>() };
+      current.count += count;
+      current.bytes += bytes;
+      current.sources.add(sourceId);
+      map.set(category, current);
+    };
+    for (const item of basket) {
+      if (item.kind === 'all') {
+        for (const stat of item.categories) add(stat.key, stat.count, stat.bytes, item.sourceId);
+      } else if (item.kind === 'category') {
+        add(item.category, item.count, item.bytes, item.sourceId);
+      } else if (!allInventory.has(item.inventoryId) && !categoryGroups.has(`${item.inventoryId}:${item.file.category}`)) {
+        add(item.file.category, 1, item.file.size, item.sourceId);
+      }
+    }
+    return CATEGORY_ORDER
+      .filter((category) => map.has(category))
+      .map((category) => {
+        const value = map.get(category)!;
+        return { category, count: value.count, bytes: value.bytes, sources: value.sources.size };
+      });
+  }, [basket]);
+
+  const basketCount = useMemo(() => basketCategories.reduce((sum, entry) => sum + entry.count, 0), [basketCategories]);
+
+  const setDestination = useCallback((choice: DestinationChoice | null) => {
+    setDestinationState(choice);
+    if (choice) notify(t.destinationSelected);
+  }, [notify, t.destinationSelected]);
+
+  const addDestinationRoot = useCallback(async () => {
+    try {
+      const grant = await bridge.pickDestination();
+      if (!grant) return null;
+      setDestinations((previous) => previous.some((item) => item.id === grant.id) ? previous : [...previous, grant]);
+      return grant;
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+      return null;
+    }
+  }, [bridge, locale, t.errorTitle]);
+
+  const setFolderName = useCallback((category: StudioCategoryKey, name: string) => {
+    setFolderNames((previous) => ({ ...previous, [category]: name }));
+  }, []);
+
+  const setCategoryDestination = useCallback((category: StudioCategoryKey, choice: CategoryDestinationChoice | null) => {
+    setCategoryDestinations((previous) => {
+      const next = { ...previous };
+      if (choice) next[category] = choice;
+      else delete next[category];
+      return next;
+    });
+  }, []);
+
+  const settingsSignature = useMemo(() => JSON.stringify({
+    mode,
+    structure,
+    collisionPolicy,
+    destination,
+    basket: basket.map((item) => item.key),
+    categories: basketCategories.map((entry) => entry.category),
+    folderNames,
+    categoryDestinations
+  }), [mode, structure, collisionPolicy, destination, basket, basketCategories, folderNames, categoryDestinations]);
+
+  useEffect(() => {
+    setPlan(null);
+  }, [settingsSignature]);
+
+  const buildPlan = useCallback(async () => {
+    if (!basketCategories.length) {
+      setError(t.needSelection);
+      return false;
+    }
+    if (mode !== 'virtual' && !destination) {
+      setError(t.needDestination);
+      return false;
+    }
+    setPlanBuilding(true);
+    setError('');
+    try {
+      const allInventory = new Set(basket.filter((item) => item.kind === 'all').map((item) => item.inventoryId));
+      const categorySelections = new Set<string>();
+      const fileIds = new Map<string, Set<number>>();
+      const selections: PlanSelection[] = [];
+      for (const item of basket) {
+        if (item.kind === 'all') {
+          selections.push({ inventoryId: item.inventoryId, all: true });
+        } else if (item.kind === 'category') {
+          const key = `${item.inventoryId}:${item.category}`;
+          if (allInventory.has(item.inventoryId) || categorySelections.has(key)) continue;
+          categorySelections.add(key);
+          selections.push({ inventoryId: item.inventoryId, category: item.category });
+        } else if (!allInventory.has(item.inventoryId) && !categorySelections.has(`${item.inventoryId}:${item.file.category}`)) {
+          const set = fileIds.get(item.inventoryId) ?? new Set<number>();
+          set.add(item.file.id);
+          fileIds.set(item.inventoryId, set);
+        }
+      }
+      for (const [inventoryIdValue, ids] of fileIds) {
+        if (!ids.size) continue;
+        selections.push({ inventoryId: inventoryIdValue, fileIds: Array.from(ids) });
+      }
+      if (!selections.length) {
+        setError(t.needSelection);
+        return false;
+      }
+      const names: Record<string, string> = {};
+      if (structure === 'categorized' || mode === 'virtual') {
+        for (const entry of basketCategories) {
+          const value = folderNames[entry.category];
+          if (value) names[entry.category] = value;
+        }
+      }
+      const overrides: Record<string, { destinationId: string; relativePath: string }> = {};
+      if (mode !== 'virtual') {
+        for (const entry of basketCategories) {
+          const choice = categoryDestinations[entry.category];
+          if (choice) overrides[entry.category] = { destinationId: choice.destinationId, relativePath: choice.relativePath };
+        }
+      }
+      const request: PlanRequest = {
+        selections,
+        operation: mode,
+        destination: mode === 'virtual' || !destination
+          ? undefined
+          : { destinationId: destination.destinationId, relativePath: destination.relativePath },
+        structure,
+        categoryFolderNames: names,
+        categoryDestinations: overrides,
+        collisionPolicy
+      };
+      const built = await bridge.buildPlan(request);
+      setPlan(built);
+      setSurface('review');
+      setNotice(t.planBuilt);
+      return true;
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+      return false;
+    } finally {
+      setPlanBuilding(false);
+    }
+  }, [basket, basketCategories, bridge, categoryDestinations, collisionPolicy, destination, folderNames, locale, mode, structure, t]);
+
+  const discardPlan = useCallback(() => setPlan(null), []);
+
+  const executePlan = useCallback(async (approvedPlan: OrganizationPlan) => {
+    if (executing) return;
+    setExecuting(true);
+    setError('');
+    try {
+      const result = await bridge.executePlan({
+        planId: approvedPlan.planId,
+        planHash: approvedPlan.planHash,
+        approved: true,
+        operation: approvedPlan.operation,
+        destinationSummary: approvedPlan.destinationSummary
+      });
+      setLastExecution(result);
+      setPlan(null);
+      setExecutionLive((previous) => {
+        if (previous && previous.operationId === result.journalId) {
+          return { ...previous, phase: result.summary.status, processed: result.summary.totalFiles, summary: result.summary };
+        }
+        return {
+          operationId: result.journalId,
+          planId: approvedPlan.planId,
+          phase: result.summary.status,
+          processed: result.summary.completedFiles + result.summary.failedFiles + result.summary.cancelledFiles,
+          total: result.summary.totalFiles,
+          bytes: 0,
+          totalBytes: result.summary.totalBytes,
+          completed: result.summary.completedFiles,
+          failed: result.summary.failedFiles,
+          cancelled: result.summary.cancelledFiles,
+          currentName: null,
+          message: null,
+          summary: result.summary
+        };
+      });
+      setNotice(result.mode === 'virtual' ? t.virtualCompleted : t.executionDone);
+      setSurface('execution');
+      await loadHistory();
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+      if (['STUDIO_PLAN_STALE', 'STUDIO_PLAN_USED', 'STUDIO_PLAN_TAMPERED', 'STUDIO_PLAN_NOT_FOUND', 'STUDIO_PLAN_HAS_COLLISIONS'].includes(detail.code)) {
+        setPlan(null);
+      }
+      if (detail.code === 'STUDIO_PLAN_STALE') setNotice(t.planStaleNotice);
+      if (detail.code === 'STUDIO_PLAN_USED') setNotice(t.planUsedNotice);
+    } finally {
+      setExecuting(false);
+    }
+  }, [bridge, executing, loadHistory, locale, t]);
+
+  const cancelExecution = useCallback(async () => {
+    if (!executionLive) return;
+    try {
+      await bridge.cancelExecution({ operationId: executionLive.operationId });
+      notify(t.cancelling);
+    } catch (cause) {
+      const detail = describeError(cause, locale);
+      setError(`${t.errorTitle}: ${detail.message}`);
+    }
+  }, [bridge, executionLive, locale, notify, t.cancelling, t.errorTitle]);
+
+  const value: StudioContextValue = {
+    bridge,
+    locale,
+    t,
+    surface,
+    goto,
+    sources,
+    saved,
+    sourcesLoading,
+    activeSourceId,
+    setActiveSourceId,
+    activeSource,
+    inventory,
+    scanRunning,
+    pickSource,
+    beginScan,
+    cancelScan,
+    removeSource,
+    notice,
+    error,
+    dismissBanner,
+    notify,
+    filters,
+    updateFilters,
+    resetFilters,
+    page,
+    pageLoading,
+    view,
+    setView,
+    focused,
+    focusFile,
+    basket,
+    basketCount,
+    basketCategories,
+    toggleFile,
+    addCategory,
+    addAll,
+    removeBasketItem,
+    clearBasket,
+    isFileSelected,
+    isFileCovered,
+    destinations,
+    addDestinationRoot,
+    destination,
+    setDestination,
+    mode,
+    setMode,
+    structure,
+    setStructure,
+    collisionPolicy,
+    setCollisionPolicy,
+    folderNames,
+    setFolderName,
+    categoryDestinations,
+    setCategoryDestination,
+    buildPlan,
+    planBuilding,
+    plan,
+    discardPlan,
+    executePlan,
+    executing,
+    executionLive,
+    lastExecution,
+    cancelExecution,
+    history,
+    historyLoading,
+    loadHistory,
+    insight
+  };
+
+  return (
+    <StudioContext.Provider value={value}>
+      <div className="st-root">
+        <StudioHero />
+        <StudioBanners />
+        <div className="st-shell">
+          <SurfaceRail />
+          <div className="st-stage" id="studio-stage" tabIndex={-1}>
+            <StudioStage />
+          </div>
+        </div>
+      </div>
+    </StudioContext.Provider>
+  );
 }
