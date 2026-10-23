@@ -33,7 +33,7 @@
 | History export | JSON and CSV serialization with a proven round trip | 7 export tests including Arabic, quotes, commas, newlines, empty history and failure entries | packaged smoke exercised the same code path | PASS | `electron/history-export.cjs`, `tests/history-export.test.ts` |
 | Diagnostics export | local support bundle with redacted paths and no clipboard content | static review | reachable from Settings | PASS | `electron/main.cjs` → `buildDiagnostics` |
 | NSIS setup | Electron Builder NSIS configuration | installer build | install/launch/uninstall smoke recorded | PASS | `docs/evidence/installer-smoke.json` |
-| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Source CI run `39831532810` and Windows release-closure run `39831532797` (including the fresh-runner job) pass on repository SHA `6329c6e`; the signed public release gate remains blocked on the external certificate | PASS (unsigned candidate) | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
+| CI / release closure | Ubuntu source CI plus a Windows release-closure gate on `main` | check, lint, tests, build, packaging, packaged/installer/offline smokes, Authenticode verification, artifact manifest, fresh-runner install verification | Source CI run `39888924705` and Windows release-closure run `39888924716` (including the fresh-runner job) pass on repository SHA `adbc8eb`; the signed public release gate remains blocked on the external certificate | PASS (unsigned candidate) | `.github/workflows/ci.yml`, `.github/workflows/release-closure.yml` |
 
 ## Release position
 

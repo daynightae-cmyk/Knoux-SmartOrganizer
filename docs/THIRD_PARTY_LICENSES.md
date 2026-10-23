@@ -10,7 +10,7 @@
 | Zod | 3.23.8 | MIT | https://github.com/colinhacks/zod |
 | lucide-react | 0.462.0 | ISC | https://github.com/lucide-icons/lucide |
 | @vitejs/plugin-react-swc | 3.5.0 | MIT | https://github.com/vitejs/vite-plugin-react |
-| Electron | 43.4.1 | MIT | https://github.com/electron/electron |
+| Electron | 43.8.3 | MIT | https://github.com/electron/electron |
 | electron-builder | 26.15.3 | MIT | https://github.com/electron-userland/electron-builder |
 
 Electron وelectron-builder أدوات بناء/تشغيل يحتاجهما توزيع سطح المكتب؛ لا يعني إدراجهما أن المنتج ينقل ملكية Windows أو مكونات النظام. تبقى التراخيص العابرة للاعتماد محل تدقيق إضافي عند إدخال native module أو SDK جديد.

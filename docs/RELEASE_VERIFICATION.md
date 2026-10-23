@@ -18,7 +18,7 @@ Environment of this verification run:
 |---|---|
 | Machine | Windows 10 Pro 10.0.19045 x64 (`DESKTOP-VQKU9P8`) |
 | Node | v24.21.0 |
-| Electron | 43.4.1 |
+| Electron | 43.8.3 |
 | electron-builder | 26.15.3 |
 | Build host | Developer workstation, K: volume |
 | Network | Connected for build; offline behaviour proved separately with Chromium host rules |
@@ -108,20 +108,25 @@ Unit coverage in `tests/clipboard-vault.test.ts` (18 cases) additionally proves:
 | Visual acceptance | `npm run smoke:visual` | PASS — 10 captured scenarios at the claimed sizes, no horizontal overflow |
 | Reinstall / user-data preservation | `npm run smoke:reinstall` | PASS — install, run, uninstall, reinstall and run, with the user stores intact |
 | Release evidence gate | `node scripts/verify-release.cjs` | PASS |
+| Dependency audit | `npm audit --json` | PASS — 0 vulnerabilities across 470 dependencies after the vitest 5.0.5 and Electron 43.8.3 upgrades; raw report in `docs/evidence/dependency-audit.json` |
 | Authenticode truth | `npm run signing:verify` | `UNSIGNED_PRODUCTION_CANDIDATE` — see §5 |
 | Artifact manifest | `npm run artifact:manifest` | PASS |
-| Source CI | `.github/workflows/ci.yml` | PASS on the pushed source - run `39831532810` |
-| Windows release gate | `.github/workflows/release-closure.yml` | PASS on the pushed source - run `39831532797`, baseline and final packaged, installer, offline and visual gates |
-| Fresh-runner product verification | `clean-machine-verification` | PASS - run `39831532797` (job `clean-machine-verification`): silent install, packaged launch, core operations, uninstall and reinstall on `windows-latest` without a checkout or `node_modules`; unsigned state recorded explicitly |
+| Source CI | `.github/workflows/ci.yml` | PASS on the pushed source - run `39888924705` |
+| Windows release gate | `.github/workflows/release-closure.yml` | PASS on the pushed source - run `39888924716`, baseline and final packaged, installer, offline and visual gates |
+| Fresh-runner product verification | `clean-machine-verification` | PASS - run `39888924716` (job `clean-machine-verification`): silent install, packaged launch, core operations, uninstall and reinstall on `windows-latest` without a checkout or `node_modules`; unsigned state recorded explicitly |
 
-The final green runs above were produced from repository SHA
-`6329c6e1e209e58bd86b21e60e0848b2260d49dc`; the packaged application code is
-the same code built into the delivered artifacts from `1a65c23`. An earlier
-release-closure attempt on `1a65c23` hit a one-off Electron
-`PostQueuedCompletionStatus` crash in the baseline packaged smoke; that same
-smoke passed in the `1a65c23` source-CI run and in both jobs of the final run,
-so it is recorded as a non-reproducible runner crash rather than a product
-failure.
+The current green runs above were produced from repository SHA
+`adbc8ebb24db510e1834c9c333ec1f07669aa454`; the packaged application code is
+the exact audit-clean build of the commit
+`0bf5b6b1ca209e9dc0cdbccc9c545647a4f769a7` (Electron 43.8.3, vitest 5.0.5,
+npm audit 0/470), and the delivered artifacts' hashes in
+`docs/evidence/FINAL_ARTIFACT_MANIFEST.json` match that build. An earlier release-closure attempt on `1a65c23` hit a
+one-off Electron `PostQueuedCompletionStatus` crash in the baseline packaged
+smoke; that same smoke passed in the `1a65c23` source-CI run and in both jobs
+of the final run, so it is recorded as a non-reproducible runner crash rather
+than a product failure. The audit-pinned Electron upgrade changed the shipped
+runtime, so all packaged, installer, offline, reinstall and visual evidence
+was regenerated against the current build instead of being carried over.
 
 ---
 
