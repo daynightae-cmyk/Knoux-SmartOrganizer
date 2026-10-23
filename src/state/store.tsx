@@ -126,7 +126,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!silent) setOperationOpen(true);
     startedAt.current = Date.now();
     try {
-      const completed = await window.knoux.runTool({ toolId: tool.id, inputs: override });
+      // The flag has to travel with the request. The main process marks the
+      // events it emits, and an event that arrives unmarked re-opens the
+      // operation drawer the world was trying not to interrupt.
+      const completed = await window.knoux.runTool({ toolId: tool.id, inputs: override, silent });
       setResult(completed);
       if (tool.id === 'system-health' && completed.success) setHealth(completed.summary);
       return completed;

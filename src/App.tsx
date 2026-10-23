@@ -1,4 +1,5 @@
 import AppShell from './shell/AppShell';
+import ApplicationsPage from './pages/ApplicationsPage';
 import AutomationPage from './pages/AutomationPage';
 import CatalogPage from './pages/CatalogPage';
 import ClipboardVaultPage from './pages/ClipboardVaultPage';
@@ -15,6 +16,7 @@ function RoutedPage() {
   if (!booted) return <p>{t('common.loading')}</p>;
   if (bootError) return <div className="notice" role="alert">{bootError}</div>;
   if (page === 'home') return <HomePage />;
+  if (page === 'applications') return <ApplicationsPage />;
   if (page === 'scan') return <SmartScanPage />;
   if (page === 'studio') return <StudioPage />;
   if (page === 'clipboard') return <ClipboardVaultPage />;

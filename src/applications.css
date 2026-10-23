@@ -1,0 +1,296 @@
+/* ---------------------------------------------------------------------------
+   Applications — the Software Command world.
+
+   Composition: a live register of every program Windows reports, a coverage
+   ribbon that grades the source data, a dossier band that opens on selection,
+   and a staging deck that only exists once programs are staged.
+   --------------------------------------------------------------------------- */
+
+.appx { --appx-row: 46px; }
+html[data-density="compact"] .appx { --appx-row: 38px; }
+
+/* -- Filter bar ----------------------------------------------------------- */
+
+.appx__bar {
+  display: grid; gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, var(--surface-raised), var(--surface) 70%);
+  box-shadow: var(--shadow-soft);
+}
+.appx__barrow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.appx__barlabel { color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .9px; font-weight: 700; }
+.appx__search { flex: 1 1 280px; min-width: 200px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 11px; background: var(--bg); padding-inline: 11px; }
+.appx__search svg { flex: none; color: var(--muted); }
+.appx__search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); padding: 9px 0; font-size: var(--text-body); }
+.appx__search:focus-within { border-color: var(--world-border); box-shadow: 0 0 0 3px var(--world-quiet); }
+.appx__search-clear { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 7px; display: grid; place-items: center; }
+.appx__search-clear:hover { color: var(--text); background: var(--surface-hover); }
+.appx__spacer { flex: 1; }
+.appx__count { color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* The result count rides the facet row instead of holding its own band. */
+.world-facets .appx__count { margin-inline-start: auto; align-self: center; }
+
+/* -- Layout --------------------------------------------------------------- */
+
+.appx__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 360px); gap: 14px; align-items: start; }
+/* The column is a block, not a grid, on purpose: the staging deck is a sticky
+   child and a grid item can only ever stick inside its own row. */
+.appx__column { min-width: 0; }
+.appx__column > * + * { margin-top: 12px; }
+
+/* -- Ledger ------------------------------------------------------------- */
+
+.appx__ledger {
+  container-type: inline-size;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.appx__ledger-head, .appx__row {
+  display: grid;
+  grid-template-columns: 26px 34px minmax(132px, 2.6fr) minmax(78px, 1.4fr) 86px 92px 84px;
+  gap: 8px; align-items: center;
+}
+.appx__ledger-head { padding: 9px 14px; border-bottom: 1px solid var(--border); background: var(--surface-raised); position: sticky; top: 0; z-index: 2; }
+.appx__ledger-head span { color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .9px; font-weight: 700; }
+.appx__ledger-head .is-name { grid-column: span 2; }
+.appx__ledger-head .is-num { text-align: end; }
+.appx__rows { max-height: min(58vh, 620px); overflow: auto; scrollbar-width: thin; }
+html[data-density="compact"] .appx__rows { max-height: min(66vh, 720px); }
+
+.appx__row {
+  position: relative;
+  width: 100%;
+  min-height: var(--appx-row);
+  padding: 5px 14px;
+  display: grid;
+  border: 0; border-bottom: 1px solid var(--border-soft);
+  background: transparent; color: var(--text); text-align: start;
+  transition: background .14s, box-shadow .14s;
+}
+.appx__rows .appx__row:last-child { border-bottom: 0; }
+.appx__row:hover { background: var(--surface-hover); }
+.appx__row[data-active="true"] { background: var(--world-quiet); box-shadow: inset 3px 0 0 var(--world-hue); }
+html[dir="rtl"] .appx__row[data-active="true"] { box-shadow: inset -3px 0 0 var(--world-hue); }
+.appx__row[data-staged="true"] .appx__rowname { color: var(--world-hue); }
+html[data-theme="light"] .appx__row[data-staged="true"] .appx__rowname { color: color-mix(in srgb, var(--world-hue) 72%, #171522); }
+
+.appx__tick { display: grid; place-items: center; }
+.appx__tick input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; margin: 0; }
+.appx__tick input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.appx__opener {
+  grid-column: span 2;
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 11px; align-items: center;
+  border: 0; background: transparent; color: inherit; font: inherit; text-align: start;
+  cursor: pointer; min-width: 0; padding: 2px 0; border-radius: 8px;
+}
+.appx__opener:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.appx__rowtext { min-width: 0; }
+.appx__rowname { display: block; font-size: var(--text-lg); font-weight: 700; letter-spacing: -.25px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appx__rowname--staged { color: var(--world-hue); }
+.appx__rowmeta { display: flex; align-items: center; gap: 5px; margin-top: 2px; min-width: 0; flex-wrap: nowrap; overflow: hidden; }
+.appx__colhead { display: flex; align-items: center; gap: 7px; }
+.appx__colhead input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; margin: 0; }
+.appx__publisher { display: block; color: var(--muted); font-size: var(--text-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.appx__publisher--none { font-style: normal; }
+.appx__version { color: var(--muted); font-size: var(--text-md); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* An unrecorded field is a quiet rule, not a warning. Spelling "Not recorded"
+   down every column made a hundred and fifty real rows read like a failure log. */
+.appx__empty, .appx__publisher--none, .appx__version--none { opacity: .5; }
+.appx__cell { font-size: var(--text-md); color: var(--text); min-width: 0; }
+.appx__cell--faint { color: var(--muted); }
+.appx__cell--num { text-align: end; }
+.appx__size { text-align: end; font-size: var(--text-md); }
+.appx__size b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.appx__size i { font-style: normal; color: var(--muted); font-size: var(--text-xs); display: block; line-height: 1.3; }
+.appx__badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); padding: 1px 6px; border-radius: var(--radius-pill); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.appx__badge--system { color: var(--status-warning-text); background: var(--status-warning-surface); border-color: var(--status-warning-border); }
+.appx__badge--package { color: var(--status-info); border-color: color-mix(in srgb, var(--status-info) 40%, transparent); }
+.appx__badge--runtime { color: var(--primary-bright); border-color: var(--accent-border); background: var(--world-quiet); }
+/* The lane holds the three facts that change what you can do with an entry.
+   This counts the ones the lane could not show; the full set is in the title
+   and in the dossier. */
+.appx__badge--more { border-style: dashed; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* -- Chapter (publisher) view ------------------------------------------- */
+
+.appx__chapters { max-height: min(62vh, 660px); overflow: auto; scrollbar-width: thin; }
+.appx__chapter { padding: 0 14px 14px; }
+.appx__chapter + .appx__chapter { border-top: 1px solid var(--border-soft); padding-top: 14px; }
+.appx__chapterhead { position: sticky; top: 0; z-index: 2; display: flex; align-items: baseline; gap: 9px; padding: 11px 0 9px; background: var(--surface); }
+.appx__chapterhead h4 { margin: 0; font-size: var(--text-md); font-weight: 800; letter-spacing: .1px; }
+.appx__chapterhead span { color: var(--muted); font-size: var(--text-sm); }
+.appx__chapterhead .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--world-border), transparent); }
+html[dir="rtl"] .appx__chapterhead .rule { background: linear-gradient(270deg, var(--world-border), transparent); }
+.appx__tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(154px, 1fr)); gap: 9px; }
+.appx__tile {
+  position: relative; display: grid; gap: 8px; align-content: start;
+  padding: 12px; min-height: 96px;
+  border: 1px solid var(--border); border-radius: 13px;
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface) 74%);
+  text-align: start; color: var(--text); cursor: pointer; font: inherit;
+  transition: border-color .16s, transform .16s, background .16s;
+}
+.appx__tile:hover { border-color: var(--world-border); transform: translateY(-2px); }
+.appx__tile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.appx__tile[data-active="true"] { background: var(--world-quiet); border-color: var(--world-border); }
+.appx__tile[data-staged="true"]::after { content: ""; position: absolute; inset-block: 8px; inset-inline: 8px; border: 1px solid var(--world-border); border-radius: 10px; pointer-events: none; }
+.appx__tile strong { display: block; font-size: var(--text-body); font-weight: 700; line-height: 1.32; letter-spacing: -.2px; }
+.appx__tile small { display: block; color: var(--muted); font-size: var(--text-xs); line-height: 1.4; }
+.appx__tile .appx__opener { grid-column: auto; grid-template-columns: 34px minmax(0, 1fr); align-items: start; }
+.appx__tile .appx__rowname { white-space: normal; overflow: visible; font-size: var(--text-body); line-height: 1.32; display: block; }
+.appx__tile small { margin-top: 2px; }
+.appx__tile .appx__tick { position: absolute; top: 8px; inset-inline-end: 8px; opacity: 0; transition: opacity .16s; }
+.appx__tile:hover .appx__tick, .appx__tile:focus-within .appx__tick, .appx__tile[data-staged="true"] .appx__tick { opacity: 1; }
+
+/* -- Icon tokens -------------------------------------------------------- */
+
+.appx-icon { flex: none; display: block; width: 30px; height: 30px; border-radius: 8px; }
+.appx-icon--38 { width: 34px; height: 34px; border-radius: 9px; }
+.appx-icon--52 { width: 52px; height: 52px; border-radius: 13px; }
+.appx-glyph {
+  display: grid; place-items: center;
+  font-weight: 800; letter-spacing: -.6px;
+  color: hsl(var(--glyph-hue) 78% 84%);
+  background: hsl(var(--glyph-hue) 42% 21%);
+  border: 1px solid hsl(var(--glyph-hue) 46% 34%);
+  box-shadow: inset 0 1px #ffffff14;
+}
+html[data-theme="light"] .appx-glyph { color: hsl(var(--glyph-hue) 62% 24%); background: hsl(var(--glyph-hue) 68% 92%); border-color: hsl(var(--glyph-hue) 52% 78%); }
+.appx-glyph--38 { font-size: 13px; }
+.appx-glyph--52 { font-size: 19px; }
+.appx-icon-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.appx-icon--img { background: transparent; border: 0; box-shadow: none; overflow: hidden; padding: 2px; }
+.appx-icon--pending { background: var(--surface-hover); border: 1px dashed var(--border); }
+
+/* -- Dossier ------------------------------------------------------------ */
+
+.appx__dossier {
+  position: sticky; top: 16px;
+  display: grid; gap: 0;
+  border: 1px solid var(--world-border); border-radius: var(--radius-lg);
+  background: linear-gradient(170deg, var(--surface-raised), var(--surface) 58%);
+  box-shadow: var(--shadow-soft);
+  max-height: calc(100vh - 120px); overflow: auto; scrollbar-width: thin;
+}
+.appx__dossier--empty { border-style: dashed; border-color: var(--border-strong); box-shadow: none; background: var(--surface); padding: 22px 20px; gap: 9px; display: grid; }
+.appx__dossier--empty h3 { margin: 0; font-size: var(--text-md); font-weight: 800; }
+.appx__dossier--empty p { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: 1.6; }
+.appx__dossier--empty ul { margin: 4px 0 0; padding-inline-start: 18px; color: var(--muted); font-size: var(--text-xs); line-height: 1.7; }
+
+.appx__dhead { position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 13px; padding: 16px 16px 13px; border-bottom: 1px solid var(--border-soft); }
+.appx__dtitle { min-width: 0; }
+.appx__dhead h3 { margin: 0; font-size: var(--text-lg); font-weight: 800; letter-spacing: -.4px; line-height: 1.28; overflow-wrap: anywhere; }
+.appx__dhead p { margin: 3px 0 0; color: var(--muted); font-size: var(--text-md); line-height: 1.45; overflow-wrap: anywhere; }
+.appx__dchips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.appx__dclose { position: absolute; top: 10px; inset-inline-end: 10px; }
+.appx__dsection { padding: 13px 16px; border-bottom: 1px solid var(--border-soft); }
+.appx__dsection:last-child { border-bottom: 0; }
+.appx__dsection h4 { margin: 0 0 9px; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 800; }
+.appx__dfield { display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 10px; padding: 5px 0; border-top: 1px solid var(--border-soft); }
+.appx__dfield:first-of-type { border-top: 0; }
+.appx__dfield dt { color: var(--muted); font-size: var(--text-sm); }
+.appx__dfield dd { margin: 0; font-size: var(--text-md); overflow-wrap: anywhere; }
+.appx__dfield dd em { font-style: normal; color: var(--muted); font-size: var(--text-xs); }
+.appx__dfields { margin: 0; }
+.appx__mono { font-size: var(--text-sm); }
+
+.appx__actions { display: grid; gap: 6px; }
+.appx__action {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  color: var(--text); padding: 8px 11px; font-size: var(--text-md); text-align: start; cursor: pointer;
+  transition: border-color .16s, background .16s;
+}
+.appx__action:hover { border-color: var(--world-border); background: var(--surface-hover); }
+.appx__action:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.appx__action svg { color: var(--world-hue); }
+html[data-theme="light"] .appx__action svg { color: color-mix(in srgb, var(--world-hue) 72%, #171522); }
+.appx__action--off { cursor: not-allowed; opacity: .72; border-style: dashed; }
+.appx__action--off svg { color: var(--muted); }
+.appx__action--off .appx__actionlabel { color: var(--muted); }
+.appx__action__note { grid-column: 2 / -1; color: var(--muted); font-size: var(--text-xs); line-height: 1.5; }
+.appx__action__state { font-size: var(--text-xs); color: var(--amber); white-space: nowrap; }
+.appx__action__state--live { color: var(--status-success-text); }
+.appx__hint { margin: 8px 0 0; color: var(--muted); font-size: var(--text-xs); line-height: 1.55; }
+
+/* -- Staging deck ------------------------------------------------------- */
+
+/* The deck is the register's own tray, so it is pinned to the bottom of the
+   register column and spans it. `position: fixed` here would anchor the tray to
+   the nearest transformed ancestor — the animated page wrapper — which puts it
+   below the fold on a laptop viewport. */
+.appx__deck {
+  position: sticky; bottom: 14px; z-index: 4;
+  display: flex; justify-content: center; pointer-events: none;
+}
+.appx__deckinner {
+  pointer-events: auto;
+  width: 100%;
+  display: flex; align-items: center; gap: 13px; flex-wrap: wrap;
+  padding: 11px 15px;
+  border: 1px solid var(--world-border); border-radius: var(--radius-lg);
+  background: var(--surface-glass); backdrop-filter: blur(22px);
+  box-shadow: var(--shadow), inset 0 1px #ffffff12;
+  animation: appx-deck-up .2s ease-out;
+}
+html[data-theme="light"] .appx__deckinner { background: var(--surface-glass); box-shadow: var(--shadow); }
+@keyframes appx-deck-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.appx__deckcount { display: inline-flex; align-items: baseline; gap: 7px; font-size: var(--text-md); font-weight: 700; }
+.appx__deckcount b { font-size: var(--text-xl); letter-spacing: -.6px; color: var(--world-hue); font-variant-numeric: tabular-nums; }
+html[data-theme="light"] .appx__deckcount b { color: color-mix(in srgb, var(--world-hue) 72%, #171522); }
+.appx__decknote { color: var(--muted); font-size: var(--text-sm); line-height: 1.45; flex: 1 1 260px; min-width: 0; }
+.appx__deckactions { display: inline-flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+
+/* -- States ------------------------------------------------------------- */
+
+.appx__states { display: grid; gap: 11px; padding: 22px; border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); color: var(--muted); justify-items: start; }
+.appx__states h3 { margin: 0; color: var(--text); font-size: var(--text-md); font-weight: 800; }
+.appx__states p { margin: 0; font-size: var(--text-sm); line-height: 1.6; max-width: 62ch; }
+.appx__warn { display: flex; gap: 9px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--status-warning-border); background: var(--status-warning-surface); color: var(--status-warning-text); border-radius: 11px; font-size: var(--text-sm); line-height: 1.5; }
+.appx__warn svg { flex: none; margin-top: 1px; }
+
+.appx__skel { display: grid; gap: 1px; }
+.appx__skelrow { display: grid; grid-template-columns: 38px minmax(120px, 2fr) minmax(80px, 1.4fr) 90px 90px; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border-soft); }
+.appx__skelbar { height: 10px; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--surface-raised), var(--surface-hover), var(--surface-raised)); background-size: 240% 100%; animation: appx-sweep 1.5s linear infinite; }
+.appx__skeldot { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-raised), var(--surface-hover), var(--surface-raised)); background-size: 240% 100%; animation: appx-sweep 1.5s linear infinite; }
+@keyframes appx-sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+.appx__live { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* -- Responsive --------------------------------------------------------- */
+
+/* The ledger is a container because its width depends on whether the dossier
+   is docked beside it, not on the window alone. */
+@container (max-width: 720px) {
+  .appx__ledger-head, .appx__row { grid-template-columns: 26px 34px minmax(120px, 2.6fr) minmax(72px, 1.3fr) 82px 88px; }
+  .appx__col--date, .appx__cell--date { display: none; }
+}
+@container (max-width: 620px) {
+  .appx__ledger-head, .appx__row { grid-template-columns: 26px 34px minmax(120px, 2.6fr) 82px 88px; }
+  .appx__col--publisher, .appx__cell--publisher { display: none; }
+}
+@container (max-width: 520px) {
+  .appx__ledger-head, .appx__row { grid-template-columns: 26px 34px minmax(110px, 2.6fr) 88px; }
+  .appx__col--version, .appx__cell--version { display: none; }
+}
+
+@media (max-width: 1180px) {
+  .appx__body { grid-template-columns: minmax(0, 1fr); }
+  .appx__dossier, .appx__dossier--empty { position: relative; top: 0; max-height: none; order: -1; }
+}
+@media (max-width: 900px) {
+  .appx__barrow { gap: 8px; }
+  .appx__tiles { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appx__deckinner, .appx__skelbar, .appx__skeldot { animation: none; }
+  .appx__tile:hover { transform: none; }
+}
+html[data-motion="reduced"] .appx__deckinner,
+html[data-motion="reduced"] .appx__skelbar,
+html[data-motion="reduced"] .appx__skeldot { animation: none; }

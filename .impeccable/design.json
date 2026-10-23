@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T15:20:00.000Z",
+  "title": "Design System: KNOuX SmartOrganizer",
+  "extensions": {
+    "colorMeta": {
+      "ground": { "role": "neutral", "displayName": "Midnight Graphite", "canonical": "#08090f", "tonalRamp": ["#05060a", "#08090f", "#0c0e16", "#111320", "#171a2a", "#20233a", "#2b2d45", "#a6a5bd"] },
+      "surface": { "role": "neutral", "displayName": "Workshop Surface", "canonical": "#111320", "tonalRamp": ["#0a0b13", "#0e101a", "#111320", "#141725", "#171a2a", "#1c1f31", "#20233a", "#2b2d45"] },
+      "violet": { "role": "primary", "displayName": "KNOuX Violet", "canonical": "#a855f7", "tonalRamp": ["#2a1140", "#3d1860", "#5b1f8c", "#7b2cc4", "#a855f7", "#c4a6ff", "#dcc8ff", "#efe4ff"] },
+      "violet-bright": { "role": "primary", "displayName": "Lilac Light", "canonical": "#c4a6ff", "tonalRamp": ["#3b2a63", "#553b8f", "#7a5cc4", "#a488ee", "#c4a6ff", "#d8c4ff", "#e9ddff", "#f7f3ff"] },
+      "verified-teal": { "role": "secondary", "displayName": "Verified Teal", "canonical": "#5ee1a5", "tonalRamp": ["#0d3a28", "#12503a", "#1a6b4e", "#2c9370", "#5ee1a5", "#8becc0", "#b6f3d8", "#e0fbef"] },
+      "caution-amber": { "role": "secondary", "displayName": "Caution Amber", "canonical": "#ffc56d", "tonalRamp": ["#4a3519", "#6b4d1f", "#8f6726", "#bf8c3a", "#ffc56d", "#ffd79b", "#ffe7c4", "#fff6e6"] },
+      "fault-rose": { "role": "secondary", "displayName": "Fault Rose", "canonical": "#ff7890", "tonalRamp": ["#4b1d2b", "#6d2437", "#962f49", "#c34a67", "#ff7890", "#ffa3b4", "#ffc2cf", "#ffe3ea"] },
+      "data-blue": { "role": "secondary", "displayName": "Data Blue", "canonical": "#79b8ff", "tonalRamp": ["#12294a", "#1b3c6b", "#28548f", "#4a83c4", "#79b8ff", "#a4d1ff", "#cbe5ff", "#eaf5ff"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#f7f5ff", "tonalRamp": ["#1a1926", "#33324a", "#514f6c", "#6f6d8d", "#a6a5bd", "#c9c8da", "#e6e5f0", "#f7f5ff"] },
+      "ink-muted": { "role": "neutral", "displayName": "Quiet Ink", "canonical": "#a6a5bd", "tonalRamp": ["#1a1926", "#2b2d45", "#43456a", "#5d5f84", "#7b7d9c", "#a6a5bd", "#c9c8da", "#e6e5f0"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#2b2d45", "tonalRamp": ["#14152a", "#1c1e33", "#2b2d45", "#3a3d5c", "#4c4f75", "#666a97", "#8a8ebb", "#b3b7dd"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "World title", "purpose": "One per screen, inside the head band." },
+      "metric": { "displayName": "Metric readout", "purpose": "Counted values in the metric rail; always tabular." },
+      "title": { "displayName": "Section title", "purpose": "Sub-heads inside a world." },
+      "body": { "displayName": "Body", "purpose": "Prose, dossier values, descriptions; 74ch measure." },
+      "label": { "displayName": "Panel legend", "purpose": "Column heads, badges, facet counts; uppercase with 0.9px tracking." }
+    },
+    "shadows": [
+      { "name": "shadow", "value": "0 26px 70px #00000052", "purpose": "Floating layers: drawer, palette, dialog." },
+      { "name": "shadow-soft", "value": "0 14px 36px #00000035", "purpose": "In-flow panels: ledger container, head band, dossier." },
+      { "name": "glow", "value": "0 0 0 1px #a855f733, 0 12px 34px #7b43db22", "purpose": "Brand only: the world tile and the active nav item." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "140ms", "purpose": "Row hover and selection recolour." },
+      { "name": "state-standard", "value": "180ms", "purpose": "Control border, background and chip fill." },
+      { "name": "state-slow", "value": "250ms", "purpose": "Sidebar width and drawer transforms." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion, html[data-motion=\"reduced\"]", "purpose": "Removes every transform, animation and atmosphere layer." }
+    ],
+    "breakpoints": [
+      { "name": "document-minimum", "value": "860px" },
+      { "name": "ledger-date-drop", "value": "720px (container)" },
+      { "name": "ledger-publisher-drop", "value": "620px (container)" },
+      { "name": "ledger-version-drop", "value": "520px (container)" },
+      { "name": "world-single-column", "value": "1180px" },
+      { "name": "shell-overlay", "value": "900px" }
+    ],
+    "worldHues": {
+      "applications": "#8b5cf6", "files": "#a5b4fc", "storage": "#6366f1", "cleanup": "#f59e0b", "startup": "#38bdf8",
+      "system": "#2dd4bf", "repair": "#f87171", "services": "#7c8cc4", "network": "#22d3ee", "hardware": "#fb923c", "automation": "#c084fc"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary world control",
+      "kind": "button",
+      "refersTo": "control-primary",
+      "description": "The single main action in a world's command strip, tinted with that world's hue.",
+      "html": "<button class=\"ds-control-primary\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-9-9\"/><path d=\"M21 3v9h-9\"/></svg>Rescan inventory</button>",
+      "css": ".ds-control-primary { display:inline-flex; align-items:center; gap:8px; border:1px solid #a855f75c; border-radius:12px; padding:8px 11px; font:700 12px/1.2 'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; color:#f7f5ff; cursor:pointer; background:linear-gradient(103deg, color-mix(in srgb, #a855f7 34%, #111320), #171a2a); transition:background .18s, border-color .18s, transform .18s; } .ds-control-primary svg { color:#a855f7; } .ds-control-primary:hover { background:#20233a; border-color:#a855f7; } .ds-control-primary:active { transform:translateY(1px); } .ds-control-primary:focus-visible { outline:2px solid #a855f7; outline-offset:2px; }"
+    },
+    {
+      "name": "Facet chip",
+      "kind": "chip",
+      "refersTo": "facet-chip",
+      "description": "A filter with its live count; a chip is never rendered for a facet with zero members.",
+      "html": "<button class=\"ds-facet\" aria-pressed=\"true\">Packaged <b>38</b></button>",
+      "css": ".ds-facet { display:inline-flex; align-items:center; gap:7px; border:1px solid #2b2d45; border-radius:99px; background:transparent; color:#a6a5bd; padding:6px 12px; font:600 11px/1.3 'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; cursor:pointer; transition:color .18s, border-color .18s, background .18s; } .ds-facet b { font-weight:700; font-variant-numeric:tabular-nums; color:#c9c8da; } .ds-facet:hover { color:#f7f5ff; border-color:#a855f75c; } .ds-facet[aria-pressed=\"true\"] { background:#a855f71f; border-color:#a855f75c; color:#f7f5ff; font-weight:700; } .ds-facet[aria-pressed=\"true\"] b { color:#a855f7; } .ds-facet:focus-visible { outline:2px solid #a855f7; outline-offset:2px; }"
+    },
+    {
+      "name": "Ledger row",
+      "kind": "card",
+      "refersTo": "ledger-row",
+      "description": "One installed program. Real Windows icon, tabular size column, three-badge meta lane.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-tick\"><input type=\"checkbox\" aria-label=\"Select Example Tool\"></span><span class=\"ds-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"3\"/><path d=\"M3 9h18\"/></svg></span><span class=\"ds-name\"><b>Example Tool</b><em>Packaged · Machine · +2</em></span><span class=\"ds-pub\">Example Publisher</span><span class=\"ds-ver\">4.2.118</span><span class=\"ds-size\"><b>128.4 MB</b><i>declared</i></span><span class=\"ds-date\">12 Mar 2026</span></div>",
+      "css": ".ds-row { display:grid; grid-template-columns:26px 34px minmax(132px,2.6fr) minmax(78px,1.4fr) 86px 92px 84px; gap:8px; align-items:center; min-height:48px; padding:5px 14px; background:#111320; color:#f7f5ff; border-bottom:1px solid #2b2d4566; font-family:'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; } .ds-row:hover { background:#20233a; } .ds-tick input { width:15px; height:15px; accent-color:#a855f7; } .ds-icon { display:grid; place-items:center; color:#c4a6ff; } .ds-name b { display:block; font-size:15px; font-weight:700; letter-spacing:-.25px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ds-name em { display:block; margin-top:2px; font-size:11px; font-style:normal; color:#a6a5bd; } .ds-pub, .ds-ver { font-size:12px; color:#a6a5bd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ds-size { text-align:end; } .ds-size b { font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; } .ds-size i { display:block; font-size:10px; font-style:normal; color:#a6a5bd; } .ds-date { font-size:12px; color:#a6a5bd; opacity:.5; }"
+    },
+    {
+      "name": "Coverage measure",
+      "kind": "custom",
+      "refersTo": "dossier-panel",
+      "description": "One measured line of what the inventory actually knows; hatched when the source does not exist.",
+      "html": "<div class=\"ds-measure\"><span class=\"ds-mname\">Publisher</span><span class=\"ds-mtrack\" role=\"progressbar\" aria-valuenow=\"74\" aria-valuemin=\"0\" aria-valuemax=\"100\"><i></i></span><b>74%</b></div>",
+      "css": ".ds-measure { display:flex; align-items:center; gap:8px; min-width:0; font-family:'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; } .ds-mname { color:#a6a5bd; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ds-mtrack { position:relative; flex:1 1 34px; min-width:26px; height:5px; border-radius:99px; background:#20233a; overflow:hidden; } .ds-mtrack i { position:absolute; inset:0 auto 0 0; width:74%; border-radius:inherit; background:linear-gradient(90deg,#a855f7,#c4a6ff); } .ds-measure b { flex:none; min-width:34px; text-align:end; font-size:11px; font-variant-numeric:tabular-nums; } .ds-measure--off .ds-mtrack i { display:none; } .ds-measure--off .ds-mtrack { background:repeating-linear-gradient(115deg,#20233a 0 5px,#2b2d45 5px 6px); }"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "text-field",
+      "description": "The command strip's inventory search: a recessed well that lights with the world hue.",
+      "html": "<label class=\"ds-search\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg><input placeholder=\"Search installed software\"></label>",
+      "css": ".ds-search { flex:1 1 280px; min-width:200px; display:flex; align-items:center; gap:9px; border:1px solid #2b2d45; border-radius:12px; background:#08090f; padding-inline:11px; } .ds-search svg { color:#a6a5bd; flex:none; } .ds-search input { width:100%; border:0; outline:0; background:transparent; color:#f7f5ff; padding:9px 0; font:400 13px/1.4 'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; } .ds-search:focus-within { border-color:#a855f7; box-shadow:0 0 0 3px #a855f71f; }"
+    },
+    {
+      "name": "Nav item",
+      "kind": "nav",
+      "refersTo": "control-quiet",
+      "description": "A world entry in the sidebar rail; the active item carries a 3px inset violet bar.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-item\">Software</button><button class=\"ds-nav-item active\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"3\"/><path d=\"M3 9h18\"/></svg><span>Applications</span></button></nav>",
+      "css": ".ds-nav { display:grid; gap:4px; width:232px; background:linear-gradient(180deg,#111320f2,#0b0d16e8); padding:16px; font-family:'Segoe UI Variable','Segoe UI',Tahoma,sans-serif; } .ds-nav-item { display:flex; gap:11px; align-items:center; min-width:0; border:1px solid transparent; background:transparent; color:#a6a5bd; padding:10px 12px; border-radius:11px; font-size:13px; text-align:start; cursor:pointer; transition:background .2s, color .2s, transform .2s; } .ds-nav-item span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .ds-nav-item:hover { background:#20233a; color:#f7f5ff; transform:translateX(2px); } .ds-nav-item.active { background:linear-gradient(100deg,#8b3dff35,#5b5ff812); color:#f7f5ff; border-color:#a855f733; box-shadow:inset 3px 0 0 #c4a6ff; } .ds-nav-item:focus-visible { outline:2px solid #a855f7; outline-offset:2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Verified Instrument Panel",
+    "overview": "KNOuX looks like a precision instrument mounted in a dark workshop. The ground is near-black graphite, the surfaces rise in three measurable steps, and colour is never decoration: violet is the brand and the selection signal, and every other hue is bound to a state. A screen is correct when a non-technical owner can read it in one glance and a technician can audit every number on it. Density is the default: hairline rules, tabular figures and aligned columns carry the information instead of nested cards.",
+    "keyCharacteristics": [
+      "Midnight graphite ground with three explicit surface steps; no fourth level.",
+      "Violet is identity and selection; the other four hues are state, never mood.",
+      "Hairline rules and aligned columns instead of nested panels.",
+      "Tabular figures wherever a number can be compared.",
+      "Real Windows artefacts are the only permitted imagery.",
+      "Every unmeasured value declares itself as unmeasured."
+    ],
+    "rules": [
+      { "name": "The State-Colour Rule", "body": "A hue other than violet appears only when it means something. If the reason is aesthetic, the answer is quiet ink.", "section": "colors" },
+      { "name": "The Honest Blank Rule", "body": "An unknown value is rendered as an em dash at half opacity, not as zero, not as \"N/A\", and not as a friendly sentence repeated down a column.", "section": "colors" },
+      { "name": "The Tabular Rule", "body": "Any number a user can compare across rows is set in tabular figures.", "section": "typography" },
+      { "name": "The One-Display Rule", "body": "A screen has exactly one 28px display line. A second one means two worlds are competing for the same viewport.", "section": "typography" },
+      { "name": "The One-Inset-Rule", "body": "A selected row is marked by inset 3px 0 0 in the world hue, mirrored to the inline end in RTL. Selection never changes the row's height.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do bind each world to one hue through [data-world] and let it own a distinct composition, not a distinct palette.",
+      "Do source every visible number, icon and status from a verified local Windows provider, and render an em dash when the provider did not answer.",
+      "Do keep the head band under roughly 180px at 1366x768 so the ledger shows at least eight rows above the fold.",
+      "Do put a consequence in a control's label: what will change, and whether it can be undone.",
+      "Do test each screen at 1920x1080, 1366x768 and 860x600, in Arabic RTL and English LTR, in dark and light."
+    ],
+    "donts": [
+      "Don't present an unimplemented command as functional.",
+      "Don't use nested cards, gradient text, eyebrow headings, or a decorative glow on data.",
+      "Don't ship invented imagery: no fake sparklines, no rings around numbers that are not ratios, no downloaded or guessed application logos.",
+      "Don't let a control's width be decided by its longest Windows string.",
+      "Don't repeat a sentence such as \"Not recorded\" down a column."
+    ]
+  }
+}

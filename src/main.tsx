@@ -5,5 +5,7 @@ import './index.css';
 import './shell.css';
 import './states.css';
 import './clipboard.css';
+import './worlds.css';
+import './applications.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

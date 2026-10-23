@@ -55,6 +55,24 @@ export interface ClipboardStatus {
   limits: { maxTextBytes: number; maxImageBytes: number; maxFiles: number };
 }
 
+/**
+ * A Windows-native application icon for the Applications workspace.
+ *
+ * `ready` always carries a real PNG produced from the shell, an MSIX/AppX package
+ * or a `.ico` file. Anything that could not be resolved comes back `unavailable`
+ * with a machine-readable reason token, so the renderer can show the typographic
+ * identity instead of a placeholder. No path ever crosses this bridge.
+ */
+export interface AppIconResult {
+  id: string;
+  status: 'ready' | 'unavailable' | 'unknown-app';
+  source: 'shell' | 'package' | 'ico' | 'none';
+  dataUrl?: string;
+  /** Square edge actually produced; icons are never upscaled. */
+  pixels?: number;
+  reason?: string;
+}
+
 export interface AppInfo {
   version: string;
   startedAt: string;
@@ -100,6 +118,8 @@ declare global {
       openPath: (target: string) => Promise<string>;
       exportDiagnostics: () => Promise<string | null>;
       codeSigning: () => Promise<NonNullable<AppInfo['codeSigning']>>;
+      /** Opaque installed-application ids in, native icons or an honest reason out. */
+      appIcons: (request: { ids: string[] }) => Promise<AppIconResult[]>;
       clipboardStatus: () => Promise<ClipboardStatus>;
       clipboardList: (request?: { query?: string; type?: 'all' | 'text' | 'image' | 'files'; pinnedOnly?: boolean }) => Promise<ClipboardItem[]>;
       clipboardGet: (id: string) => Promise<ClipboardItem | null>;

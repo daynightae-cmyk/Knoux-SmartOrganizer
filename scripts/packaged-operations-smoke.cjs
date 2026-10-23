@@ -25,7 +25,12 @@ function launch(exe, args, logPath) {
     // The application's own output is kept. A packaged application that dies
     // without a word used to produce a bare exit code, which named no cause.
     const stream = fsSync.createWriteStream(logPath, { flags: 'a' });
-    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const env = { ...process.env };
+    // See the visual acceptance harness: ELECTRON_RUN_AS_NODE makes the packaged
+    // binary reject every application switch as a Node option.
+    delete env.ELECTRON_RUN_AS_NODE;
+    delete env.ELECTRON_EXEC_PATH;
+    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env });
     child.stdout.pipe(stream);
     child.stderr.pipe(stream);
     const timer = setTimeout(() => {

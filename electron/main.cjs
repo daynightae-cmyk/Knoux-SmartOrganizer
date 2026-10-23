@@ -15,6 +15,7 @@ const { createStartupManager } = require('./startup-manager.cjs');
 const advancedLocal = require('./advanced-local-services.cjs');
 const windowsProviders = require('./windows-providers.cjs');
 const windowsFs = require('./windows-fs-metadata.cjs');
+const appIcons = require('./app-icons.cjs');
 const verificationKit = require('./verification.cjs');
 const historyExport = require('./history-export.cjs');
 const safeMove = require('./safe-move.cjs');
@@ -38,6 +39,7 @@ let automationStore = null;
 let startupManager = null;
 let clipboardVault = null;
 let studioController = null;
+let appIconProvider = null;
 const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
@@ -54,6 +56,9 @@ const toolDefinitions = createToolRegistry(engine => (context, inputs) => runToo
  */
 function shutdownBackgroundWorkers() {
   try { if (clipboardVault) clipboardVault.stop(); } catch { /* the watcher is already gone */ }
+  // Icon extraction is bounded work with a child process attached; quitting
+  // abandons whatever is still queued instead of waiting for PowerShell.
+  try { if (appIconProvider) appIconProvider.dispose(); } catch { /* no extraction is running */ }
   try { if (tray) tray.destroy(); } catch { /* the tray is already gone */ }
 }
 
@@ -78,6 +83,24 @@ const runRequestSchema = z.object({
   inputs: z.record(z.unknown()).default({}),
   silent: z.boolean().optional()
 }).strict();
+
+// The icon bridge accepts opaque identifiers only. A path can never enter this
+// channel: the main process resolves icons from the inventory it recorded itself.
+const appIconRequestSchema = z.object({
+  ids: z.array(z.string().regex(/^app-[0-9a-f]{8,40}$/, 'Icon requests must use an opaque installed-application id')).min(1).max(48)
+}).strict();
+
+/**
+ * Stable identity for one installed application, derived from the registry
+ * evidence that names it. It is what the renderer sees and what the icon provider
+ * is allowed to look up; the same machine and inventory always produce the same id.
+ */
+function installedAppId(app) {
+  const tuple = [app?.name, app?.version, app?.packageIdentity, app?.evidence?.keyName, app?.installLocation]
+    .map(value => String(value ?? ''))
+    .join('|');
+  return `app-${crypto.createHash('sha1').update(tuple).digest('hex').slice(0, 16)}`;
+}
 
 function appDataPath(name) { return path.join(app.getPath('userData'), name); }
 async function ensureAppStorage() { await fsp.mkdir(app.getPath('userData'), { recursive: true }); await fsp.mkdir(appDataPath('logs'), { recursive: true }); }
@@ -761,9 +784,13 @@ async function runTool(context, tool, inputs) {
       const key = `${String(app.name || '').toLowerCase()}\u0000${String(app.version || '').toLowerCase()}\u0000${app.packageIdentity || app.evidence?.keyName || ''}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      merged.push({ ...app, installLocationRecorded: Boolean(app.installLocation), uninstallCommandRecorded: Boolean(app.uninstallCapability) });
+      const id = installedAppId(app);
+      merged.push({ ...app, id, installLocationRecorded: Boolean(app.installLocation), uninstallCommandRecorded: Boolean(app.uninstallCapability) });
     }
     merged.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    // The icon provider is registered from here, never from the renderer: it gets
+    // the same ids the UI receives and the inventory data behind them.
+    try { appIconProvider?.registerInventory(merged); } catch { /* icons fall back to typography */ }
     const hygiene = advancedLocal.analyzeInstalledApps(merged);
     const unavailable = sourceFailures + entryFailures;
     const warnings = [];
@@ -1082,6 +1109,20 @@ async function verifyClipboardVault() {
  * Nothing here is drawn or simulated: each PNG is a real `capturePage()` of the
  * packaged window, and each measurement is read from the live document.
  */
+/**
+ * What a populated Applications capture has to wait for.
+ *
+ * The ledger rows appear when the inventory read lands; the icons arrive later,
+ * in bounded batches, because the renderer asks for what is visible instead of
+ * blocking the first paint on 150 shell lookups. A screenshot taken between those
+ * two moments shows a fallback grid and would be filed as evidence of the
+ * interface it is meant to prove.
+ */
+const INVENTORY_WAITS = [
+  { selector: '.appx__row', min: 5, ms: 90000 },
+  { selector: '.appx-icon--img', min: 3, ms: 25000 }
+];
+
 async function captureVisualEvidence(outputDirectory) {
   const fsPromises = fsp;
   await fsPromises.mkdir(outputDirectory, { recursive: true });
@@ -1098,8 +1139,23 @@ async function captureVisualEvidence(outputDirectory) {
     { name: 'en-home-1024x768', locale: 'en', page: 'home', width: 1024, height: 768 },
     { name: 'ar-home-1024x768', locale: 'ar', page: 'home', width: 1024, height: 768 },
     { name: 'en-clipboard-1920x1080', locale: 'en', page: 'clipboard', width: 1920, height: 1080 },
-    { name: 'ar-clipboard-1920x1080', locale: 'ar', page: 'clipboard', width: 1920, height: 1080 }
+    { name: 'ar-clipboard-1920x1080', locale: 'ar', page: 'clipboard', width: 1920, height: 1080 },
+    // The Applications world reads the real installed-program inventory, so these
+    // scenarios wait for live rows and for the native icon batches rather than for
+    // a fixed delay. The prepare scripts drive the actual interface: clicking a row
+    // opens the dossier, clicking row checkboxes raises the staging deck.
+    { name: 'en-applications-1920x1080', locale: 'en', page: 'applications', width: 1920, height: 1080, waits: INVENTORY_WAITS },
+    { name: 'ar-applications-1920x1080', locale: 'ar', page: 'applications', width: 1920, height: 1080, waits: INVENTORY_WAITS },
+    { name: 'en-applications-dossier-1366x768', locale: 'en', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' },
+    { name: 'ar-applications-deck-1366x768', locale: 'ar', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDeck: true, prepare: 'Array.from(document.querySelectorAll(".appx__row input[type=checkbox]")).slice(0,4).forEach(function(c){ c.click(); });' },
+    { name: 'en-applications-light-1366x768', locale: 'en', page: 'applications', theme: 'light', width: 1366, height: 768, waits: INVENTORY_WAITS },
+    { name: 'ar-applications-860x600', locale: 'ar', page: 'applications', width: 860, height: 600, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' }
   ];
+  // A single named scenario, so one layout question gets one answer in about
+  // twenty seconds instead of a full sixteen-scenario pass. An unrecognised
+  // name is reported as an empty run by the harness, which fails loudly.
+  const only = argumentValue('knoux-visual-smoke-only');
+  const selected = only ? scenarios.filter(scenario => scenario.name === only || scenario.page === only) : scenarios;
   const results = [];
   const settle = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   /**
@@ -1152,7 +1208,7 @@ async function captureVisualEvidence(outputDirectory) {
     // this run must keep painting while the terminal owns the foreground. The
     // setting is restored below.
     try { mainWindow.webContents.setBackgroundThrottling(false); } catch {}
-    for (const scenario of scenarios) {
+    for (const scenario of selected) {
       let completed = false;
       let lastError = null;
       // A reload replaces the compositor surface. If a pass cannot produce a
@@ -1175,6 +1231,7 @@ async function captureVisualEvidence(outputDirectory) {
           await progress(`bounds-confirmed ${scenario.name} ${scenarioBounds.width}x${scenarioBounds.height} at ${scenarioBounds.x},${scenarioBounds.y} maximized=${mainWindow.isMaximized()} full=${mainWindow.isFullScreen()}`);
           await updateSettings({
             localization: { ...originalSettings.localization, locale: scenario.locale },
+            appearance: scenario.theme ? { ...originalSettings.appearance, theme: scenario.theme } : originalSettings.appearance,
             window: { ...originalSettings.window, bounds: scenarioBounds, lastPage: scenario.page }
           });
           await progress(`settings-updated ${scenario.name}`);
@@ -1186,18 +1243,50 @@ async function captureVisualEvidence(outputDirectory) {
           // instead of a fixed delay.
           const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
           for (let attempt = 0; attempt < 60; attempt += 1) {
-            const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false })`).catch(() => null);
-            if (state && state.ready === true && state.lang === scenario.locale && state.dir === expectedDirection) break;
-            await settle(200);
+            const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false, theme: document.documentElement.dataset.theme })`).catch(() => null);
+            if (!state || state.ready !== true || state.lang !== scenario.locale || state.dir !== expectedDirection) { await settle(200); continue; }
+            // A scenario that pins a theme is only valid once that theme is the one
+            // painted; a light capture taken while the dark theme is still applied
+            // would be evidence of nothing.
+            if (scenario.theme && state.theme !== scenario.theme) { await settle(200); continue; }
+            break;
           }
           await settle(700);
           // The compositor has to have painted the window before it can produce a
-          // frame, so the capture waits for the first paint after the reload.
+          // frame, so the capture waits for the first paint after the reload. The
+          // listener is removed when the timeout wins: a run that reloads the
+          // window eighteen times would otherwise stack eighteen dead handlers.
           await new Promise(resolve => {
-            const timer = setTimeout(resolve, 3000);
-            mainWindow.webContents.once('paint', () => { clearTimeout(timer); resolve(); });
+            const onPaint = () => { clearTimeout(timer); mainWindow.webContents.off('paint', onPaint); resolve(); };
+            const timer = setTimeout(onPaint, 3000);
+            mainWindow.webContents.on('paint', onPaint);
           });
           await progress(`loaded ${scenario.name}`);
+          // A world that reads the system has to finish reading before it can be
+          // judged. The wait is bounded, and a scenario that times out is still
+          // captured and reported, because the empty or loading state is itself
+          // part of the interface under review.
+          if (scenario.waits?.length) {
+            let satisfied = true;
+            for (const wait of scenario.waits) {
+              const deadline = Date.now() + (wait.ms || 30000);
+              let seen = 0;
+              while (Date.now() < deadline) {
+                seen = await mainWindow.webContents.executeJavaScript(`document.querySelectorAll(${JSON.stringify(wait.selector)}).length`).catch(() => 0);
+                if (seen >= wait.min) break;
+                await settle(500);
+              }
+              satisfied = satisfied && seen >= wait.min;
+              await progress(`waited ${scenario.name} ${wait.selector}=${seen}`);
+            }
+            if (satisfied && scenario.prepare) {
+              await mainWindow.webContents.executeJavaScript(`(() => { ${scenario.prepare} })()`)
+                .catch(error => progress(`prepare-error ${scenario.name}: ${String(error?.message || error)}`));
+              // Selection states and the staging deck animate in; the capture waits
+              // for the transition to land so it shows the settled interface.
+              await settle(600);
+            }
+          }
           const metrics = await mainWindow.webContents.executeJavaScript(`(() => ({
             lang: document.documentElement.lang,
             dir: document.documentElement.dir,
@@ -1205,6 +1294,34 @@ async function captureVisualEvidence(outputDirectory) {
             clientWidth: document.documentElement.clientWidth,
             scrollWidth: document.documentElement.scrollWidth,
             horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            // Inventory evidence: how many real rows rendered, how many of them
+            // carry a Windows-extracted icon, and which surfaces are open. A
+            // screenshot of the Applications world with no rows is not a populated
+            // capture, and the report has to say so.
+            rows: document.querySelectorAll('.appx__row').length,
+            nativeIcons: document.querySelectorAll('.appx-icon--img').length,
+            dossierOpen: !!document.querySelector('.appx__dossier:not(.appx__dossier--empty)'),
+            deckPresent: !!document.querySelector('.appx__deck'),
+            // When the deck is missing, this says whether the ticks never landed
+            // or landed and were dropped: checked rows versus a queued selection.
+            stagedTicks: document.querySelectorAll('.appx__row input[type=checkbox]:checked').length,
+            // In the DOM is not on the screen. The staging deck is a floating
+            // tray: its whole job is to be reachable while the register scrolls,
+            // so a deck that renders below the fold — or that an animated
+            // ancestor turns into a positioned-descendant of a taller containing
+            // block — is a broken control even though the query finds it.
+            deckOnScreen: (() => {
+              const node = document.querySelector('.appx__deckinner');
+              if (!node) return false;
+              const box = node.getBoundingClientRect();
+              return box.height > 20 && box.top >= -1 && box.bottom <= window.innerHeight + 1;
+            })(),
+            deckBox: (() => {
+              const node = document.querySelector('.appx__deckinner');
+              if (!node) return null;
+              const box = node.getBoundingClientRect();
+              return { top: Math.round(box.top), bottom: Math.round(box.bottom), height: Math.round(box.height), viewport: window.innerHeight };
+            })(),
             // The in-flow elements whose content actually escapes their parent.
             // A bare overflow flag names the symptom; this names the cause. Text
             // that is deliberately clipped, and decorative layers that are
@@ -1230,7 +1347,7 @@ async function captureVisualEvidence(outputDirectory) {
           const file = path.join(outputDirectory, `${scenario.name}.png`);
           await fsPromises.writeFile(file, image.toPNG());
           const capturedBounds = mainWindow.getBounds();
-          results.push({ ...scenario, ...metrics, requestedWidth: scenario.width, requestedHeight: scenario.height, capturedWidth: capturedBounds.width, capturedHeight: capturedBounds.height, captureSizeMatches: capturedBounds.width === scenario.width && capturedBounds.height === scenario.height, file: path.basename(file), captured: true });
+          results.push({ ...scenario, ...metrics, expectedTheme: scenario.theme || null, page: scenario.page, requestedWidth: scenario.width, requestedHeight: scenario.height, capturedWidth: capturedBounds.width, capturedHeight: capturedBounds.height, captureSizeMatches: capturedBounds.width === scenario.width && capturedBounds.height === scenario.height, file: path.basename(file), captured: true });
           completed = true;
         } catch (error) {
           lastError = error;
@@ -1287,6 +1404,11 @@ app.whenReady().then(async () => {
   });
   await clipboardVault.init();
   clipboardVault.start();
+  // Windows-native application icons. The provider is the only place that turns a
+  // recorded inventory entry into an icon path, and it writes inside its own
+  // cache directory alone. On another platform it answers 'not-windows' so the
+  // Applications workspace still renders during development.
+  appIconProvider = appIcons.createAppIconProvider({ cacheDirectory: appDataPath('app-icons'), platform: process.platform, nativeImage });
   // Warm the Authenticode state in the background; it must never delay the
   // first paint of the application.
   void resolveSigningInfo().catch(() => {});
@@ -1328,6 +1450,14 @@ app.whenReady().then(async () => {
   // KNOuX Clipboard Vault. Capture stays off until the user enables it in the
   // vault page or in Settings.
   ipcMain.handle('knoux:code-signing', () => resolveSigningInfo());
+  // Native application icons for the Applications workspace. Opaque ids in,
+  // PNG data URLs or an honest reason out; never a path in either direction.
+  ipcMain.handle('knoux:app-icons', async (_event, request) => {
+    const parsed = appIconRequestSchema.parse(request);
+    const ids = [...new Set(parsed.ids)];
+    if (!appIconProvider) return ids.map(id => ({ id, status: 'unavailable', source: 'none', reason: appIcons.REASONS.DISPOSED }));
+    return await appIconProvider.getIcons(ids);
+  });
   ipcMain.handle('knoux:clipboard-status', () => clipboardVault.status());
   ipcMain.handle('knoux:clipboard-list', (_event, request) => {
     const parsed = z.object({ query: z.string().max(500).optional(), type: z.enum(['all', 'text', 'image', 'files']).optional(), pinnedOnly: z.boolean().optional() }).strict().parse(request || {});

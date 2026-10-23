@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('knoux', Object.freeze({
   openPath: (target) => ipcRenderer.invoke('knoux:open-path', target),
   exportDiagnostics: () => ipcRenderer.invoke('knoux:diagnostics-export'),
   codeSigning: () => ipcRenderer.invoke('knoux:code-signing'),
+  // Opaque installed-application ids only; the main process owns every path.
+  appIcons: (request) => ipcRenderer.invoke('knoux:app-icons', request),
   clipboardStatus: () => ipcRenderer.invoke('knoux:clipboard-status'),
   clipboardList: (request) => ipcRenderer.invoke('knoux:clipboard-list', request),
   clipboardGet: (id) => ipcRenderer.invoke('knoux:clipboard-get', id),

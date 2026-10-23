@@ -459,7 +459,7 @@ const UNINSTALL_ROOTS = [
 
 function uninstallScript(roots) {
   const list = (Array.isArray(roots) && roots.length ? roots : UNINSTALL_ROOTS).map(root => `'${String(root).replace(/'/g, "''")}'`).join(',');
-  return `$roots=@(${list}); $items=@(); $sourceFailures=0; $entryFailures=0; foreach($root in $roots){ if(-not (Test-Path -LiteralPath $root)){ $sourceFailures++; continue }; $keys=Get-ChildItem -LiteralPath $root -ErrorAction SilentlyContinue; foreach($key in @($keys)){ try { $x=Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction Stop; if($x.DisplayName){ $items += [pscustomobject]@{name=[string]$x.DisplayName;version=[string]$x.DisplayVersion;publisher=[string]$x.Publisher;installLocation=[string]$x.InstallLocation;uninstallString=[string]$x.UninstallString;installDate=[string]$x.InstallDate;installSource=[string]$x.InstallSource;estimatedSize=[string]$x.EstimatedSize;releaseType=[string]$x.ReleaseType;systemComponent=[string]$x.SystemComponent;parentKeyName=[string]$x.ParentKeyName;windowsInstaller=[string]$x.WindowsInstaller;source=$root} } } catch { $entryFailures++ } } }; [pscustomobject]@{items=$items;sourceFailures=$sourceFailures;entryFailures=$entryFailures;roots=$roots} | ConvertTo-Json -Depth 4`;
+  return `$roots=@(${list}); $items=@(); $sourceFailures=0; $entryFailures=0; foreach($root in $roots){ if(-not (Test-Path -LiteralPath $root)){ $sourceFailures++; continue }; $keys=Get-ChildItem -LiteralPath $root -ErrorAction SilentlyContinue; foreach($key in @($keys)){ try { $x=Get-ItemProperty -LiteralPath $key.PSPath -ErrorAction Stop; if($x.DisplayName){ $items += [pscustomobject]@{name=[string]$x.DisplayName;version=[string]$x.DisplayVersion;publisher=[string]$x.Publisher;installLocation=[string]$x.InstallLocation;uninstallString=[string]$x.UninstallString;installDate=[string]$x.InstallDate;installSource=[string]$x.InstallSource;estimatedSize=[string]$x.EstimatedSize;releaseType=[string]$x.ReleaseType;systemComponent=[string]$x.SystemComponent;parentKeyName=[string]$x.ParentKeyName;windowsInstaller=[string]$x.WindowsInstaller;displayIcon=[string]$x.DisplayIcon;source=$root} } } catch { $entryFailures++ } } }; [pscustomobject]@{items=$items;sourceFailures=$sourceFailures;entryFailures=$entryFailures;roots=$roots} | ConvertTo-Json -Depth 4`;
 }
 
 const APPX_SCRIPT = "Get-AppxPackage -ErrorAction SilentlyContinue | Select-Object Name,PackageFullName,Version,Publisher,InstallLocation,Architecture,SignatureKind,Status,IsFramework,NonRemovable | ConvertTo-Json -Depth 4";
@@ -534,6 +534,9 @@ function normalizeUninstallApp(raw) {
       registryView: /WOW6432Node/i.test(root) ? '32-bit' : '64-bit',
       packageIdentity: null,
       uninstallCapability: uninstallString ? 'uninstall-string' : null,
+      // The registry's own icon declaration, read verbatim: it is the starting
+      // point for the read-only icon provider, which validates it before use.
+      displayIcon: text(entry.displayIcon),
       repairCapability: null,
       updateCapability: null,
       estimatedSizeBytes: numberOrNull(entry.estimatedSize) != null ? Number(entry.estimatedSize) * 1024 : null,
@@ -893,6 +896,7 @@ module.exports = {
   normalizeStartup,
   classifyStartupSource,
   normalizeUninstallApp,
+  uninstallScript,
   normalizeAppxApp,
   normalizeInstallDate,
   guessArchitecture,

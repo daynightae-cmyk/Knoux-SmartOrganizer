@@ -74,7 +74,15 @@ export function pageTitleKey(id: PageId): string {
 }
 
 export function isCatalogPage(id: PageId): boolean {
-  return !['home', 'scan', 'studio', 'clipboard', 'automation', 'history', 'settings'].includes(id);
+  return !['home', 'scan', 'studio', 'clipboard', 'automation', 'history', 'settings', 'applications'].includes(id);
+}
+
+/**
+ * A world that owns its own head renders its own title, statistics and coverage
+ * inside the page, so the shell prints no competing heading above it.
+ */
+export function worldOwnsHeader(id: PageId): boolean {
+  return id === 'applications';
 }
 
 export function pageSubtitleKey(id: PageId): string | null {

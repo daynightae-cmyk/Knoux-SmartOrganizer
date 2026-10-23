@@ -1,0 +1,195 @@
+/* ---------------------------------------------------------------------------
+   KNOuX service worlds — shared chrome.
+
+   Eleven worlds, one identity. A world sets three tokens (hue, quiet tint,
+   border) and inherits the head, metric rail, coverage ribbon and service
+   ledger below. World-specific layout lives in its own stylesheet; nothing here
+   prescribes a card grid, so each world can still look like itself.
+   --------------------------------------------------------------------------- */
+
+.world {
+  --world-hue: var(--primary);
+  --world-quiet: var(--accent-quiet);
+  --world-border: var(--accent-border);
+  display: grid;
+  gap: var(--space-4);
+}
+
+/*
+ * A world lays its bands out in one grid column. A grid item may not shrink
+ * below its own min-content width, so one oversized control inside one band
+ * would widen the whole world and push the page into horizontal scrolling.
+ * The bands are allowed to shrink; what they contain wraps or ellipsises.
+ */
+.world > * { min-width: 0; }
+
+/* Per-world accents mirror src/lib/service-catalog.ts. */
+[data-world="applications"] { --world-hue: #8b5cf6; --world-quiet: #8b5cf61f; --world-border: #8b5cf666; }
+[data-world="files"]         { --world-hue: #a5b4fc; --world-quiet: #a5b4fc1f; --world-border: #a5b4fc5c; }
+[data-world="storage"]       { --world-hue: #6366f1; --world-quiet: #6366f11f; --world-border: #6366f166; }
+[data-world="cleanup"]       { --world-hue: #f59e0b; --world-quiet: #f59e0b1f; --world-border: #f59e0b5c; }
+[data-world="startup"]       { --world-hue: #38bdf8; --world-quiet: #38bdf81f; --world-border: #38bdf85c; }
+[data-world="system"]        { --world-hue: #2dd4bf; --world-quiet: #2dd4bf1f; --world-border: #2dd4bf5c; }
+[data-world="repair"]        { --world-hue: #f87171; --world-quiet: #f871711f; --world-border: #f871715c; }
+[data-world="services"]      { --world-hue: #7c8cc4; --world-quiet: #7c8cc41f; --world-border: #7c8cc45c; }
+[data-world="network"]       { --world-hue: #22d3ee; --world-quiet: #22d3ee1f; --world-border: #22d3ee5c; }
+[data-world="hardware"]      { --world-hue: #fb923c; --world-quiet: #fb923c1f; --world-border: #fb923c5c; }
+[data-world="automation"]    { --world-hue: #c084fc; --world-quiet: #c084fc1f; --world-border: #c084fc66; }
+
+/* A world that owns its head needs no shell heading above it: the topbar
+   collapses to just its actions. */
+.topbar--bare { justify-content: flex-end; margin-bottom: 14px; }
+
+/* -- Head band ------------------------------------------------------------- */
+
+.world-head {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--world-border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(620px 220px at 88% -60%, var(--world-quiet), transparent 70%),
+    linear-gradient(158deg, var(--surface-raised), var(--surface) 62%);
+  box-shadow: var(--shadow-soft), inset 0 1px #ffffff0d;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+html[data-theme="light"] .world-head { background: radial-gradient(620px 220px at 88% -60%, var(--world-quiet), transparent 70%), linear-gradient(158deg, #ffffff, var(--surface-raised) 62%); }
+
+.world-head__row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.world-head__identity { display: flex; gap: 14px; align-items: flex-start; min-width: 0; }
+.world-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px; height: 46px;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(150deg, var(--world-hue), color-mix(in srgb, var(--world-hue) 42%, #1b1030));
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--world-hue) 38%, transparent), inset 0 1px #ffffff66;
+}
+.world-head__title { margin: 0; font-size: var(--text-2xl); line-height: 1.06; letter-spacing: -.9px; font-weight: 800; }
+.world-head__subtitle { margin: 5px 0 0; max-width: 74ch; color: var(--muted); font-size: var(--text-md); line-height: 1.55; }
+.world-head__readout { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+.world-head__stamp { color: var(--muted); font-size: var(--text-sm); letter-spacing: .2px; }
+
+/* -- Metric rail: divided statistics, not a grid of identical cards -------- */
+
+.world-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-soft);
+}
+.world-metric { padding: 2px var(--space-4); border-inline-start: 1px solid var(--border-soft); min-width: 0; }
+.world-metric:first-child { padding-inline-start: 0; border-inline-start: 0; }
+.world-metric b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; }
+.world-metric span { display: block; color: var(--muted); font-size: var(--text-sm); margin-top: 1px; }
+.world-metric i { display: block; color: var(--muted); font-style: normal; font-size: var(--text-xs); margin-top: 3px; opacity: .85; }
+.world-metric--accent b { color: var(--world-hue); }
+html[data-theme="light"] .world-metric--accent b { color: color-mix(in srgb, var(--world-hue) 78%, #171522); }
+html[data-theme="high-contrast"] .world-metric--accent b { color: var(--text); }
+
+/* -- Coverage ribbon ------------------------------------------------------- */
+
+.world-ribbon { display: grid; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
+.world-ribbon__label { display: flex; align-items: baseline; gap: 8px; font-size: var(--text-sm); font-weight: 700; letter-spacing: .2px; }
+.world-ribbon__label small { color: var(--muted); font-weight: 500; font-size: var(--text-xs); }
+.world-ribbon__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 6px 14px; }
+/* One measure per line: name, bar, share. Two lines per measure turned the
+   ribbon into a second header band and cost the ledger its first row on a
+   1366x768 laptop. */
+.world-measure { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.world-measure__name { color: var(--muted); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.world-measure__track { position: relative; flex: 1 1 34px; min-width: 26px; height: 5px; border-radius: var(--radius-pill); background: var(--surface-hover); overflow: hidden; }
+.world-measure__track i { position: absolute; inset: 0 auto 0 0; inline-size: var(--fill); border-radius: inherit; background: linear-gradient(90deg, var(--world-hue), color-mix(in srgb, var(--world-hue) 55%, #ffffff)); }
+.world-measure b { flex: none; min-width: 34px; text-align: end; font-size: var(--text-sm); font-variant-numeric: tabular-nums; letter-spacing: -.2px; }
+html[dir="rtl"] .world-measure__track i { inset: 0 0 0 auto; }
+.world-measure--off .world-measure__track i { display: none; }
+.world-measure--off .world-measure__track { background: repeating-linear-gradient(115deg, var(--surface-hover) 0 5px, var(--border) 5px 6px); }
+.world-measure--off b { color: var(--muted); font-weight: 600; }
+
+/* -- Controls ------------------------------------------------------------- */
+
+.world-controls { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.world-control {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--surface-glass); color: var(--text);
+  padding: 8px 11px; font-size: var(--text-md); cursor: pointer;
+  transition: background .18s, border-color .18s, transform .18s;
+}
+.world-control:hover { background: var(--surface-hover); border-color: var(--world-border); }
+.world-control:active { transform: translateY(1px); }
+.world-control--primary { border-color: var(--world-border); background: linear-gradient(103deg, color-mix(in srgb, var(--world-hue) 34%, var(--surface)), var(--surface-raised)); font-weight: 700; }
+.world-control:disabled { opacity: var(--control-disabled-opacity); cursor: not-allowed; transform: none; }
+.world-control svg { flex: none; color: var(--world-hue); }
+html[data-theme="light"] .world-control svg { color: color-mix(in srgb, var(--world-hue) 74%, #171522); }
+select.world-select { appearance: none; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-glass); color: var(--text); padding: 8px 30px 8px 11px; font-size: var(--text-md); cursor: pointer; }
+/* A select is sized by its longest option. Publisher, tool and service names
+   are unbounded strings from Windows, so the control is capped and the visible
+   label is clipped; the opened list still shows each value in full. */
+select.world-select { max-width: 240px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[dir="rtl"] select.world-select { padding: 8px 11px 8px 30px; }
+.world-select:focus-visible, .world-control:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.world-control-group { display: inline-flex; border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--surface-glass); }
+.world-control-group button { border: 0; background: transparent; color: var(--muted); padding: 8px 12px; font-size: var(--text-md); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.world-control-group button + button { border-inline-start: 1px solid var(--border); }
+.world-control-group button[aria-pressed="true"] { background: var(--world-quiet); color: var(--text); font-weight: 700; }
+
+/* -- Facets -------------------------------------------------------------- */
+
+.world-facets { display: flex; gap: 6px; flex-wrap: wrap; }
+.world-facet {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: transparent; color: var(--muted);
+  padding: 6px 12px; font-size: var(--text-sm); cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+}
+.world-facet:hover { color: var(--text); border-color: var(--world-border); }
+.world-facet b { font-variant-numeric: tabular-nums; font-weight: 700; color: color-mix(in srgb, var(--muted) 70%, var(--text)); }
+.world-facet[aria-pressed="true"] { background: var(--world-quiet); border-color: var(--world-border); color: var(--text); font-weight: 700; }
+.world-facet[aria-pressed="true"] b { color: var(--world-hue); }
+html[data-theme="light"] .world-facet[aria-pressed="true"] b { color: color-mix(in srgb, var(--world-hue) 72%, #171522); }
+
+/* -- Service ledger (shared across all eleven worlds) -------------------- */
+
+.world-services { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.world-services__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: 12px var(--space-4); cursor: pointer; background: transparent; border: 0; color: var(--text); text-align: start; width: 100%; }
+.world-services__head:hover { background: var(--surface-hover); }
+.world-services__head h3 { margin: 0; font-size: var(--text-md); font-weight: 800; letter-spacing: -.1px; }
+.world-services__head p { margin: 2px 0 0; color: var(--muted); font-size: var(--text-sm); }
+.world-services__state { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: var(--text-sm); white-space: nowrap; }
+.world-services__dots { display: inline-flex; gap: 3px; }
+.world-services__dots i { width: 7px; height: 7px; border-radius: 2px; background: var(--border-strong); }
+.world-services__dots i.live { background: var(--world-hue); }
+.world-services__dots i.partial { background: var(--amber); }
+.world-services__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 1px; background: var(--border-soft); border-top: 1px solid var(--border-soft); padding: 1px; }
+.world-service { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; padding: 11px 13px; background: var(--surface); text-align: start; border: 0; color: var(--text); }
+.world-service--linked { cursor: pointer; }
+.world-service--linked:hover { background: var(--surface-hover); }
+.world-service__mark { width: 9px; height: 9px; margin-top: 5px; border-radius: 3px; background: var(--border-strong); }
+.world-service--operational .world-service__mark { background: var(--world-hue); box-shadow: 0 0 0 3px var(--world-quiet); }
+.world-service--partial .world-service__mark { background: var(--amber); box-shadow: 0 0 0 3px #ffc56d1f; }
+.world-service__name { display: block; font-size: var(--text-md); font-weight: 700; }
+.world-service__summary { display: block; color: var(--muted); font-size: var(--text-sm); line-height: 1.45; margin-top: 2px; }
+.world-service__limit { display: block; color: var(--amber); font-size: var(--text-xs); line-height: 1.45; margin-top: 4px; }
+.world-service__pill { font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--radius-pill); white-space: nowrap; border: 1px solid var(--border); color: var(--muted); }
+.world-service--operational .world-service__pill { color: var(--status-success-text); background: var(--status-success-surface); border-color: var(--status-success-border); }
+.world-service--partial .world-service__pill { color: var(--status-warning-text); background: var(--status-warning-surface); border-color: var(--status-warning-border); }
+
+@media (max-width: 1180px) {
+  /* The band stays a single row and lets the readout wrap only when it must.
+     Forcing the two into a column cost roughly 60px of ledger on a 1366 laptop. */
+  .world-head { padding: var(--space-3) var(--space-4) var(--space-3); }
+  .world-head__title { font-size: 24px; }
+  .world-metrics { margin-top: var(--space-3); }
+}
+@media (max-width: 900px) {
+  .world-head__row { flex-direction: column; }
+  .world-head__readout { justify-content: flex-start; }
+  .world-metric { padding-inline: var(--space-3); }
+  .world-ribbon__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

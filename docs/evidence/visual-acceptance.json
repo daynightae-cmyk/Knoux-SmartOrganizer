@@ -1,7 +1,7 @@
 {
-  "capturedAt": "2026-10-23T02:07:15.588Z",
+  "capturedAt": "2026-10-23T13:35:58.833Z",
   "packaged": true,
-  "scope": "Real screenshots of the packaged application window. Window-size coverage only; Windows display-scaling behaviour across a DPI matrix is not claimed.",
+  "scope": "Real screenshots of the packaged application window: window size, locale direction, theme and populated-inventory coverage. Windows display-scaling behaviour across a DPI matrix is not claimed.",
   "scenarios": [
     {
       "name": "en-home-1366x768",
@@ -15,15 +15,20 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 48,
+      "focusable": 35,
       "headings": [
-        "Device overview",
-        "Your PC today",
-        "Workspaces",
-        "Recent operations",
-        "Available tools"
+        "Available tools",
+        "Disk overview"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1366,
       "requestedHeight": 768,
       "capturedWidth": 1366,
@@ -44,8 +49,15 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 48,
+      "focusable": 50,
       "headings": [
         "نظرة عامة على الجهاز",
         "حالة جهازك اليوم",
@@ -53,6 +65,7 @@
         "آخر العمليات",
         "الأدوات المتاحة"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1366,
       "requestedHeight": 768,
       "capturedWidth": 1366,
@@ -73,11 +86,19 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 44,
+      "focusable": 37,
       "headings": [
-        "Clipboard Vault"
+        "Software Command"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1366,
       "requestedHeight": 768,
       "capturedWidth": 1366,
@@ -98,11 +119,19 @@
       "clientWidth": 1335,
       "scrollWidth": 1335,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 44,
+      "focusable": 45,
       "headings": [
         "خزنة الحافظة"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1366,
       "requestedHeight": 768,
       "capturedWidth": 1366,
@@ -123,24 +152,19 @@
       "clientWidth": 829,
       "scrollWidth": 829,
       "horizontalOverflow": false,
-      "overflowingElements": [
-        {
-          "tag": "span",
-          "className": "brand-symbol",
-          "width": 42,
-          "parentWidth": 59
-        },
-        {
-          "tag": "button",
-          "className": "icon-button collapse-button",
-          "width": 32,
-          "parentWidth": 59
-        }
-      ],
-      "focusable": 38,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 39,
       "headings": [
         "Clipboard Vault"
       ],
+      "expectedTheme": null,
       "requestedWidth": 860,
       "requestedHeight": 600,
       "capturedWidth": 860,
@@ -161,21 +185,15 @@
       "clientWidth": 829,
       "scrollWidth": 829,
       "horizontalOverflow": false,
-      "overflowingElements": [
-        {
-          "tag": "span",
-          "className": "brand-symbol",
-          "width": 42,
-          "parentWidth": 59
-        },
-        {
-          "tag": "button",
-          "className": "icon-button collapse-button",
-          "width": 32,
-          "parentWidth": 59
-        }
-      ],
-      "focusable": 42,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 44,
       "headings": [
         "نظرة عامة على الجهاز",
         "حالة جهازك اليوم",
@@ -183,6 +201,7 @@
         "آخر العمليات",
         "الأدوات المتاحة"
       ],
+      "expectedTheme": null,
       "requestedWidth": 860,
       "requestedHeight": 600,
       "capturedWidth": 860,
@@ -203,15 +222,20 @@
       "clientWidth": 993,
       "scrollWidth": 993,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 48,
+      "focusable": 36,
       "headings": [
-        "Device overview",
-        "Your PC today",
-        "Workspaces",
-        "Recent operations",
-        "Available tools"
+        "Available tools",
+        "Temporary files preview"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1024,
       "requestedHeight": 768,
       "capturedWidth": 1024,
@@ -232,8 +256,15 @@
       "clientWidth": 993,
       "scrollWidth": 993,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 48,
+      "focusable": 50,
       "headings": [
         "نظرة عامة على الجهاز",
         "حالة جهازك اليوم",
@@ -241,6 +272,7 @@
         "آخر العمليات",
         "الأدوات المتاحة"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1024,
       "requestedHeight": 768,
       "capturedWidth": 1024,
@@ -261,11 +293,19 @@
       "clientWidth": 1889,
       "scrollWidth": 1889,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 44,
+      "focusable": 45,
       "headings": [
         "Clipboard Vault"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1920,
       "requestedHeight": 1080,
       "capturedWidth": 1920,
@@ -286,17 +326,306 @@
       "clientWidth": 1889,
       "scrollWidth": 1889,
       "horizontalOverflow": false,
+      "rows": 0,
+      "nativeIcons": 0,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
       "overflowingElements": [],
-      "focusable": 44,
+      "focusable": 45,
       "headings": [
         "خزنة الحافظة"
       ],
+      "expectedTheme": null,
       "requestedWidth": 1920,
       "requestedHeight": 1080,
       "capturedWidth": 1920,
       "capturedHeight": 1080,
       "captureSizeMatches": true,
       "file": "ar-clipboard-1920x1080.png",
+      "captured": true
+    },
+    {
+      "name": "en-applications-1920x1080",
+      "locale": "en",
+      "page": "applications",
+      "width": 1920,
+      "height": 1080,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 1889,
+      "scrollWidth": 1889,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 16,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 346,
+      "headings": [
+        "Software Command"
+      ],
+      "expectedTheme": null,
+      "requestedWidth": 1920,
+      "requestedHeight": 1080,
+      "capturedWidth": 1920,
+      "capturedHeight": 1080,
+      "captureSizeMatches": true,
+      "file": "en-applications-1920x1080.png",
+      "captured": true
+    },
+    {
+      "name": "ar-applications-1920x1080",
+      "locale": "ar",
+      "page": "applications",
+      "width": 1920,
+      "height": 1080,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1889,
+      "scrollWidth": 1889,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 16,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 346,
+      "headings": [
+        "قيادة البرمجيات"
+      ],
+      "expectedTheme": null,
+      "requestedWidth": 1920,
+      "requestedHeight": 1080,
+      "capturedWidth": 1920,
+      "capturedHeight": 1080,
+      "captureSizeMatches": true,
+      "file": "ar-applications-1920x1080.png",
+      "captured": true
+    },
+    {
+      "name": "en-applications-dossier-1366x768",
+      "locale": "en",
+      "page": "applications",
+      "width": 1366,
+      "height": 768,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "requiresDossier": true,
+      "prepare": "var o=document.querySelector(\".appx__opener\"); if(o) o.click();",
+      "lang": "en",
+      "dir": "ltr",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 106,
+      "dossierOpen": true,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 356,
+      "headings": [
+        "Software Command"
+      ],
+      "expectedTheme": null,
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
+      "file": "en-applications-dossier-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-applications-deck-1366x768",
+      "locale": "ar",
+      "page": "applications",
+      "width": 1366,
+      "height": 768,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "requiresDeck": true,
+      "prepare": "Array.from(document.querySelectorAll(\".appx__row input[type=checkbox]\")).slice(0,4).forEach(function(c){ c.click(); });",
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 105,
+      "dossierOpen": false,
+      "deckPresent": true,
+      "stagedTicks": 4,
+      "deckOnScreen": true,
+      "deckBox": {
+        "top": 586,
+        "bottom": 689,
+        "height": 103,
+        "viewport": 703
+      },
+      "overflowingElements": [],
+      "focusable": 350,
+      "headings": [
+        "قيادة البرمجيات"
+      ],
+      "expectedTheme": null,
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
+      "file": "ar-applications-deck-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "en-applications-light-1366x768",
+      "locale": "en",
+      "page": "applications",
+      "theme": "light",
+      "width": 1366,
+      "height": 768,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "lang": "en",
+      "dir": "ltr",
+      "clientWidth": 1335,
+      "scrollWidth": 1335,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 16,
+      "dossierOpen": false,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 346,
+      "headings": [
+        "Software Command"
+      ],
+      "expectedTheme": "light",
+      "requestedWidth": 1366,
+      "requestedHeight": 768,
+      "capturedWidth": 1366,
+      "capturedHeight": 768,
+      "captureSizeMatches": true,
+      "file": "en-applications-light-1366x768.png",
+      "captured": true
+    },
+    {
+      "name": "ar-applications-860x600",
+      "locale": "ar",
+      "page": "applications",
+      "width": 860,
+      "height": 600,
+      "waits": [
+        {
+          "selector": ".appx__row",
+          "min": 5,
+          "ms": 90000
+        },
+        {
+          "selector": ".appx-icon--img",
+          "min": 3,
+          "ms": 25000
+        }
+      ],
+      "requiresDossier": true,
+      "prepare": "var o=document.querySelector(\".appx__opener\"); if(o) o.click();",
+      "lang": "ar",
+      "dir": "rtl",
+      "theme": "dark",
+      "clientWidth": 829,
+      "scrollWidth": 829,
+      "horizontalOverflow": false,
+      "rows": 150,
+      "nativeIcons": 111,
+      "dossierOpen": true,
+      "deckPresent": false,
+      "stagedTicks": 0,
+      "deckOnScreen": false,
+      "deckBox": null,
+      "overflowingElements": [],
+      "focusable": 350,
+      "headings": [
+        "قيادة البرمجيات"
+      ],
+      "expectedTheme": null,
+      "requestedWidth": 860,
+      "requestedHeight": 600,
+      "capturedWidth": 860,
+      "capturedHeight": 600,
+      "captureSizeMatches": true,
+      "file": "ar-applications-860x600.png",
       "captured": true
     }
   ],

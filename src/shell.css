@@ -3,20 +3,23 @@
 .app-shell.collapsed .main { width:min(1480px,calc(100% - 76px)); }
 .sidebar { transition:width .25s ease,transform .25s ease; overflow-y:auto; overflow-x:hidden; }
 .sidebar.collapsed { width:76px; padding-inline:8px; }
-.sidebar.collapsed .brand { justify-content:center; padding-inline:0; }
+.sidebar.collapsed .brand { flex-direction:column; align-items:center; justify-content:center; gap:6px; padding-inline:0; }
 .sidebar.collapsed .brand-text,.sidebar.collapsed .sidebar-foot .version { display:none; }
 .sidebar.collapsed .nav-item { justify-content:center; padding-inline:0; }
 .collapse-button { margin-inline-start:auto; padding:7px; }
 .sidebar.collapsed .collapse-button { margin-inline-start:0; }
 .sidebar-nav { display:grid; gap:15px; overflow-y:auto; overflow-x:hidden; }
-.nav-group { display:grid; gap:5px; }
-.nav-group-head { border:0; background:transparent; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.3px; display:flex; justify-content:space-between; align-items:center; width:100%; padding:5px 11px; cursor:pointer; }
+/* A grid item is not allowed to shrink below its min-content unless told to,
+   so the longest page name in the rail set the width of the whole sidebar. */
+.nav-group { display:grid; gap:5px; min-width:0; }
+.nav-group-head { border:0; background:transparent; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.3px; display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:5px 11px; cursor:pointer; min-width:0; }
+.nav-group-head > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nav-group-head:hover { color:var(--primary-bright); }
-.nav-group-head .caret { font-size:10px; transition:transform .2s; }
+.nav-group-head .caret { font-size:10px; flex:none; transition:transform .2s; }
 .nav-group-head .caret.open { transform:rotate(180deg); }
-.nav-group-items { display:grid; gap:4px; }
-.nav-icon { display:inline-flex; color:currentColor; }
-.nav-label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-group-items { display:grid; gap:4px; min-width:0; }
+.nav-icon { display:inline-flex; color:currentColor; flex:none; }
+.nav-label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .topbar-title { min-width:0; }
 .topbar-title h1 { margin-bottom:3px; }
 .search-trigger { cursor:pointer; color:var(--muted); font-size:12px; }

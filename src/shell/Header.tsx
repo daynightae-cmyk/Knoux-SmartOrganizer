@@ -1,19 +1,21 @@
 import { ListChecks, Menu, Search } from 'lucide-react';
-import { pageSubtitleKey, pageTitleKey } from '../lib/pages';
-import { localeLabel } from '../lib/pages';
+import { localeLabel, pageSubtitleKey, pageTitleKey, worldOwnsHeader } from '../lib/pages';
 import { useStore } from '../state/store';
 
 export default function Header() {
   const { page, t, locale, settings, update, setPaletteOpen, setOperationOpen, active, sidebarCollapsed, setSidebarCollapsed } = useStore();
   const subtitleKey = pageSubtitleKey(page);
+  const ownsHead = worldOwnsHeader(page);
 
   return (
-    <header className="topbar">
-      <div className="topbar-title">
-        <p className="eyebrow">{t('app.tagline')}</p>
-        <h1>{t(pageTitleKey(page))}</h1>
-        {subtitleKey && <p className="page-description">{t(subtitleKey)}</p>}
-      </div>
+    <header className={`topbar${ownsHead ? ' topbar--bare' : ''}`}>
+      {!ownsHead && (
+        <div className="topbar-title">
+          <p className="eyebrow">{t('app.tagline')}</p>
+          <h1>{t(pageTitleKey(page))}</h1>
+          {subtitleKey && <p className="page-description">{t(subtitleKey)}</p>}
+        </div>
+      )}
       <div className="top-actions">
         <button
           className="icon-button narrow-menu-button"

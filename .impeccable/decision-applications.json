@@ -1,0 +1,61 @@
+{
+  "title": "KNOuX Applications — the software command surface",
+  "question": "The KNOuX visual world is fixed. This round chooses only the composition of the Applications workspace. The roll leads with the register.",
+  "options": [
+    {
+      "id": "ledger",
+      "label": "The Live Register",
+      "kicker": "THE ROLL",
+      "lineage": "Windows Control Panel 'Programs and Features' raised to a dossier-grade ledger",
+      "thesis": "One continuous ledger of installed software, where selecting a program opens its dossier in that row's own place.",
+      "palette": ["#08090f", "#171a2a", "#a855f7", "#c4a6ff", "#5ee1a5"],
+      "materials": ["real Windows icons", "hairline rules", "tabular figures", "fine directional light"],
+      "viewport": "Command strip and facet bar, then a dense publisher-grouped ledger with the selected program's dossier band expanded inline.",
+      "risk": "A wide table goes flat unless the icon column and the expanded band carry real contrast.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "command strip: inventory search + live counts", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "facet bar + sort", "x": 0, "y": 1, "w": 12, "h": 1 },
+        { "label": "ledger rows", "x": 0, "y": 2, "w": 12, "h": 4 },
+        { "label": "expanded dossier band (icon, identity, size, source, controls)", "x": 0, "y": 6, "w": 12, "h": 3, "accent": true },
+        { "label": "ledger rows continue", "x": 0, "y": 9, "w": 12, "h": 1 }
+      ] }
+    },
+    {
+      "id": "deck",
+      "label": "The Staging Deck",
+      "kicker": "",
+      "lineage": "batch software managers and a freight manifest",
+      "thesis": "Selection is a queue, not a highlight: chosen programs collect in a staging tray that carries the next action.",
+      "palette": ["#08090f", "#20233a", "#a855f7", "#5b5ff8", "#ffc56d"],
+      "materials": ["real Windows icons", "elevated charcoal panels", "chip stack", "short spring motion"],
+      "viewport": "Facet rail, inventory field, dossier column, and a persistent staging tray pinned across the bottom of the workspace.",
+      "risk": "The tray promises batch operations the backend cannot yet perform, so it must carry review actions only.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "facet rail with live counts", "x": 0, "y": 0, "w": 3, "h": 8 },
+        { "label": "inventory field (list / compact / cards)", "x": 3, "y": 0, "w": 5, "h": 8, "accent": true },
+        { "label": "dossier column for the focused program", "x": 8, "y": 0, "w": 4, "h": 8 },
+        { "label": "staging tray — selected programs queue here", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ] }
+    },
+    {
+      "id": "ribbon",
+      "label": "The Coverage Ribbon",
+      "kicker": "",
+      "lineage": "instrument readout panels and data-coverage charts",
+      "thesis": "The workspace opens by declaring how much it actually knows about this machine, then shows the collection under it.",
+      "palette": ["#08090f", "#111320", "#79b8ff", "#c4a6ff", "#5ee1a5"],
+      "materials": ["measured band segments", "real Windows icons", "quiet violet glow", "unavailable-state hatching"],
+      "viewport": "A measured coverage band (icons, sizes, dates, publishers known) above filter chips, with the collection and its dossier split below.",
+      "risk": "A meta-metric over the content can read as a dashboard instead of a software library.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "coverage ribbon — what the inventory really knows", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true },
+        { "label": "filter chips", "x": 0, "y": 2, "w": 12, "h": 1 },
+        { "label": "collection", "x": 0, "y": 3, "w": 7, "h": 7 },
+        { "label": "dossier", "x": 7, "y": 3, "w": 5, "h": 7 }
+      ] }
+    }
+  ],
+  "reroll": true,
+  "steer": true,
+  "buildPath": { "value": "code", "toggle": true }
+}

@@ -1,3 +1,6 @@
+import { serviceCopy } from './lib/service-copy';
+import { applicationsCopy } from './lib/applications-copy';
+
 export type Locale = 'ar' | 'en';
 export type Dictionary = Record<string, string>;
 
@@ -729,5 +732,8 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'diagnostics.exported': { ar: 'تم تصدير تقرير التشخيص', en: 'Diagnostics report exported' }
 };
 for (const [key, value] of Object.entries(shellCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+
+for (const [key, value] of Object.entries(serviceCopy) ) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+for (const [key, value] of Object.entries(applicationsCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 
 export function direction(locale: Locale) { return locale === 'ar' ? 'rtl' : 'ltr'; }
