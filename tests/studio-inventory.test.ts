@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
+import { EventEmitter } from 'node:events';
 const require = createRequire(import.meta.url);
 const { scanFolder, query, categoryFor, validateSource } = require('../electron/studio/folder-inventory.cjs');
 
@@ -62,18 +63,20 @@ describe('Studio read-only index',()=>{
 describe('Studio IPC authorization',()=>{
  it('only indexes picker-granted folders and only reveals files to the owning sender',async()=>{
   const dir=fixtures();
+  type TestSender=EventEmitter&{id:number;mainFrame?:object;isDestroyed:()=>boolean;send:()=>void};
   const handlers=new Map<string,(event:unknown,input?:unknown)=>Promise<unknown>>();
-  const sender={id:31,isDestroyed:()=>false,send:()=>{}};
-  const other={...sender,id:32};
+  const sender:TestSender=Object.assign(new EventEmitter(),{id:31,mainFrame:{},isDestroyed:()=>false,send:()=>{}});
+  const other:TestSender=Object.assign(new EventEmitter(),{id:32,isDestroyed:()=>false,send:()=>{}});
   const {registerStudioIpc,CH}=require('../electron/studio/register-studio-ipc.cjs');
   const reveals:string[]=[];
   const controller=registerStudioIpc({
    ipcMain:{handle:(name:string,fn:(event:unknown,input?:unknown)=>Promise<unknown>)=>handlers.set(name,fn),removeHandler:(name:string)=>handlers.delete(name)},
    dialog:{showOpenDialog:async()=>({canceled:false,filePaths:[dir]})},
    shell:{showItemInFolder:(p:string)=>reveals.push(p)},
-   windowProvider:()=>({})
+   windowProvider:()=>({webContents:sender}),
+   userDataPath:join(dir,'journal.json')
   });
-  const invoke=(ch:string,input:unknown,who=sender)=>handlers.get(ch)!({sender:who},input) as Promise<any>;
+  const invoke=(ch:string,input:unknown,who:TestSender=sender)=>handlers.get(ch)!({sender:who,senderFrame:who.mainFrame||sender.mainFrame},input) as Promise<any>;
   try{
    const denied=await invoke(CH.scan,{sourceId:randomUUID(),operationId:randomUUID()}).then(()=>false,()=>true);
    expect(denied).toBe(true);
@@ -85,7 +88,7 @@ describe('Studio IPC authorization',()=>{
    const q=await invoke(CH.query,{inventoryId:scanned.inventoryId});
    expect(q.rows).toHaveLength(4);
    await expect(invoke(CH.query,{inventoryId:scanned.inventoryId},other)).rejects.toThrow();
-   expect(await invoke(CH.reveal,{inventoryId:scanned.inventoryId,fileId:0},other)).toBe(false);
+   await expect(invoke(CH.reveal,{inventoryId:scanned.inventoryId,fileId:0},other)).rejects.toThrow('STUDIO_SENDER_REFUSED');
    expect(await invoke(CH.reveal,{inventoryId:scanned.inventoryId,fileId:0})).toBe(true);
    expect(reveals).toHaveLength(1);
    expect(await invoke(CH.remove,selected.id)).toBe(true);
