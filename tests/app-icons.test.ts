@@ -587,7 +587,11 @@ describe('extraction resilience and caching', () => {
     provider.registerInventory([{ id, name: 'NoIcon', version: '1', displayIcon: exePath }]);
 
     const pending = provider.getIcons([id]);
-    await flush(4);
+    // The batch is launched by asynchronous queue work, so wait for the child
+    // process instead of counting microtask ticks: on a machine running 27 test
+    // workers at once, four timers can expire before the process ever spawns.
+    await waitFor(() => powershell.calls.length >= 1, 'the no-PNG extraction batch');
+    expect(powershell.calls).toHaveLength(1);
     powershell.calls[0].release({ exitCode: 0 }, [null]);
     const [icon] = await pending;
     expect(icon).toMatchObject({ status: 'unavailable', reason: appIcons.REASONS.EXTRACTION_FAILED });
@@ -646,7 +650,11 @@ describe('extraction resilience and caching', () => {
 
     const first = provider.getIcons([id]);
     const second = provider.getIcons([id]);
-    await flush(4);
+    await waitFor(() => powershell.calls.length >= 1, 'the shared extraction batch');
+    // Give the second request its turn at the queue: dedupe is decided when a
+    // batch is formed, so a stray timer here would let a duplicate process slip
+    // in and the count below would be a real bug rather than a flake.
+    await flush(8);
     expect(powershell.calls).toHaveLength(1);
     powershell.calls[0].release({ exitCode: 0 }, [{ width: 32, height: 32 }]);
     const [firstIcons, secondIcons] = await Promise.all([first, second]);

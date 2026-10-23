@@ -1,0 +1,66 @@
+
+ RUN  v5.0.5 K:/Knoux Projects/KNOuX SmartOrganizer/Base
+
+ ❯ tests/studio-organization.test.ts (12 tests | 1 failed | 11 skipped) 76946ms
+   ↓ Studio immutable planning and durable journal (6)
+     ↓ records a real virtual collection without changing either folder and retains history across owners
+     ↓ rejects hash, operation and destination mismatches before any mutation
+     ↓ rejects a replacement even when size and modified time match the index
+     ↓ rejects revoked inventory authority without creating the reviewed folders
+     ↓ rejects a category folder that appeared after review rather than silently accepting it
+     ↓ deduplicates a pathname selected through overlapping source roots
+   ❯ Studio real Windows transfer and undo (6)
+     ↓ copies with full SHA-256 verification and never replaces a newly occupied target
+     ↓ requires new picker grants after restart, binds undo to a hash, and restores verified content
+     ↓ preserves occupied originals, allows skipped undo to be previewed again, and uses the exact reviewed rename
+     ↓ never deletes a foreign file that took over the original path mid-copy
+     ↓ deletes nothing when another process vacates the original path during the copy
+     × loses nothing while another writer races the original path throughout a move 76944ms (repeat x400)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+ FAIL  tests/studio-organization.test.ts > Studio real Windows transfer and undo > loses nothing while another writer races the original path throughout a move
+AssertionError: expected 'STUDIO_PATH_UNSAFE' to be 'STUDIO_PLAN_STALE' // Object.is equality
+
+Expected: "STUDIO_PLAN_STALE"
+Received: "STUDIO_PATH_UNSAFE"
+
+ ❯ tests/studio-organization.test.ts:265:33
+    263|       // The swap landed before the copy: the operation must refuse, a…
+    264|       // partial destination must be gone rather than left as a decoy …
+    265|       expect(moved.thrown.code).toBe('STUDIO_PLAN_STALE');
+       |                                 ^
+    266|       expect(existsSync(destination)).toBe(false);
+    267|       expect(holdsOurBytes).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/24]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  00:27:42
+   Duration  77.24s (tests 100%)
+

@@ -8,11 +8,11 @@
 .sidebar.collapsed .nav-item { justify-content:center; padding-inline:0; }
 .collapse-button { margin-inline-start:auto; padding:7px; }
 .sidebar.collapsed .collapse-button { margin-inline-start:0; }
-.sidebar-nav { display:grid; gap:15px; overflow-y:auto; overflow-x:hidden; }
+.sidebar-nav { display:grid; gap:12px; overflow-y:auto; overflow-x:hidden; }
 /* A grid item is not allowed to shrink below its min-content unless told to,
    so the longest page name in the rail set the width of the whole sidebar. */
 .nav-group { display:grid; gap:5px; min-width:0; }
-.nav-group-head { border:0; background:transparent; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.3px; display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:5px 11px; cursor:pointer; min-width:0; }
+.nav-group-head { border:0; background:transparent; color:var(--rail-muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.3px; display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:5px 11px; cursor:pointer; min-width:0; }
 .nav-group-head > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nav-group-head:hover { color:var(--primary-bright); }
 .nav-group-head .caret { font-size:10px; flex:none; transition:transform .2s; }
@@ -121,4 +121,4 @@ html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#
 /* The product name is a Latin brand mark. Inside an RTL sidebar the
    truncation ellipsis must still fall at the end of the Latin text, so the
    brand is isolated as its own left-to-right run. */
-.brand-text strong { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.brand-text strong, .brand-text .brand-product { direction: ltr; unicode-bidi: isolate; text-align: start; }

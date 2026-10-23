@@ -27,7 +27,7 @@ export const pageGroups: Array<{ id: GroupId; nameKey: string; pages: PageDef[] 
     page('clipboard', 'nav.clipboard', ClipboardCopy, 'home')
   ] },
   { id: 'organize', nameKey: 'nav.group.organize', pages: [
-    page('studio', 'studio.title', FolderOpen, 'organize'),
+    page('studio', 'nav.studio', FolderOpen, 'organize'),
     page('storage', 'nav.storage', HardDrive, 'organize'),
     page('files', 'nav.files', FolderOpen, 'organize'),
     page('applications', 'nav.apps', AppWindow, 'organize')
@@ -74,7 +74,7 @@ export function pageTitleKey(id: PageId): string {
 }
 
 export function isCatalogPage(id: PageId): boolean {
-  return !['home', 'scan', 'studio', 'clipboard', 'automation', 'history', 'settings', 'applications'].includes(id);
+  return !['home', 'scan', 'studio', 'clipboard', 'automation', 'history', 'settings', 'applications', 'files', 'storage'].includes(id);
 }
 
 /**
@@ -82,7 +82,7 @@ export function isCatalogPage(id: PageId): boolean {
  * inside the page, so the shell prints no competing heading above it.
  */
 export function worldOwnsHeader(id: PageId): boolean {
-  return id === 'applications';
+  return id === 'applications' || id === 'files' || id === 'storage';
 }
 
 export function pageSubtitleKey(id: PageId): string | null {

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, shell, Tray, Menu, nativeImage, clipboard, safeStorage } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, screen, shell, Tray, Menu, nativeImage, clipboard, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
@@ -275,7 +275,16 @@ async function buildDiagnostics() {
 function argumentValue(name) { const prefix = `--${name}=`; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 function smokeArgument(name) { const value = argumentValue(name); return value ? path.resolve(value) : null; }
 const cancelSmokeHoldMs = Math.min(Math.max(Number(argumentValue('knoux-cancel-hold-ms')) || 0, 0), 10000);
-if (argumentValue('knoux-visual-smoke-output')) { app.commandLine.appendSwitch('disable-backgrounding-occluded-windows'); app.commandLine.appendSwitch('disable-renderer-backgrounding'); }
+if (argumentValue('knoux-visual-smoke-output')) {
+  app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+  app.commandLine.appendSwitch('disable-renderer-backgrounding');
+  // Windows itself tells Chromium when the window is covered, and Chromium
+  // answers by marking the page hidden and stopping frame production outright:
+  // capturePage() then never settles, because the surface has been told it is
+  // not worth painting. The measuring run never brings its own window forward,
+  // so the occlusion source is switched off for that run only.
+  app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+}
 function automationArgument() { const prefix = '--automation-run='; const value = process.argv.find(argument => argument.startsWith(prefix)); return value ? value.slice(prefix.length) : null; }
 /**
  * Runs the Windows Task Scheduler.
@@ -482,7 +491,7 @@ async function scanLargeFiles(root, context, threshold, limit) {
   traversalWarnings(context, data.totals);
   const intelligence = advancedLocal.buildStorageIntelligence(data.files, root);
   const largest = data.files.filter(file => file.size >= threshold).sort((a, b) => b.size - a.size).slice(0, limit).map(file => ({ ...fileRecord(file), type: advancedLocal.classifyFileType(file.path), ageBucket: advancedLocal.ageBucket(file.modifiedAt) }));
-  return { items: largest, summary: { folder: root, filesScanned: data.files.length, matchingFiles: largest.length, thresholdBytes: threshold, totalMatchingBytes: largest.reduce((sum, item) => sum + item.size, 0), totalScannedBytes: intelligence.totalBytes, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, topFolders: intelligence.topFolders, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
+  return { items: largest, summary: { folder: root, filesScanned: data.files.length, matchingFiles: largest.length, thresholdBytes: threshold, totalMatchingBytes: largest.reduce((sum, item) => sum + item.size, 0), totalScannedBytes: intelligence.totalBytes, typeGroups: intelligence.typeGroups, ageBuckets: intelligence.ageBuckets, extensionGroups: intelligence.extensionGroups, topFolders: intelligence.topFolders, traversal: { ...data.totals, reparsePoints: data.links.slice(0, 200) } }, partial: data.partial };
 }
 function downloadCategory(filePath) { const ext = path.extname(filePath).toLowerCase(); if (['.jpg','.jpeg','.png','.gif','.webp','.heic','.svg'].includes(ext)) return 'Images'; if (['.mp4','.mkv','.mov','.avi','.webm'].includes(ext)) return 'Videos'; if (['.mp3','.wav','.flac','.aac','.m4a'].includes(ext)) return 'Audio'; if (['.pdf','.doc','.docx','.xls','.xlsx','.ppt','.pptx','.txt'].includes(ext)) return 'Documents'; if (['.zip','.rar','.7z','.tar','.gz'].includes(ext)) return 'Archives'; if (['.exe','.msi','.msix','.appx'].includes(ext)) return 'Installers'; if (['.js','.ts','.tsx','.py','.java','.cs','.cpp','.json','.html','.css'].includes(ext)) return 'Development'; return 'Other'; }
 /** Preflight: report destination collisions, reparse entries and cross-volume moves before anything moves. */
@@ -1123,12 +1132,81 @@ const INVENTORY_WAITS = [
   { selector: '.appx-icon--img', min: 3, ms: 25000 }
 ];
 
+/**
+ * What a populated Files capture has to wait for.
+ *
+ * The bench reads the Downloads directory table on mount, so the first rows are
+ * the signal that a real folder was read. The organisation plan is not a read:
+ * it is computed only when the preview button is pressed, so it is waited for
+ * separately, after the prepare script has clicked.
+ */
+const FILES_WAITS = [
+  { selector: '.filex__row', min: 5, ms: 90000 },
+  { selector: '.filex__seg', min: 2, ms: 20000 }
+];
+
+const FILES_PLAN_WAITS = [
+  { selector: '.filex__planbody', min: 1, ms: 60000 }
+];
+
+/**
+ * What a populated Storage capture has to wait for.
+ *
+ * The volume table is a real WMI round trip: `disk-overview` answers when
+ * Win32_LogicalDisk and MSFT_PhysicalDisk have both replied, so the first rails
+ * are the evidence that the machine was actually read rather than laid out from a
+ * template. A walk is a different animal — it enumerates a tree under a scan
+ * budget, so the ledger and the ladders are waited for only after the button that
+ * starts the walk has been clicked.
+ */
+// The rack is a cold Windows round trip: the first Win32_LogicalDisk query of a
+// freshly started process took longer than a minute and a half on the machine
+// this suite runs on (measured — the second read of the same class returned in
+// under four seconds), so the first wait is generous and every wait after it is
+// a check that the page drew what the engine already gave it.
+const ATLAS_WAITS = [
+  { selector: '.atlas__bay', min: 1, ms: 180000 },
+  { selector: '.atlas__rail', min: 1, ms: 30000 }
+];
+
+const WALK_WAITS = [
+  { selector: '.atlas__row', min: 5, ms: 240000 },
+  { selector: '.atlas__rung', min: 6, ms: 30000 }
+];
+
+// The empties walk is a folder-only traversal: it never hashes a byte, so it
+// answers well inside the heavy walk's budget. One row is enough to open a
+// folder record, which is all this wait is asked to prove.
+const EMPTIES_WAITS = [
+  { selector: '.atlas__row', min: 1, ms: 240000 }
+];
+
 async function captureVisualEvidence(outputDirectory) {
   const fsPromises = fsp;
   await fsPromises.mkdir(outputDirectory, { recursive: true });
   const originalBounds = mainWindow.getBounds();
   const originalAlwaysOnTop = mainWindow.isAlwaysOnTop();
   const originalSettings = await getSettings();
+  // The window is sized and placed inside the work area, not at whatever
+  // position the user happened to leave it in. A requested size that hangs off
+  // the edge of the display is a window Windows re-clamps mid-run: the capture
+  // then shows a width nobody asked for, and the compositor can stop producing
+  // frames altogether. Anchoring to the work area's top-left keeps every
+  // capture honest, and the clamp records the largest size this display can
+  // actually show instead of pretending a bigger one was measured.
+  //
+  // The anchor is inset rather than flush. A frame that touches both the top
+  // and the side of the work area is a window the shell reads as a snap or
+  // maximise candidate, and once the shell owns the geometry it can take the
+  // size away between two of this harness's own measurements.
+  const display = screen.getPrimaryDisplay();
+  const workArea = display.workArea;
+  const PLACEMENT_INSET = 24;
+  const placementOrigin = () => ({ x: workArea.x + PLACEMENT_INSET, y: workArea.y + PLACEMENT_INSET });
+  const targetSize = scenario => ({
+    width: Math.min(scenario.width, workArea.width - PLACEMENT_INSET * 2),
+    height: Math.min(scenario.height, workArea.height - PLACEMENT_INSET * 2)
+  });
   const scenarios = [
     { name: 'en-home-1366x768', locale: 'en', page: 'home', width: 1366, height: 768 },
     { name: 'ar-home-1366x768', locale: 'ar', page: 'home', width: 1366, height: 768 },
@@ -1149,46 +1227,343 @@ async function captureVisualEvidence(outputDirectory) {
     { name: 'en-applications-dossier-1366x768', locale: 'en', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' },
     { name: 'ar-applications-deck-1366x768', locale: 'ar', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDeck: true, prepare: 'Array.from(document.querySelectorAll(".appx__row input[type=checkbox]")).slice(0,4).forEach(function(c){ c.click(); });' },
     { name: 'en-applications-light-1366x768', locale: 'en', page: 'applications', theme: 'light', width: 1366, height: 768, waits: INVENTORY_WAITS },
-    { name: 'ar-applications-860x600', locale: 'ar', page: 'applications', width: 860, height: 600, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' }
+    { name: 'ar-applications-860x600', locale: 'ar', page: 'applications', width: 860, height: 600, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' },
+    // The Files bench reads the Downloads tree, so the same rule applies: wait for
+    // real rows. The inspector opens on a row click; the plan band appears only
+    // after the preview button has been pressed and the engine has answered.
+    { name: 'en-files-1920x1080', locale: 'en', page: 'files', width: 1920, height: 1080, waits: FILES_WAITS },
+    { name: 'ar-files-1920x1080', locale: 'ar', page: 'files', width: 1920, height: 1080, waits: FILES_WAITS },
+    { name: 'en-files-inspector-1366x768', locale: 'en', page: 'files', width: 1366, height: 768, waits: FILES_WAITS, requiresInspector: true, prepare: 'var o=document.querySelector(".filex__opener"); if(o) o.click();', scrollTo: '.filex__inspector' },
+    { name: 'en-files-plan-1366x768', locale: 'en', page: 'files', width: 1366, height: 768, waits: FILES_WAITS, requiresPlan: true, prepare: 'var b=document.querySelector(".filex__plan-preview"); if(b) b.click();', waitsAfterPrepare: FILES_PLAN_WAITS, scrollTo: '.filex__planbody' },
+    { name: 'ar-files-plan-860x600', locale: 'ar', page: 'files', width: 860, height: 600, waits: FILES_WAITS, requiresPlan: true, prepare: 'var b=document.querySelector(".filex__plan-preview"); if(b) b.click(); var o=document.querySelector(".filex__opener"); if(o) o.click();', waitsAfterPrepare: FILES_PLAN_WAITS, scrollTo: '.filex__planbody' },
+    { name: 'en-files-light-1366x768', locale: 'en', page: 'files', theme: 'light', width: 1366, height: 768, waits: FILES_WAITS },
+    // The Volume Atlas reads the Windows volume table on mount, so the rack is
+    // waited for. A walk is started by the prepare script — the atlas never walks
+    // a folder the reader did not choose — and its ledger and ladders are then
+    // waited for separately. The inspector scenario needs a second act, because
+    // the row it opens only exists once that walk has answered.
+    { name: 'en-storage-1920x1080', locale: 'en', page: 'storage', width: 1920, height: 1080, waits: ATLAS_WAITS },
+    { name: 'ar-storage-1920x1080', locale: 'ar', page: 'storage', width: 1920, height: 1080, waits: ATLAS_WAITS },
+    { name: 'en-storage-walked-1366x768', locale: 'en', page: 'storage', width: 1366, height: 768, waits: ATLAS_WAITS, requiresLedger: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=heavy] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: WALK_WAITS, scrollTo: '.atlas__ladders' },
+    { name: 'en-storage-inspector-1366x768', locale: 'en', page: 'storage', width: 1366, height: 768, waits: ATLAS_WAITS, requiresInspector: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=heavy] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: WALK_WAITS, interact: 'var r=document.querySelector(".atlas__row"); if(r) r.click();', scrollTo: '.atlas__inspector' },
+    // The read board is what the inspector shows while nothing is picked, so it
+    // needs its own capture with a walk answered but no row opened: that is the
+    // only state where the three roots and their agreement line are on screen.
+    { name: 'en-storage-readboard-1366x768', locale: 'en', page: 'storage', width: 1366, height: 768, waits: ATLAS_WAITS, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=heavy] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: WALK_WAITS, scrollTo: '.atlas__inspector' },
+    // And its resting twin: no walk has run, in Arabic, at the narrow size — the
+    // state every reader lands in first, and the one where an idle column is
+    // most tempting to leave empty.
+    { name: 'ar-storage-readboard-860x600', locale: 'ar', page: 'storage', width: 860, height: 600, waits: ATLAS_WAITS, scrollTo: '.atlas__inspector' },
+    { name: 'ar-storage-walked-860x600', locale: 'ar', page: 'storage', width: 860, height: 600, waits: ATLAS_WAITS, requiresLedger: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=heavy] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: WALK_WAITS },
+    // The empty-folder record is the fourth thing the inspector can be asked to
+    // show, and the only one made of a read rather than a measurement. The ledger
+    // follows the walk that answered, so clicking the empties lane and then its
+    // first row is enough to land the column on a folder. Captured twice: the
+    // narrow Arabic pass is where a long parent path and a drive letter in the
+    // same line are most likely to break the row.
+    { name: 'en-storage-folder-1366x768', locale: 'en', page: 'storage', width: 1366, height: 768, waits: ATLAS_WAITS, requiresFolder: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=empties] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: EMPTIES_WAITS, interact: 'var r=document.querySelector(".atlas__row"); if(r) r.click();', scrollTo: '.atlas__inspector' },
+    { name: 'ar-storage-folder-860x600', locale: 'ar', page: 'storage', width: 860, height: 600, waits: ATLAS_WAITS, requiresFolder: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=empties] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: EMPTIES_WAITS, interact: 'var r=document.querySelector(".atlas__row"); if(r) r.click();', scrollTo: '.atlas__inspector' },
+    { name: 'en-storage-light-1366x768', locale: 'en', page: 'storage', theme: 'light', width: 1366, height: 768, waits: ATLAS_WAITS }
   ];
-  // A single named scenario, so one layout question gets one answer in about
-  // twenty seconds instead of a full sixteen-scenario pass. An unrecognised
-  // name is reported as an empty run by the harness, which fails loudly.
+  // One or more named scenarios (or page names), comma separated, so one layout
+  // question gets one answer in about twenty seconds instead of a full pass over
+  // every world — and so a defect that only shows up when one world follows
+  // another, like a Files capture handing its page to the Storage run, can be
+  // reproduced without the whole suite. An unrecognised name is reported as an
+  // empty run by the harness, which fails loudly.
   const only = argumentValue('knoux-visual-smoke-only');
-  const selected = only ? scenarios.filter(scenario => scenario.name === only || scenario.page === only) : scenarios;
+  const wanted = only ? only.split(',').map(token => token.trim()).filter(Boolean) : [];
+  const selected = wanted.length ? scenarios.filter(scenario => wanted.some(token => scenario.name === token || scenario.page === token)) : scenarios;
   const results = [];
   const settle = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  /**
+   * Move a region into the frame the capture will take.
+   *
+   * In the DOM is not on the screen: a short viewport can hold a control far
+   * below the fold, and a screenshot of the top of that page is not evidence of
+   * the control. A scenario that claims one asks for the page to be scrolled to
+   * it, which is what a person reviewing the picture would do, and the offset is
+   * reported so the capture says where it was taken from.
+   *
+   * An explicit scroll rather than scrollIntoView: the header is sticky, several
+   * ancestors clip, and the capture has to show the region it names rather than
+   * the tail of it.
+   *
+   * This runs twice per scenario — once after the page settles, and once in the
+   * instant before the frame. The second call is not decoration: a record that
+   * replaces a taller panel shortens the document, and a window manager that
+   * re-places the frame in between leaves the browser clamping the scroll back
+   * down to whatever height the page has by then. A picture is only evidence of
+   * the region it names if that region is inside it when the pixels are taken.
+   */
+  const scrollToRegion = async (selector, label) => {
+    // Framing is a loop, not a command. The page keeps changing under the
+    // capture: a walk that finishes replaces its progress lane with a shorter
+    // note, the document shrinks by a screenful, and a region that was at the
+    // clearance line when the scroll was issued sits above the header by the
+    // time the frame is taken. Measured on the atlas, where the composition
+    // ladders were photographed from their third row down.
+    //
+    // So the scroll is asked for, measured, and asked again while the region is
+    // still coming into place, and gives up the moment it stops improving — a
+    // region below the last scrollable pixel is reported, not chased.
+    const clearance = 88;
+    let scroll = { reached: false };
+    let lastDrift = Infinity;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      scroll = await mainWindow.webContents.executeJavaScript(`(() => {
+        const node = document.querySelector(${JSON.stringify(selector)});
+        if (!node) return { reached: false };
+        const drifted = Math.abs(node.getBoundingClientRect().top - ${clearance}) > 3;
+        if (drifted) window.scrollTo({ top: Math.max(0, Math.round(window.scrollY + node.getBoundingClientRect().top - ${clearance})), behavior: 'instant' });
+        const box = node.getBoundingClientRect();
+        return { reached: true, drifted, offset: Math.round(box.top), height: Math.round(box.height), viewport: Math.round(window.innerHeight), scrollY: Math.round(window.scrollY) };
+      })()`).catch(() => ({ reached: false }));
+      if (!scroll.reached) break;
+      const drift = Math.abs(Number(scroll.offset) - clearance);
+      if (drift <= 3 || drift >= lastDrift) break;
+      lastDrift = drift;
+      await settle(140);
+    }
+    const offset = Number.isFinite(scroll.offset) ? scroll.offset : null;
+    if (label) {
+      await progress(`scrolled ${label} ${selector}=${scroll.reached} top=${offset === null ? 'n/a' : offset} h=${scroll.height ?? 'n/a'} of ${scroll.viewport ?? 'n/a'}px`);
+    }
+    // The one claim that decides whether the picture is evidence of the region
+    // it names: the region has to start inside the frame. A top edge above the
+    // viewport means the capture shows the tail of the panel and nothing more.
+    return { selector, found: scroll.reached === true, offset, scrollY: Number.isFinite(scroll.scrollY) ? scroll.scrollY : -1, height: Number.isFinite(scroll.height) ? scroll.height : null, viewport: Number.isFinite(scroll.viewport) ? scroll.viewport : null, topInView: offset !== null && offset >= -2 };
+  };
+
+  /**
+   * Window placement the harness can trust.
+   *
+   * Windows maximises and snaps this window on its own — the shell does it
+   * while the harness is waiting for a page to settle, and a maximised window
+   * ignores setBounds() completely, so every later scenario would silently be
+   * captured at the maximised size. Two defences run together: the window is
+   * made non-resizable and non-maximisable for the duration of the run, which
+   * removes the snap affordances the shell was using, and the 'maximize'
+   * event puts the scenario's geometry back if the shell forces it anyway.
+   * The recovery is capped per scenario: a harness that keeps unmaximising a
+   * window the shell keeps maximising is a fight over the window procedure,
+   * and it ends with the compositor producing no frames at all. Every
+   * recovery is counted and reported, because a screenshot is only ever filed
+   * under a size the window actually had.
+   */
+  let placement = null;
+  let maximizeRecoveries = 0;
+  let recoveriesThisScenario = 0;
+  let restoringPlacement = false;
+  const placeWindow = (target) => {
+    placement = target;
+    const origin = placementOrigin();
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    if (mainWindow.isFullScreen()) mainWindow.setFullScreen(false);
+    mainWindow.setBounds({ ...origin, width: target.width, height: target.height });
+  };
+  const reclaimPlacement = () => {
+    if (!placement || !mainWindow || restoringPlacement) return;
+    if (recoveriesThisScenario >= 2) {
+      void progress(`maximise-guard stood down for ${placement.width}x${placement.height} after ${recoveriesThisScenario} recoveries`);
+      return;
+    }
+    restoringPlacement = true;
+    maximizeRecoveries += 1;
+    recoveriesThisScenario += 1;
+    void progress(`window-maximised-by-shell -> re-placed ${placement.width}x${placement.height} (recovery ${maximizeRecoveries})`);
+    // Unmaximising inside the maximize event itself re-enters the window
+    // procedure, so the correction is handed to the next tick.
+    setImmediate(() => {
+      try {
+        if (mainWindow.isMaximized()) mainWindow.unmaximize();
+        mainWindow.setBounds({ ...placementOrigin(), width: placement.width, height: placement.height });
+      } finally { restoringPlacement = false; }
+    });
+  };
+  mainWindow.on('maximize', reclaimPlacement);
+  // The root cause of every "no frame" this run has produced, found by
+  // measurement rather than guesswork: the product's own window policy. With
+  // "minimise to tray" switched on — and it is switched on in this user's
+  // settings — `minimize` is preventDefault()ed and replaced by `hide()`. A
+  // hidden window has no desktop surface at all, so capturePage() never settles,
+  // while the page keeps reporting itself visible because the run switched off
+  // occlusion calculation. The harness then restores a window that is not
+  // minimised and not hidden, asks again, and loses. For the duration of the
+  // measuring run the product's handler is therefore detached and replaced by
+  // one that puts the window back on screen; the finally block hands the policy
+  // to the app again, because a product that refuses to be minimised is a bug.
+  const appMinimiseHandlers = mainWindow.listeners('minimize');
+  mainWindow.removeAllListeners('minimize');
+  let minimizeRecoveries = 0;
+  let minimisesThisPass = 0;
+  const reclaimMinimisedWindow = () => {
+    if (!mainWindow || !placement) return;
+    if (minimisesThisPass >= 6) {
+      if (minimisesThisPass === 6) {
+        minimisesThisPass += 1;
+        void progress(`minimise-guard stood down for ${placement.width}x${placement.height}`);
+      }
+      return;
+    }
+    minimisesThisPass += 1;
+    minimizeRecoveries += 1;
+    void progress(`window-minimised-by-shell -> restored (recovery ${minimizeRecoveries})`);
+    setImmediate(() => {
+      try {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        if (!mainWindow.isVisible()) mainWindow.show();
+        mainWindow.moveTop();
+      } catch { /* the shell won this round; the capture loop asks again */ }
+    });
+  };
+  mainWindow.on('minimize', reclaimMinimisedWindow);
+  const geometry = () => {
+    const b = mainWindow.getBounds();
+    return `${b.width}x${b.height}@${b.x},${b.y} vis=${mainWindow.isVisible()} min=${mainWindow.isMinimized()} max=${mainWindow.isMaximized()} focus=${mainWindow.isFocused()}`;
+  };
+  // The single fact that separates "the page is not painting" from "the frame
+  // was not asked for in time" is the page's own visibility state, so a failed
+  // capture records it rather than leaving the next reader to guess.
+  const pageVisibility = async () => await mainWindow.webContents
+    .executeJavaScript('document.visibilityState').catch(() => 'unknown');
   /**
    * Captures the real window.
    *
    * The compositor refuses to produce a frame before the window has been
    * painted, and it reports that refusal as an opaque viz error. A capture
    * that is retried until the window is ready is the difference between a
-   * real screenshot and a failed run.
+   * real screenshot and a failed run. When three polite requests go
+   * unanswered the surface itself is woken: a window that has been moved and
+   * resized is a window the compositor has to repaint, which is the cure for
+   * a surface that has decided it is not visible. If even that is answered
+   * with a refused frame, `surfaceLost` is set and the run stops — a
+   * compositor that will not paint is not going to change its mind eighteen
+   * more times, and a run that knows it has died says so in a minute instead
+   * of timing out half an hour later.
    */
-  const captureWindow = async (label) => {
+  let surfaceLost = false;
+  let consecutiveSurfaceFailures = 0;
+  const captureWindow = async (label, target, beforeFrame) => {
     let lastError = null;
+    let reasserts = 0;
+    let nudges = 0;
+    let unplaceableStreak = 0;
     for (let attempt = 0; attempt < 8; attempt += 1) {
       try {
         // The window has to be on screen for the compositor to produce a
-        // frame for it.
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        if (!mainWindow.isVisible()) mainWindow.show();
-        mainWindow.focus();
+        // frame for it, and it needs a beat after coming back before a frame
+        // exists: restore() and show() return as soon as the window procedure
+        // is told, not as soon as the surface is.
+        let woke = false;
+        if (mainWindow.isMinimized()) { mainWindow.restore(); woke = true; }
+        if (!mainWindow.isVisible()) { mainWindow.show(); woke = true; }
+        // Raising is not a courtesy here: a window another window covers is a
+        // window the compositor has stopped feeding, and every attempt below
+        // asks for a frame from whichever surface is currently live.
+        mainWindow.moveTop();
+        if (woke) await settle(200);
+        if (attempt === 0 || attempt === 3 || attempt === 6) { // attempt 0 jogs as well: after a minimise/restore the compositor can hand back the last frame it committed rather than a new one, and a stale frame filed under a fresh DOM is worse evidence than no frame at all
+          nudges += 1;
+          await progress(`surface-nudge ${label} attempt ${attempt + 1}: ${geometry()}`);
+          mainWindow.moveTop();
+          mainWindow.focus();
+          mainWindow.setBounds({ x: workArea.x + 72, y: workArea.y + 72, width: target.width, height: target.height });
+          await settle(150);
+          placeWindow(target);
+          await settle(200);
+        }
+        // Windows re-clamps a window that fills the work area, and an RTL
+        // document can make it reposition the frame, so the whole placement —
+        // position as well as size — is re-asserted in the instant before the
+        // frame is asked for. A window manager on the machine (a snap tool, a
+        // stale multi-monitor layout) also moves frames from under a run: a
+        // window with eight hundred pixels of its width off the primary
+        // display has no surface for the compositor to hand back, and the run
+        // then reads that as "no frame in time" and blames the page. The
+        // capture is either the size and place the scenario claims, or the
+        // attempt is retried — never a screenshot filed under a geometry it
+        // does not have.
+        const before = mainWindow.getBounds();
+        const origin = placementOrigin();
+        const drifted = before.x !== origin.x || before.y !== origin.y
+          || before.width !== target.width || before.height !== target.height
+          || mainWindow.isMaximized();
+        if (drifted) {
+          reasserts += 1;
+          await progress(`bounds-reassert ${label} ${before.width}x${before.height}@${before.x},${before.y} max=${mainWindow.isMaximized()} -> ${target.width}x${target.height}@${origin.x},${origin.y}`);
+          placeWindow(target);
+          await settle(250);
+        }
+        // The page is placed in the same instant the window is: a scenario that
+        // named a region had it scrolled into frame a moment ago, and anything
+        // that changed the document's height since then — a record replacing a
+        // taller panel, a re-asserted bounds nudging a reflow — can have clamped
+        // that scroll back and carried the region out of the picture. The frame
+        // is asked for with the region where the scenario says it is. Whatever
+        // that placement measured is returned, so the evidence reports the scroll
+        // the picture was taken at rather than the one the page held a moment
+        // earlier — those two are the same only when nothing moved in between.
+        let scrolledAtFrame = null;
+        if (beforeFrame) scrolledAtFrame = await beforeFrame().catch(() => null);
+        // The size is read in the same instant the frame is asked for, together
+        // with the content area the page is actually laid out in. The outer
+        // bounds include the invisible resize border Windows draws, so the
+        // painted frame is smaller than the window, and the acceptance record
+        // has to say both numbers.
+        const boundsBeforeFrame = mainWindow.getBounds();
+        const contentBeforeFrame = mainWindow.getContentBounds();
         // The capture is bounded. A frame request that the compositor never
         // satisfies does not reject, it simply never settles, and a harness
         // that waits for it waits forever.
+        //
+        // The budget is not tight: after the shell has snapped, maximised and
+        // restored this window a few times in a second, the compositor needs a
+        // moment before it produces a frame again, and a five-second race
+        // against that moment reads as a dead surface. Two tries at eight
+        // seconds, then twelve — still under a minute for all eight attempts.
         const image = await Promise.race([
           mainWindow.capturePage(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('the capture produced no frame in time')), 5000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('the capture produced no frame in time')), attempt < 2 ? 8000 : 12000))
         ]);
-        if (image && !image.isEmpty()) return image;
+        if (image && !image.isEmpty()) return { image, boundsBeforeFrame, contentBeforeFrame, reasserts, nudges, scrolledAtFrame };
         lastError = new Error('the captured frame was empty');
       } catch (error) { lastError = error; }
-      await progress(`capture-retry ${label} ${attempt + 1}: ${String(lastError?.message || lastError)}`);
+      const visibility = await pageVisibility();
+      const message = `${String(lastError?.message || lastError)} | ${geometry()} | page ${visibility}`;
+      await progress(`capture-retry ${label} ${attempt + 1}: ${message}`);
+      // A window that is hidden, minimised, or wholly off the display has no
+      // surface to capture however the page describes itself. But something on
+      // this machine minimises and snaps the window mid-run — the log says so —
+      // and the next attempt already knows how to wake it, so judging the
+      // streak on the instant after the failure would abort a run that was going
+      // to recover one attempt later. Wake first, then count: only a window that
+      // is still gone after we have asked it back, twice, is a lost surface.
+      const box = mainWindow.getBounds();
+      const unplaceable = !mainWindow.isVisible() || mainWindow.isMinimized()
+        || box.x + box.width <= workArea.x || box.y + box.height <= workArea.y;
+      let stillGone = unplaceable;
+      if (unplaceable) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        if (!mainWindow.isVisible()) mainWindow.show();
+        mainWindow.moveTop();
+        placeWindow(target);
+        await settle(250);
+        const back = mainWindow.getBounds();
+        stillGone = !mainWindow.isVisible() || mainWindow.isMinimized()
+          || back.x + back.width <= workArea.x || back.y + back.height <= workArea.y;
+        await progress(`surface-wake ${label} attempt ${attempt + 1}: ${geometry()}${stillGone ? ' STILL UNPLACEABLE' : ' recovered'}`);
+      }
+      unplaceableStreak = stillGone ? unplaceableStreak + 1 : 0;
+      // A page that still calls itself hidden after the window came back is the
+      // compositor refusing to paint, which is the same dead end as no window.
+      const stillHidden = stillGone && visibility === 'hidden';
+      if (/display surface not available/i.test(message) || stillHidden || unplaceableStreak >= 2) surfaceLost = true;
+      if (surfaceLost && attempt >= 3) break;
       await settle(400);
     }
-    throw new Error(`The window could not be captured for ${label}: ${String(lastError?.message || lastError)}`);
+    throw new Error(`The window could not be captured for ${label}: ${String(lastError?.message || lastError)}${surfaceLost ? ' (the display surface for this window is gone; the run stopped rather than repeating a capture that cannot succeed)' : ''}`);
   };
   const progressPath = path.join(outputDirectory, 'visual-progress.log');
   const progress = async (message) => { await fsp.appendFile(progressPath, `${new Date().toISOString()} ${message}\n`, 'utf8').catch(() => {}); };
@@ -1200,56 +1575,166 @@ async function captureVisualEvidence(outputDirectory) {
     }
     return false;
   };
+  /**
+   * Waits, with a deadline, for the live document to show enough of something.
+   *
+   * Returns false when the count never arrived. The scenario is still captured
+   * and reported either way: an empty or a loading bench is a real state of the
+   * interface, and the gate in the harness decides whether it is acceptable.
+   */
+  const runWaits = async (scenario, waits) => {
+    let satisfied = true;
+    for (const wait of waits) {
+      const budget = wait.ms || 30000;
+      const deadline = Date.now() + budget;
+      let seen = 0;
+      let jogs = 0;
+      while (Date.now() < deadline) {
+        seen = await mainWindow.webContents.executeJavaScript(`document.querySelectorAll(${JSON.stringify(wait.selector)}).length`).catch(() => 0);
+        if (seen >= wait.min) break;
+        // A window Chromium has decided is occluded stops being handed frames, and
+        // a background renderer can defer the message that would populate it.
+        // Measured: two Files scenarios sat out their whole 90 s on `.filex__row`
+        // at focus=false while every other scenario in the same run answered in
+        // four seconds, and the capture filed under them showed a page the DOM was
+        // no longer on. Re-raising the window costs nothing and unfreezes both.
+        const elapsed = budget - (deadline - Date.now());
+        if (jogs < 3 && elapsed > (jogs + 1) * 8000) {
+          jogs += 1;
+          try { mainWindow.show(); mainWindow.moveTop(); mainWindow.focus(); } catch {}
+          await progress(`wait-jog ${scenario.name} ${wait.selector} after ${Math.round(elapsed / 1000)}s focus=${mainWindow.isFocused()} visible=${mainWindow.isVisible()}`);
+        }
+        await settle(500);
+      }
+      const met = seen >= wait.min;
+      satisfied = satisfied && met;
+      if (!met) {
+        // The report says *why* the bench stayed empty: a hidden document and a
+        // document with nothing to show are different failures, and only one of
+        // them is a design problem.
+        const health = await mainWindow.webContents.executeJavaScript(`({ visibility: document.visibilityState, focus: document.hasFocus(), page: document.documentElement.dataset.page })`).catch(() => null);
+        await progress(`wait-timeout ${scenario.name} ${wait.selector}=${seen} wanted=${wait.min} ${JSON.stringify(health)}`);
+      }
+      await progress(`waited ${scenario.name} ${wait.selector}=${seen}`);
+    }
+    return satisfied;
+  };
   try {
+    // The run owns the window: it is raised and kept painting even while the
+    // terminal owns the foreground. It is *not* made non-resizable to stop the
+    // shell snapping it — measured, and a non-resizable window ignores
+    // setBounds() entirely, which would freeze every scenario at one size.
+    // Dragging is switched off instead, because a measured window that gets
+    // pulled off its anchor by anything on the desktop — a snap helper, a stale
+    // multi-monitor layout, a hand — loses the surface the capture needs.
     mainWindow.setAlwaysOnTop(true);
+    mainWindow.setMovable(false);
     mainWindow.show();
+    mainWindow.moveTop();
     mainWindow.focus();
     // Chromium stops producing frames for a window it considers occluded, and
     // this run must keep painting while the terminal owns the foreground. The
     // setting is restored below.
     try { mainWindow.webContents.setBackgroundThrottling(false); } catch {}
+    //
+    // A cold process reads the volume table through WMI, and that first query
+    // has been measured past three minutes on a busy machine. Warming it once
+    // before the loop means scenario 1 is not graded on a different clock from
+    // the rest of the run — and the warm read is the engine's own cache, so the
+    // page still reports the real numbers rather than a staged result.
+    if (selected.some(scenario => scenario.page === 'storage' || scenario.page === 'home')) {
+      await progress('volume-warm start');
+      await diskOverview().then(() => progress('volume-warm done')).catch(error => progress(`volume-warm failed: ${String(error?.message || error)}`));
+    }
     for (const scenario of selected) {
       let completed = false;
       let lastError = null;
-      // A reload replaces the compositor surface. If a pass cannot produce a
-      // frame, the surface is recreated once before the scenario is declared
-      // failed, so one stale surface cannot discard the other captures.
+      // Two scenarios in a row that could not be painted is not bad luck. Once
+      // the window has lost its display surface, every later capture in the run
+      // is the same failure repeated, so the remainder of the suite is recorded
+      // as skipped with the reason instead of spending the whole timeout on it.
+      if (consecutiveSurfaceFailures >= 2) {
+        await progress(`scenario-skipped ${scenario.name}: the display surface is gone`);
+        results.push({ ...scenario, captured: false, skipped: 'surface-lost', error: 'Skipped: the previous two captures had no display surface to paint, so a screenshot taken now would show nothing.' });
+        continue;
+      }
+      surfaceLost = false;
+      // A frame request that goes unanswered three times is answered with a
+      // geometry change the compositor cannot ignore (see captureWindow), so a
+      // surface that has decided it is not visible is given a reason to change
+      // its mind; pass 2 reloads the page on top of that, so one stale surface
+      // cannot discard the other captures.
       for (let pass = 1; pass <= 2 && !completed; pass += 1) {
         await progress(`scenario-start ${scenario.name} pass=${pass}`);
+        recoveriesThisScenario = 0;
+        minimisesThisPass = 0;
         try {
-          mainWindow.setBounds({ x: originalBounds.x, y: originalBounds.y, width: scenario.width, height: scenario.height });
-          await progress(`bounds-set ${scenario.name}`);
+          const target = targetSize(scenario);
+          const clamped = target.width !== scenario.width || target.height !== scenario.height;
+          placeWindow(target);
+          await progress(`bounds-set ${scenario.name} ${target.width}x${target.height}${clamped ? ` (requested ${scenario.width}x${scenario.height} exceeds the ${workArea.width}x${workArea.height} work area)` : ''}`);
           // The window resizes on the next layout pass, so the new size is only
           // real once the window reports it. Reading the bounds too early is how a
           // capture ends up filed under a size it does not have.
           for (let attempt = 0; attempt < 40; attempt += 1) {
             const bounds = mainWindow.getBounds();
-            if (bounds.width === scenario.width && bounds.height === scenario.height) break;
+            if (!mainWindow.isMaximized() && bounds.width === target.width && bounds.height === target.height) break;
+            if (mainWindow.isMaximized()) placeWindow(target);
             await settle(100);
           }
           const scenarioBounds = mainWindow.getBounds();
           await progress(`bounds-confirmed ${scenario.name} ${scenarioBounds.width}x${scenarioBounds.height} at ${scenarioBounds.x},${scenarioBounds.y} maximized=${mainWindow.isMaximized()} full=${mainWindow.isFullScreen()}`);
-          await updateSettings({
-            localization: { ...originalSettings.localization, locale: scenario.locale },
-            appearance: scenario.theme ? { ...originalSettings.appearance, theme: scenario.theme } : originalSettings.appearance,
-            window: { ...originalSettings.window, bounds: scenarioBounds, lastPage: scenario.page }
-          });
-          await progress(`settings-updated ${scenario.name}`);
-          mainWindow.reload();
-          await settle(400);
-          await waitForLoad();
-          // The document metadata is applied by the renderer once its settings have
-          // loaded, so the capture waits for the expected language and direction
-          // instead of a fixed delay.
+          // A scenario owns its own preconditions, so the harness does not ask once
+          // and then photograph whatever arrives. The settings are written, the window
+          // is reloaded, and the document is read back; if the language, the theme or
+          // the world the scenario asked for is not the one on screen, the write is
+          // repeated. Measured: a cold boot can answer the first write with its own
+          // defaults, and a capture filed under a page it never showed is worse than
+          // no capture at all — the numbers describe one document and the pixels
+          // another.
           const expectedDirection = scenario.locale === 'ar' ? 'rtl' : 'ltr';
-          for (let attempt = 0; attempt < 60; attempt += 1) {
-            const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, ready: document.documentElement.dataset.theme ? true : false, theme: document.documentElement.dataset.theme })`).catch(() => null);
-            if (!state || state.ready !== true || state.lang !== scenario.locale || state.dir !== expectedDirection) { await settle(200); continue; }
-            // A scenario that pins a theme is only valid once that theme is the one
-            // painted; a light capture taken while the dark theme is still applied
-            // would be evidence of nothing.
-            if (scenario.theme && state.theme !== scenario.theme) { await settle(200); continue; }
-            break;
+          let scenarioState = null;
+          let lastSeen = null;
+          for (let round = 1; round <= 3 && !scenarioState; round += 1) {
+            await updateSettings({
+              // The world a scenario asks for is delivered as the page the window
+              // restores, and the product only honours that when the user has
+              // switched "restore the previous section" on. A capture suite whose
+              // navigation depends on a preference someone can toggle in the
+              // Settings world is a suite that changes behaviour with the product;
+              // the run therefore states the preference it needs, and hands the
+              // user's own back in the finally block below.
+              general: { ...originalSettings.general, restorePreviousPage: true },
+              localization: { ...originalSettings.localization, locale: scenario.locale },
+              appearance: scenario.theme ? { ...originalSettings.appearance, theme: scenario.theme } : originalSettings.appearance,
+              window: { ...originalSettings.window, bounds: scenarioBounds, lastPage: scenario.page }
+            });
+            await progress(`settings-updated ${scenario.name} round=${round}`);
+            mainWindow.reload();
+            await settle(400);
+            await waitForLoad();
+            // The document metadata is applied by the renderer once its settings have
+            // loaded, so the capture waits for the expected language and direction
+            // instead of a fixed delay.
+            for (let attempt = 0; attempt < 45 && !scenarioState; attempt += 1) {
+              const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, theme: document.documentElement.dataset.theme, page: document.documentElement.dataset.page })`).catch(() => null);
+              if (!state || !state.lang || !state.theme) { await settle(200); continue; }
+              lastSeen = state;
+              if (state.lang !== scenario.locale || state.dir !== expectedDirection) { await settle(200); continue; }
+              // A scenario that pins a theme is only valid once that theme is the one
+              // painted; a light capture taken while the dark theme is still applied
+              // would be evidence of nothing.
+              if (scenario.theme && state.theme !== scenario.theme) { await settle(200); continue; }
+              // The world is part of the ask, and the app only honours a stored page
+              // when it restores the previous section — so a page that never arrived
+              // is caught here, in nine seconds, rather than by a 180-second wait.
+              if (scenario.page && state.page && state.page !== scenario.page) { await settle(200); continue; }
+              scenarioState = state;
+            }
+            if (!scenarioState) {
+              const seen = lastSeen || await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, page: document.documentElement.dataset.page })`).catch(() => null);
+              await progress(`settings-not-applied ${scenario.name} round=${round}: asked for ${scenario.locale}/${scenario.page}, the document reports ${JSON.stringify(seen)}`);
+            }
           }
           await settle(700);
           // The compositor has to have painted the window before it can produce a
@@ -1267,17 +1752,15 @@ async function captureVisualEvidence(outputDirectory) {
           // captured and reported, because the empty or loading state is itself
           // part of the interface under review.
           if (scenario.waits?.length) {
-            let satisfied = true;
-            for (const wait of scenario.waits) {
-              const deadline = Date.now() + (wait.ms || 30000);
-              let seen = 0;
-              while (Date.now() < deadline) {
-                seen = await mainWindow.webContents.executeJavaScript(`document.querySelectorAll(${JSON.stringify(wait.selector)}).length`).catch(() => 0);
-                if (seen >= wait.min) break;
-                await settle(500);
-              }
-              satisfied = satisfied && seen >= wait.min;
-              await progress(`waited ${scenario.name} ${wait.selector}=${seen}`);
+            const satisfied = await runWaits(scenario, scenario.waits);
+            // A bench that never populated is not a capture worth grading: the
+            // pixels would show a loading state, the numbers would call the world
+            // empty, and the two would be filed under one scenario name. Pass 2
+            // re-runs the whole setup — settings, reload, waits — and only a second
+            // failure is reported as the state the world actually showed.
+            if (!satisfied && pass < 2) {
+              await progress(`waits-unsatisfied ${scenario.name}: the bench stayed empty, retrying in pass 2`);
+              continue;
             }
             if (satisfied && scenario.prepare) {
               await mainWindow.webContents.executeJavaScript(`(() => { ${scenario.prepare} })()`)
@@ -1285,12 +1768,31 @@ async function captureVisualEvidence(outputDirectory) {
               // Selection states and the staging deck animate in; the capture waits
               // for the transition to land so it shows the settled interface.
               await settle(600);
+              // A control that answers by running an engine needs its own wait:
+              // the click is not the result.
+              if (scenario.waitsAfterPrepare?.length) await runWaits(scenario, scenario.waitsAfterPrepare);
+              // A second act, taken only once the first one has answered. The
+              // atlas needs it: its ledger rows exist after a walk, so the click
+              // that opens the inspector cannot be part of the setup that starts
+              // that same walk.
+              if (scenario.interact) {
+                await mainWindow.webContents.executeJavaScript(`(() => { ${scenario.interact} })()`)
+                  .catch(error => progress(`interact-error ${scenario.name}: ${String(error?.message || error)}`));
+                await settle(600);
+                if (scenario.interactWaits?.length) await runWaits(scenario, scenario.interactWaits);
+              }
             }
+          }
+          let scrolledTo = null;
+          if (scenario.scrollTo) {
+            scrolledTo = await scrollToRegion(scenario.scrollTo, scenario.name);
+            await settle(500);
           }
           const metrics = await mainWindow.webContents.executeJavaScript(`(() => ({
             lang: document.documentElement.lang,
             dir: document.documentElement.dir,
             theme: document.documentElement.dataset.theme,
+            page: document.documentElement.dataset.page,
             clientWidth: document.documentElement.clientWidth,
             scrollWidth: document.documentElement.scrollWidth,
             horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
@@ -1322,6 +1824,155 @@ async function captureVisualEvidence(outputDirectory) {
               const box = node.getBoundingClientRect();
               return { top: Math.round(box.top), bottom: Math.round(box.bottom), height: Math.round(box.height), viewport: window.innerHeight };
             })(),
+            // The Files bench: rows read from the directory table, the number of
+            // proportional segments the composition band drew, whether an
+            // inspector is open, and whether the organisation plan has landed.
+            fileRows: document.querySelectorAll('.filex__row').length,
+            fileSegments: document.querySelectorAll('.filex__seg').length,
+            fileInspectorOpen: !!document.querySelector('.filex__inspector--record'),
+            // The idle inspector is a panel of the walk's own groupings, so its
+            // row count is evidence that the column carries data rather than an
+            // apology while nothing is selected.
+            fileGlanceRows: document.querySelectorAll('.filex__glancerow').length,
+            fileGlanceTiles: document.querySelectorAll('.filex__glancetile').length,
+            filePlanPresent: !!document.querySelector('.filex__planbody'),
+            filePlanLanes: document.querySelectorAll('.filex__lane').length,
+            filePlanApplied: !!document.querySelector('.filex__outcome'),
+            // A plan band that offers Apply before the confirmation is ticked would
+            // be the destructive bug this product cannot afford, so the state of
+            // the gate is measured, not assumed: the gate has three parts — the
+            // checkbox exists, it is unticked, and the button is nonetheless live.
+            fileConfirmPresent: !!document.querySelector('.filex__confirm input[type=checkbox]'),
+            fileConfirmChecked: !!document.querySelector('.filex__confirm input[type=checkbox]:checked'),
+            fileApplyEnabled: (() => {
+              const button = document.querySelector('.filex__apply .world-control--primary');
+              return !!button && !button.disabled;
+            })(),
+            // The Volume Atlas: how many real volumes the Windows table returned,
+            // how many of them drew a rail to scale, how many physical disks came
+            // back from MSFT_PhysicalDisk, and whether the three walks are wired
+            // to anything yet. A rack with no rails is a machine that did not
+            // answer, and the report has to be able to tell that apart from a
+            // world that failed to draw what it was given.
+            atlasBays: document.querySelectorAll('.atlas__bay').length,
+            atlasRails: document.querySelectorAll('.atlas__rail').length,
+            atlasTicks: document.querySelectorAll('.atlas__tick').length,
+            atlasDisks: document.querySelectorAll('.atlas__disk').length,
+            atlasLanes: document.querySelectorAll('.atlas__lane').length,
+            atlasRows: document.querySelectorAll('.atlas__row').length,
+            atlasRungs: document.querySelectorAll('.atlas__rung').length,
+            atlasMetrics: document.querySelectorAll('.atlas .world-metric').length,
+            // The inspector has two modes and the difference matters to the gate:
+            // a read board also carries a subject line, so probing for one would
+            // call an unselected column "open on a ledger row".
+            atlasInspectorOpen: !!document.querySelector('.atlas__inspector[data-mode="record"]'),
+            atlasReadLanes: document.querySelectorAll('.atlas__readlane').length,
+            atlasReadVolume: !!document.querySelector('.atlas__readvol'),
+            // The empty-folder record is drawn from a read, not a measurement, so
+            // the suite needs its own mark: a folder row that opens nothing but a
+            // heading is the defect this metric exists to catch.
+            atlasFolderRecord: !!document.querySelector('.atlas__inspector[data-mode="record"] [data-folder-record]'),
+            // The three walks are never summed, so the page must say so out loud
+            // and must never put a delete control in the ledger. Both are measured
+            // because both are claims the screenshots alone cannot prove.
+            atlasCaveat: !!document.querySelector('.atlas__caveat'),
+            atlasDestructive: document.querySelectorAll('.atlas button').length
+              && Array.from(document.querySelectorAll('.atlas button')).some(button => /delete|remove|clean|حذف|تنظيف/i.test(button.textContent || '')),
+            // Legibility evidence. A theme switch that repaints the surfaces and
+            // leaves the inherited text colour white is invisible, not merely
+            // ugly, and every other measurement in this report can pass while it
+            // happens. Each visible text leaf is compared with the most forgiving
+            // background it could be sitting on — its own painted gradient, the
+            // nearest solid colour above it, or the page — and only a ratio below
+            // two is called invisible. Below 3.2 it is reported, not failed.
+            lowContrast: (() => {
+              const parse = value => {
+                const m = /rgba?[(]([^)]+)[)]/.exec(String(value));
+                if (!m) return null;
+                const parts = m[1].split(/[^0-9.]+/).filter(Boolean).map(Number);
+                if (parts.length < 3) return null;
+                return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+              };
+              // Any CSS colour the page can name, read back as rgb components. A
+              // detached element is the only resolver that understands what the page
+              // actually painted: var() is substituted, color-mix() is evaluated, and
+              // the computed value is plain rgb().
+              const swatch = document.createElement('span');
+              swatch.style.display = 'none';
+              // The swatch is moved into each element in turn rather than parked on
+              // <body>, because a hue token declared on a world container only has a
+              // value inside that container: on <body>, color-mix(in srgb, var(--at-hue)
+              // 74%, #ffffff) resolves to nothing and the label is graded against the
+              // dark track underneath its own bar.
+              const resolve = raw => {
+                swatch.style.color = '';
+                swatch.style.color = String(raw);
+                if (!swatch.style.color) return null;
+                return parse(getComputedStyle(swatch).color);
+              };
+              const stopsOf = value => {
+                // A computed style keeps the colour the page asked for: color-mix()
+                // survives into getComputedStyle rather than collapsing to rgb(), so
+                // an rgb-only reader sees no stop at all and grades a label against
+                // whatever solid track sits behind it — 1.21:1 for text that is
+                // actually riding on a light bar. Every colour token is therefore put
+                // through the browser's own resolver and read back as rgb.
+                const list = [];
+                const re = /(?:color-mix|color|rgba?|hsla?|lab|lch|oklab|oklch)[(](?:[^()]|[(][^()]*[)])*[)]|#[0-9a-fA-F]{3,8}\b/g;
+                let match;
+                while ((match = re.exec(String(value))) && list.length < 8) {
+                  const colour = resolve(match[0]);
+                  if (colour) list.push(colour);
+                }
+                return list;
+              };
+              const luminance = c => {
+                const channel = v => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+                return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+              };
+              const against = (ink, back) => {
+                const hi = Math.max(luminance(ink), luminance(back));
+                const lo = Math.min(luminance(ink), luminance(back));
+                return (hi + 0.05) / (lo + 0.05);
+              };
+              const over = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
+              const average = list => ({ r: list.reduce((s, c) => s + c.r, 0) / list.length, g: list.reduce((s, c) => s + c.g, 0) / list.length, b: list.reduce((s, c) => s + c.b, 0) / list.length, a: 1 });
+              const page = parse(getComputedStyle(document.body).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
+              const found = [];
+              const leaves = Array.from(document.querySelectorAll('h1, h2, h3, h4, p, span, b, strong, em, li, button, label, small')).slice(0, 1200);
+              for (const node of leaves) {
+                if (node.childElementCount) continue;
+                const text = (node.textContent || '').trim();
+                if (text.length < 2) continue;
+                const style = getComputedStyle(node);
+                if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) < 0.2) continue;
+                if (!node.offsetParent && style.position !== 'fixed') continue;
+                const box = node.getBoundingClientRect();
+                if (box.width < 4 || box.height < 4) continue;
+                const ink = parse(style.color);
+                if (!ink) continue;
+                const candidates = [page];
+                node.appendChild(swatch);
+                for (let up = node; up; up = up.parentElement) {
+                  const upStyle = getComputedStyle(up);
+                  const stops = stopsOf(upStyle.backgroundImage);
+                  const solid = parse(upStyle.backgroundColor);
+                  if (stops.length) candidates.push(average(stops));
+                  if (solid && solid.a > 0.6) { candidates.push(over(solid, candidates[candidates.length - 1])); break; }
+                }
+                swatch.remove();
+                const colour = over(ink, page);
+                let best = 1;
+                for (const back of candidates) best = Math.max(best, against(colour, over(back, page)));
+                const size = parseFloat(style.fontSize) || 13;
+                const level = best < 2 ? 'invisible' : best < 3.2 && size >= 12 ? 'weak' : null;
+                if (!level) continue;
+                found.push({ level, tag: node.tagName.toLowerCase(), className: String(node.className || '').slice(0, 54), text: text.slice(0, 26), ratio: Math.round(best * 100) / 100 });
+                if (found.length >= 10) break;
+              }
+              swatch.remove();
+              return found;
+            })(),
             // The in-flow elements whose content actually escapes their parent.
             // A bare overflow flag names the symptom; this names the cause. Text
             // that is deliberately clipped, and decorative layers that are
@@ -1342,26 +1993,58 @@ async function captureVisualEvidence(outputDirectory) {
             focusable: document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').length,
             headings: Array.from(document.querySelectorAll('h1, h2')).slice(0, 6).map(node => (node.textContent || '').trim()).filter(Boolean)
           }))()`);
-          const image = await captureWindow(scenario.name);
+          const recoveriesBefore = maximizeRecoveries;
+          const minimisesBefore = minimizeRecoveries;
+          const capture = await captureWindow(scenario.name, target,
+            scenario.scrollTo ? () => scrollToRegion(scenario.scrollTo) : null);
+          const image = capture.image;
           await progress(`captured ${scenario.name}`);
           const file = path.join(outputDirectory, `${scenario.name}.png`);
           await fsPromises.writeFile(file, image.toPNG());
           const capturedBounds = mainWindow.getBounds();
-          results.push({ ...scenario, ...metrics, expectedTheme: scenario.theme || null, page: scenario.page, requestedWidth: scenario.width, requestedHeight: scenario.height, capturedWidth: capturedBounds.width, capturedHeight: capturedBounds.height, captureSizeMatches: capturedBounds.width === scenario.width && capturedBounds.height === scenario.height, file: path.basename(file), captured: true });
+          const frame = image.getSize();
+          const scale = display.scaleFactor || 1;
+          // The size claim is measured, not assumed. Two facts have to hold: the
+          // window was the requested size when the frame was taken, and the PNG
+          // is the device-pixel size of the content area the page was laid out
+          // in. The second fact is what makes the screenshot evidence of the
+          // first — a window that claims 1920 and paints 860 is caught here.
+          const frameMatches = Math.abs(frame.width - Math.round(capture.contentBeforeFrame.width * scale)) <= 2
+            && Math.abs(frame.height - Math.round(capture.contentBeforeFrame.height * scale)) <= 2;
+          const sizeMatches = capture.boundsBeforeFrame.width === target.width
+            && capture.boundsBeforeFrame.height === target.height && frameMatches;
+          if (!sizeMatches) await progress(`size-drift ${scenario.name} target=${target.width}x${target.height} before=${capture.boundsBeforeFrame.width}x${capture.boundsBeforeFrame.height} content=${capture.contentBeforeFrame.width}x${capture.contentBeforeFrame.height} frame=${frame.width}x${frame.height} after=${capturedBounds.width}x${capturedBounds.height}`);
+          results.push({ ...scenario, ...metrics, expectedTheme: scenario.theme || null, page: scenario.page, documentPage: metrics.page || null, pageReached: metrics.page === scenario.page, requestedWidth: scenario.width, requestedHeight: scenario.height, targetWidth: target.width, targetHeight: target.height, clampedToWorkArea: clamped, workArea, displayScale: scale, capturedWidth: capture.boundsBeforeFrame.width, capturedHeight: capture.boundsBeforeFrame.height, viewportWidth: capture.contentBeforeFrame.width, viewportHeight: capture.contentBeforeFrame.height, boundsAfterCaptureWidth: capturedBounds.width, boundsAfterCaptureHeight: capturedBounds.height, frameWidth: frame.width, frameHeight: frame.height, frameMatches, boundsReasserts: capture.reasserts, surfaceNudges: capture.nudges, maximizeRecoveries: maximizeRecoveries - recoveriesBefore, minimizeRecoveries: minimizeRecoveries - minimisesBefore, scrolledTo: capture.scrolledAtFrame || scrolledTo, captureSizeMatches: sizeMatches, file: path.basename(file), captured: true });
           completed = true;
         } catch (error) {
           lastError = error;
           await progress(`scenario-error ${scenario.name} pass=${pass}: ${String(error?.message || error)}`);
         }
       }
-      if (!completed) results.push({ ...scenario, captured: false, error: String(lastError?.message || lastError) });
+      if (completed) consecutiveSurfaceFailures = 0;
+      else if (surfaceLost) consecutiveSurfaceFailures += 1;
+      if (!completed) results.push({ ...scenario, captured: false, surfaceLost, error: String(lastError?.message || lastError) });
     }
   } finally {
+    mainWindow.removeListener('maximize', reclaimPlacement);
+    // Both guards are for the measuring run only. A window that restores itself
+    // every time the user minimises it is not a product, it is a harness.
+    mainWindow.removeListener('minimize', reclaimMinimisedWindow);
+    // The window's own policy — minimise into the tray — comes back before
+    // anything else is handed over: a product that refuses to be minimised is
+    // a bug, and this guard exists only for the run that is measuring it.
+    for (const handler of appMinimiseHandlers) mainWindow.on('minimize', handler);
+    placement = null;
     try { mainWindow.webContents.setBackgroundThrottling(true); } catch {}
     await progress('capture-finished');
+    // The window belongs to the user again before its bounds are handed back.
+    mainWindow.setMovable(true);
     mainWindow.setAlwaysOnTop(originalAlwaysOnTop);
+    // The original bounds cannot be restored onto a maximised window: setBounds
+    // is ignored while the shell owns the geometry.
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
     mainWindow.setBounds(originalBounds);
-    await updateSettings({ localization: originalSettings.localization, window: originalSettings.window });
+    await updateSettings({ general: originalSettings.general, localization: originalSettings.localization, window: originalSettings.window });
   }
   return results;
 }

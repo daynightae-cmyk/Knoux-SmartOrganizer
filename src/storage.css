@@ -1,0 +1,597 @@
+/* ---------------------------------------------------------------------------
+   Storage — the Volume Atlas.
+
+   Composition: a rack of volume rails where the bar *is* the disk (used against
+   free, with the Windows pressure thresholds drawn on it), the physical metal
+   behind those volumes, three independent walks over one folder that are never
+   summed together, a ladder of where the walked bytes went, and an inspector
+   for the single item being questioned.
+
+   The Files bench weighs one folder. The Applications register looks one thing
+   up. This world maps capacity, so its unit is the rail, not the row.
+   --------------------------------------------------------------------------- */
+
+.atlas { --at-rail: 34px; --at-gap: 10px; }
+html[data-density="compact"] .atlas { --at-rail: 26px; }
+
+/* Pressure is the one colour story this world tells, and it comes from the
+   engine's own label — never recomputed in CSS. */
+.atlas--critical { --at-hue: #ff7890; }
+.atlas--high     { --at-hue: #ffc56d; }
+.atlas--medium   { --at-hue: #79b8ff; }
+.atlas--healthy  { --at-hue: #5ee1a5; }
+.atlas--unknown  { --at-hue: #8e8ba8; }
+.atlas { --at-hue: var(--world-hue); }
+
+/*
+ * Kind hues for the walk ledger.
+ *
+ * The same ten categories appear in the Files bench, so the same ten colours
+ * mean the same thing in both worlds: a "Videos" row is purple on the atlas and
+ * purple on the bench. Pressure keeps its own five-name palette above, because
+ * a volume's health and a file's kind are two different readings of two
+ * different things.
+ */
+.atlas--kind-Images      { --at-hue: #79b8ff; }
+.atlas--kind-Video       { --at-hue: #a855f7; }
+.atlas--kind-Audio       { --at-hue: #2dd4bf; }
+.atlas--kind-Documents   { --at-hue: #7c8cc4; }
+.atlas--kind-Archives    { --at-hue: #fb923c; }
+.atlas--kind-Installers  { --at-hue: #f87171; }
+.atlas--kind-Development { --at-hue: #22d3ee; }
+.atlas--kind-Databases   { --at-hue: #c084fc; }
+.atlas--kind-Fonts       { --at-hue: #5ee1a5; }
+.atlas--kind-Other       { --at-hue: #8e8ba8; }
+.atlas--kind-Noextension { --at-hue: #6f6d88; }
+/* The age ramp, warm to cold, identical to the bench's. */
+.atlas--kind-age-today   { --at-hue: #5ee1a5; }
+.atlas--kind-age-week    { --at-hue: #2dd4bf; }
+.atlas--kind-age-month   { --at-hue: #79b8ff; }
+.atlas--kind-age-quarter { --at-hue: #a5b4fc; }
+.atlas--kind-age-year    { --at-hue: #7c8cc4; }
+.atlas--kind-age-older   { --at-hue: #585c7d; }
+.atlas--kind-age-unknown { --at-hue: #4b4a63; }
+
+/* -- Volume rack ----------------------------------------------------------- */
+
+.atlas__rack {
+  display: grid; gap: var(--at-gap);
+  margin-top: var(--space-4);
+}
+.atlas__sectionhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 2px; }
+.atlas__sectionhead h3 { margin: 0; font-size: var(--text-lg); font-weight: 800; letter-spacing: .1px; }
+.atlas__sectionhead p { margin: 0; color: var(--muted); font-size: var(--text-xs); line-height: 1.5; flex: 1 1 34ch; min-width: 0; }
+
+.atlas__bay {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, var(--surface-raised), var(--surface) 58%);
+  box-shadow: var(--shadow-soft), inset 0 1px #ffffff0a;
+  padding: 13px var(--space-4);
+  transition: border-color .16s, background .16s;
+}
+html[data-theme="light"] .atlas__bay { background: linear-gradient(150deg, #ffffff, var(--surface-raised) 62%); }
+/*
+ * The bay is not a button — it holds one — so its selected state travels as a
+ * data attribute while the drive letter stays the real toggle. A container that
+ * answered to :hover would promise a click it cannot deliver.
+ */
+.atlas__bay[data-selected='true'] {
+  border-color: color-mix(in srgb, var(--at-hue) 62%, var(--border));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--at-hue) 12%, var(--surface-raised)), var(--surface) 62%);
+}
+
+.atlas__letter {
+  display: grid; place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--at-hue) 45%, var(--border));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--at-hue) 26%, var(--surface)), var(--surface-raised));
+  box-shadow: inset 0 1px #ffffff1a, 0 10px 22px color-mix(in srgb, var(--at-hue) 18%, transparent);
+  font-size: 19px; font-weight: 800; letter-spacing: -.4px;
+  color: var(--text);
+}
+.atlas__letter bdi { direction: ltr; unicode-bidi: isolate; }
+
+.atlas__baybody { display: grid; gap: 7px; min-width: 0; }
+.atlas__bayident { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; min-width: 0; }
+.atlas__bayident strong { font-size: var(--text-lg); font-weight: 800; }
+.atlas__bayident span { color: var(--muted); font-size: var(--text-xs); }
+.atlas__bayident code {
+  border: 1px solid var(--border-soft); border-radius: var(--radius-pill);
+  background: var(--surface-glass); padding: 2px 8px;
+  color: var(--muted); font-size: var(--text-xs); font-family: Consolas, monospace; direction: ltr;
+}
+
+/* The rail: one volume, drawn to scale, with the OS pressure marks on it. */
+.atlas__rail {
+  position: relative;
+  display: flex; align-items: stretch;
+  height: var(--at-rail);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface-hover);
+  overflow: hidden;
+}
+.atlas__used,
+.atlas__free {
+  position: relative;
+  display: flex; align-items: center;
+  min-width: 0;
+  padding-inline: 10px;
+  font-size: var(--text-xs); font-weight: 700;
+  white-space: nowrap;
+}
+/*
+ * The fill is the disk, and the number inside it is the reading. That pairing
+ * decides the palette: the label is near-black, so every part of the bar it can
+ * sit on has to stay light. A bottom stop mixed toward the page's own dark colour
+ * measured 3.9:1 against that label on a medium-pressure volume — legible to the
+ * eye at a glance, failing the standard on the second look. Depth therefore comes
+ * from a sheen laid *over* the hue, never from darkening the hue under the text —
+ * and the sheen itself is bounded, because a 11% black wash at the bottom of a
+ * #6366f1 rail lands at 3.6:1. Lightening the lower stop to 88% hue and easing the
+ * wash to 8% puts the worst point of the bar at 4.9:1 against #14101f.
+ */
+.atlas__used {
+  flex-basis: 0;
+  background:
+    linear-gradient(180deg, #ffffff30, #00000014),
+    linear-gradient(180deg, color-mix(in srgb, var(--at-hue) 74%, #ffffff), color-mix(in srgb, var(--at-hue) 88%, #ffffff));
+  color: #14101f;
+  box-shadow: inset 0 1px #ffffff3d;
+}
+.atlas__free {
+  flex-basis: 0;
+  gap: 6px;
+  color: var(--muted);
+  background: repeating-linear-gradient(135deg, #ffffff08 0 6px, transparent 6px 12px);
+}
+.atlas__used span, .atlas__free span { overflow: hidden; text-overflow: ellipsis; }
+/* A slice too thin to hold its label keeps the number out of the bar; the
+   figures are always restated in the bay's own readout column. The rule is
+   per slice, so a nearly full disk still reads its own pressure. */
+.atlas__used--tight > span,
+.atlas__free--tight > span { display: none; }
+
+.atlas__tick {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: #0b0a1455;
+  box-shadow: 0 0 0 1px #ffffff1a;
+}
+html[data-theme="light"] .atlas__tick { background: #17152240; box-shadow: 0 0 0 1px #ffffff66; }
+.atlas__tick i {
+  position: absolute; top: -1px; inset-inline-start: 4px;
+  font-style: normal; font-size: 9px; font-weight: 700;
+  color: var(--muted); letter-spacing: .2px;
+}
+
+.atlas__bayread { display: grid; gap: 3px; justify-items: end; text-align: end; }
+.atlas__bayread b { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -.6px; line-height: 1; }
+.atlas__bayread small { color: var(--muted); font-size: var(--text-xs); }
+.atlas__bayread em {
+  font-style: normal; font-size: var(--text-xs); font-weight: 800;
+  color: var(--at-hue);
+}
+
+.atlas__bayactions { display: flex; align-items: center; gap: var(--at-gap); grid-column: 2 / -1; flex-wrap: wrap; }
+
+/* -- Physical metal -------------------------------------------------------- */
+
+.atlas__metal {
+  display: grid; gap: var(--at-gap);
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  margin-top: var(--space-3);
+}
+.atlas__disk {
+  display: grid; gap: 5px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 11px 13px;
+}
+.atlas__disk > b { font-size: var(--text-body); font-weight: 800; }
+.atlas__disk > div { display: flex; flex-wrap: wrap; gap: 5px 10px; }
+.atlas__disk > div > span { color: var(--muted); font-size: var(--text-xs); }
+.atlas__disk > div > span b { color: var(--text); font-weight: 700; }
+.atlas__media {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-pill);
+  background: var(--surface-glass); padding: 2px 9px;
+  font-size: var(--text-xs); font-weight: 700; color: var(--text);
+}
+.atlas__note { color: var(--muted); font-size: var(--text-xs); line-height: 1.5; }
+.atlas__note--warn { color: var(--status-warning-text); }
+
+/* -- The walk bench -------------------------------------------------------- */
+
+.atlas__bench {
+  display: grid; gap: var(--space-3);
+  margin-top: var(--space-5);
+  border: 1px solid var(--world-border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(158deg, var(--surface-raised), var(--surface) 64%);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-4);
+}
+html[data-theme="light"] .atlas__bench { background: linear-gradient(158deg, #ffffff, var(--surface-raised) 64%); }
+.atlas__benchhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.atlas__benchhead h3 { margin: 0; font-size: var(--text-xl); font-weight: 800; letter-spacing: -.2px; }
+.atlas__benchhead p { margin: 4px 0 0; color: var(--muted); font-size: var(--text-xs); line-height: 1.55; max-width: 74ch; }
+.atlas__root {
+  display: inline-flex; align-items: center; gap: 7px;
+  max-width: 52ch; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: var(--surface-glass); padding: 5px 11px;
+  color: var(--muted); font-size: var(--text-xs);
+}
+.atlas__root bdi { color: var(--text); font-weight: 700; font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: ltr; unicode-bidi: isolate; }
+/* The bench's own tool row: where the walk goes, and the two ways to start it.
+   It hugs the heading rather than forming a toolbar of its own, so the folder
+   chip and the run-all control read as one decision. */
+.atlas__benchtools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.atlas__lanes {
+  display: grid; gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+}
+.atlas__lane {
+  display: grid; align-content: start; gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 13px 14px 12px;
+}
+.atlas__lane[data-state='running'] { border-color: var(--world-border); background: linear-gradient(180deg, var(--world-quiet), var(--surface) 62%); }
+.atlas__lanehead { display: flex; align-items: center; gap: 8px; }
+.atlas__lanehead h4 { margin: 0; font-size: var(--text-body); font-weight: 800; }
+.atlas__lanehead svg { color: var(--at-hue); flex: none; }
+.atlas__lanepill {
+  margin-inline-start: auto;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-pill);
+  background: var(--surface-glass); padding: 2px 9px;
+  font-size: var(--text-xs); font-weight: 700; color: var(--muted); white-space: nowrap;
+}
+/* The same state language on the bench and on the read board: one pill, two
+   places, so a lane that is only partly covered never looks finished in one of
+   them. */
+.atlas__lane[data-state='ready'] .atlas__lanepill,
+.atlas__readlane[data-state='ready'] .atlas__lanepill { color: var(--status-success-text); background: var(--status-success-surface); border-color: var(--status-success-border); }
+.atlas__lane[data-state='failed'] .atlas__lanepill,
+.atlas__lane[data-state='unavailable'] .atlas__lanepill,
+.atlas__readlane[data-state='failed'] .atlas__lanepill,
+.atlas__readlane[data-state='unavailable'] .atlas__lanepill { color: var(--status-danger-text); background: var(--status-danger-surface); border-color: var(--status-danger-border); }
+.atlas__lane[data-state='partial'] .atlas__lanepill,
+.atlas__readlane[data-state='partial'] .atlas__lanepill { color: var(--status-warning-text); background: var(--status-warning-surface); border-color: var(--status-warning-border); }
+.atlas__lane[data-state='running'] .atlas__lanepill,
+.atlas__readlane[data-state='running'] .atlas__lanepill { color: var(--status-info); border-color: var(--status-info); }
+
+.atlas__lanefigure { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.atlas__lanefigure b { font-size: 25px; font-weight: 800; letter-spacing: -.6px; line-height: 1.05; }
+.atlas__lanefigure span { color: var(--muted); font-size: var(--text-xs); }
+.atlas__lanesub { color: var(--muted); font-size: var(--text-xs); line-height: 1.5; }
+.atlas__lanerows { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.atlas__lanerows li { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+/* The dot carries the same hue the ledger row uses, so a lane preview and a
+   ledger row for the same file agree in colour before the reader opens either. */
+.atlas__lanerows li::before {
+  content: ''; flex: none; align-self: center;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--at-hue);
+  box-shadow: 0 0 0 1px #ffffff1f;
+}
+html[data-theme="light"] .atlas__lanerows li::before { box-shadow: 0 0 0 1px #1715222b; }
+.atlas__lanerows bdi { font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+.atlas__lanerows em { margin-inline-start: auto; font-style: normal; font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--muted); flex: none; }
+.atlas__lanefoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+
+/* What the engines said about the walk itself: not a hue story, so no dots. */
+.atlas__warnings { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.atlas__warnings li { display: flex; align-items: baseline; gap: 7px; color: var(--status-warning-text); font-size: var(--text-xs); line-height: 1.5; }
+.atlas__warnings svg { flex: none; align-self: center; }
+.atlas__warnings bdi { direction: ltr; unicode-bidi: isolate; }
+
+/* The honesty band: what may not be added together. */
+.atlas__caveat {
+  display: flex; align-items: flex-start; gap: 9px;
+  border: 1px solid var(--status-info);
+  border-inline-start-width: 3px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--status-info) 9%, var(--surface));
+  padding: 9px 12px;
+  color: var(--text); font-size: var(--text-xs); line-height: 1.55;
+}
+.atlas__caveat svg { flex: none; margin-top: 1px; color: var(--status-info); }
+
+/* -- Composition ladders --------------------------------------------------- */
+
+.atlas__ladders {
+  display: grid; gap: var(--space-4);
+  /*
+   * Four ladders, so the grid has exactly two honest shapes: two lanes of two,
+   * or one row of four. auto-fit was neither — at 1366px it gave three tracks,
+   * which left the extensions ladder alone on a second row one third as wide as
+   * the others. The floor for a rung is ~260px (name + file count + bytes), so
+   * four across only earns its keep once the column can carry that.
+   */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--space-4);
+}
+@media (min-width: 1460px) {
+  .atlas__ladders { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.atlas__ladder { display: grid; gap: 6px; min-width: 0; }
+.atlas__ladder > h4 { margin: 0; font-size: var(--text-md); font-weight: 800; letter-spacing: .1px; }
+.atlas__ladder > ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.atlas__rung {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 9px;
+  border: 1px solid transparent; border-radius: 9px;
+  background: var(--surface);
+  padding: 5px 9px;
+  overflow: hidden;
+  color: inherit; font: inherit; text-align: start; cursor: pointer;
+}
+.atlas__rung:hover { border-color: var(--border-strong); }
+.atlas__rung[aria-pressed='true'] { border-color: color-mix(in srgb, var(--at-hue) 60%, var(--border)); background: color-mix(in srgb, var(--at-hue) 12%, var(--surface)); }
+.atlas__runfill {
+  position: absolute; inset-block: 0; inset-inline-start: 0;
+  width: var(--at-share, 0%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--at-hue) 34%, transparent), color-mix(in srgb, var(--at-hue) 8%, transparent));
+  pointer-events: none;
+  transition: width .2s ease;
+}
+html[dir='rtl'] .atlas__runfill { background: linear-gradient(270deg, color-mix(in srgb, var(--at-hue) 34%, transparent), color-mix(in srgb, var(--at-hue) 8%, transparent)); }
+.atlas__rung > span { position: relative; font-size: var(--text-sm); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas__rung > small { position: relative; color: var(--muted); font-size: var(--text-xs); white-space: nowrap; }
+.atlas__rung > b { position: relative; font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+.atlas__ladder > p { margin: 0; color: var(--muted); font-size: var(--text-xs); line-height: 1.5; }
+
+/* -- Ledger and inspector -------------------------------------------------- */
+
+.atlas__split {
+  display: grid; gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) 330px;
+  align-items: start;
+  margin-top: var(--space-5);
+}
+.atlas__split > .atlas__ledger { min-width: 0; }
+.atlas__ledger {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+/* The three ledgers are one table changing subject, not three panels stacked:
+   the tab row carries the live counts so the reader knows what each tab holds
+   before clicking it. */
+.atlas__ledgerbar {
+  display: flex; align-items: center; gap: var(--space-3);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  padding: 9px 14px;
+}
+.atlas__ledgerbar .world-facets { margin: 0; padding: 0; border: 0; }
+.atlas__ledgerbar .world-facet b { margin-inline-start: 6px; font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.atlas__ledgerfoot {
+  margin: 0;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-raised);
+  padding: 8px 14px;
+  color: var(--muted); font-size: var(--text-xs); line-height: 1.6;
+}
+.atlas__ledgerhead {
+  display: grid; grid-template-columns: minmax(0, 1fr) 96px 92px 88px; gap: var(--at-gap);
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  padding: 8px 14px;
+  color: var(--muted); font-size: var(--text-xs); font-weight: 700; letter-spacing: .2px;
+}
+.atlas__ledgerhead b:last-child { text-align: end; }
+.atlas__rows { display: grid; max-height: min(52vh, 560px); overflow: auto; }
+.atlas__row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 96px 92px 88px; gap: var(--at-gap);
+  align-items: center;
+  border: 0; border-bottom: 1px solid var(--border-soft);
+  background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer;
+  padding: 9px 14px;
+  min-height: 46px;
+}
+.atlas__row:last-child { border-bottom: 0; }
+.atlas__row:hover { background: var(--surface-hover); }
+.atlas__row:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.atlas__row[aria-pressed='true'] { background: color-mix(in srgb, var(--world-hue) 14%, var(--surface)); box-shadow: inset 3px 0 0 var(--at-hue); }
+html[dir='rtl'] .atlas__row[aria-pressed='true'] { box-shadow: inset -3px 0 0 var(--at-hue); }
+.atlas__rowname { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+/* The folder ledger is two columns, not the file ledger's four: the kind and
+   age slots would be empty, and a Windows path squeezed into the 96px column
+   the file rows use for "Databases" truncates to "C:\Users\day night\...".
+   Name and full path split the width instead. */
+.atlas__ledgerhead--folder, .atlas__row--folder { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.atlas__row--folder .atlas__rowwhere { text-align: end; }
+.atlas__ledgerhead--folder span:last-child { text-align: end; }
+.atlas__rowname b { font-size: var(--text-body); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas__rowname code {
+  flex: none; border-radius: 5px; padding: 1px 5px;
+  background: color-mix(in srgb, var(--at-hue) 22%, transparent);
+  color: var(--at-hue); font-family: Consolas, monospace; font-size: 10px; font-weight: 700;
+}
+.atlas__rowwhere { color: var(--muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; unicode-bidi: isolate; text-align: start; }
+/* The kind cell reads the same way but must not inherit the path's forced
+   left-to-right: it holds a translated word, and pinning an Arabic "أرشيفات"
+   to the left of an RTL column leaves it out of step with its own header. */
+.atlas__rowkind { color: var(--muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
+.atlas__rowsize { display: grid; gap: 3px; justify-items: end; }
+.atlas__rowsize b { font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+.atlas__rowsize i { display: block; width: 100%; height: 3px; border-radius: 2px; background: var(--surface-hover); overflow: hidden; }
+.atlas__rowsize i::after { content: ''; display: block; height: 100%; width: var(--at-share, 0%); border-radius: inherit; background: var(--at-hue); }
+.atlas__rowage { color: var(--muted); font-size: var(--text-xs); }
+.atlas__deferred { color: var(--status-warning-text); font-size: 10px; font-weight: 700; }
+
+.atlas__empty {
+  display: grid; place-content: center; gap: 7px; justify-items: center;
+  min-height: 168px; padding: var(--space-6);
+  color: var(--muted); text-align: center; font-size: var(--text-sm);
+}
+.atlas__empty svg { color: var(--border-strong); }
+
+.atlas__aside { position: sticky; top: var(--space-4); display: grid; gap: var(--space-3); }
+.atlas__inspector {
+  display: grid; gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(158deg, var(--surface-raised), var(--surface) 60%);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-4);
+}
+html[data-theme="light"] .atlas__inspector { background: linear-gradient(158deg, #ffffff, var(--surface-raised) 60%); }
+.atlas__inspector h3 { margin: 0; font-size: var(--text-lg); font-weight: 800; }
+.atlas__inspector h4 { margin: 0; font-size: var(--text-xs); font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+.atlas__subject { display: grid; gap: 4px; }
+.atlas__subject b { font-size: var(--text-body); word-break: break-word; }
+.atlas__subject span { color: var(--muted); font-size: var(--text-xs); }
+.atlas__attrs { display: grid; gap: 0; margin: 0; }
+.atlas__attrs > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-top: 1px solid var(--border-soft); padding: 6px 0; }
+.atlas__attrs > div:first-child { border-top: 0; }
+.atlas__attrs dt { color: var(--muted); font-size: var(--text-xs); }
+/* The value column carries figures and paths in the same cells, and the two
+   want opposite faces. Consolas was chosen so a Windows path reads as a
+   location, but its fixed advance puts a visible gap around every decimal
+   point — "98.3%" came out as "98 .3%", which reads as two numbers. So the
+   column takes the UI face with tabular figures, and only the paths, which
+   the page already marks with <bdi>, keep the monospace. */
+.atlas__attrs dd { margin: 0; font-size: var(--text-sm); font-weight: 700; text-align: end; font-variant-numeric: tabular-nums; word-break: break-all; }
+/* The folder record carries two paths — the parent above the pick and the root
+   the walk started from — and a Windows path re-ordered by an Arabic column is
+   not a location the reader can act on. Same isolation the lane rows use. */
+.atlas__attrs dd bdi { direction: ltr; unicode-bidi: isolate; font-family: Consolas, monospace; }
+/* A truncated SHA-256 is a string to compare character by character, not a
+   figure to read at a glance, so it keeps the monospace the paths keep. */
+.atlas__attrs dd code { font-family: Consolas, monospace; }
+.atlas__members { display: grid; gap: 4px; }
+.atlas__members li { display: flex; align-items: baseline; gap: 7px; font-size: var(--text-xs); }
+.atlas__members bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+.atlas__members .keeper { color: var(--status-success-text); font-weight: 700; flex: none; }
+.atlas__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* -- The read board ----------------------------------------------------------
+   The inspector with nothing picked. It reports the volume the reader is
+   standing on and the walks that answered, each against the root it walked, so
+   an idle column carries measurement rather than a prompt.
+   ------------------------------------------------------------------------- */
+
+.atlas__read { display: grid; gap: 10px; min-width: 0; }
+.atlas__readlead { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: 1.55; }
+
+.atlas__readvol { display: grid; gap: 8px; min-width: 0; }
+.atlas__readpressure { display: grid; gap: 5px; margin: 0; }
+/* The pressure word takes the bay's own hue, so the board and the rack above it
+   never describe the same volume in two different colours. */
+.atlas__readpill {
+  justify-self: start;
+  border: 1px solid color-mix(in srgb, var(--at-hue) 45%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--at-hue) 14%, transparent);
+  color: var(--at-hue);
+  padding: 2px 9px;
+  font-size: var(--text-xs); font-weight: 800; letter-spacing: .2px; white-space: nowrap;
+}
+
+.atlas__readlanes { display: grid; gap: 5px; }
+.atlas__readlane {
+  display: grid; gap: 3px; min-width: 0;
+  border: 1px solid var(--border-soft); border-radius: 10px;
+  background: var(--surface);
+  color: inherit; font: inherit; text-align: start; cursor: pointer;
+  padding: 7px 9px;
+}
+.atlas__readlane:hover { border-color: var(--border-strong); background: var(--surface-hover); }
+.atlas__readlane:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.atlas__readlane[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--world-hue) 55%, var(--border));
+  background: color-mix(in srgb, var(--world-hue) 10%, var(--surface));
+}
+.atlas__readlane[data-read='false'] { opacity: .7; }
+.atlas__readlanehead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.atlas__readlanehead b { font-size: var(--text-sm); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas__readlanepath {
+  color: var(--muted); font-size: var(--text-xs);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  direction: ltr; unicode-bidi: isolate;
+}
+.atlas__readlanefig { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.atlas__readlanefig b { font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+.atlas__readlanefig span { color: var(--muted); font-size: var(--text-xs); }
+.atlas__readlanefig small { margin-inline-start: auto; color: var(--muted); font-size: 10px; white-space: nowrap; }
+
+.atlas__readfoot {
+  display: flex; align-items: flex-start; gap: 7px;
+  margin: 0; border-top: 1px solid var(--border-soft); padding-top: 9px;
+  color: var(--muted); font-size: var(--text-xs); line-height: 1.55;
+}
+.atlas__readfoot svg { flex: none; align-self: center; color: var(--status-info); }
+.atlas__readfoot--split { color: var(--status-warning-text); }
+.atlas__readfoot--split svg { color: var(--status-warning-text); }
+
+/* -- Wide canvases --------------------------------------------------------- */
+
+@media (min-width: 1500px) {
+  .atlas .world-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .atlas .world-metric { padding-inline: var(--space-5); }
+  .atlas .world-metric b { font-size: 26px; }
+  .atlas { --at-rail: 40px; }
+  .atlas__bayread b { font-size: 32px; }
+  .atlas__rows { max-height: min(56vh, 620px); }
+}
+
+/* -- Short viewports ------------------------------------------------------- */
+
+@media (max-height: 820px) {
+  .atlas { --at-rail: 26px; }
+  .atlas__bay { padding-block: 10px; }
+  .atlas__letter { width: 48px; height: 48px; font-size: 17px; }
+  .atlas__rack { gap: 8px; }
+  .atlas__rows { max-height: min(46vh, 420px); }
+}
+
+@media (max-width: 1180px) {
+  .atlas__split { grid-template-columns: minmax(0, 1fr); }
+  .atlas__aside { position: static; }
+  /* The board loses its narrow column and gains a row instead: three lanes
+     beside each other read as one comparison, which is what it is. */
+  .atlas__readlanes { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .atlas__bay { grid-template-columns: 48px minmax(0, 1fr); }
+  .atlas__letter { width: 48px; height: 48px; border-radius: 14px; font-size: var(--text-lg); }
+  /* The read block loses its own column, and a bare 28px figure dropped under
+     the rail reads as an orphan rather than as the volume's answer. So on the
+     narrow bay it becomes a summary line: figure, share and verdict side by
+     side on one baseline, held to the card by a hairline, with the figure
+     stepped down to the size the identity line uses. */
+  .atlas__bayread {
+    grid-column: 2;
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    justify-items: unset; text-align: start;
+    border-top: 1px solid var(--border-soft); margin-top: 3px; padding-top: 7px;
+  }
+  .atlas__bayread b { font-size: var(--text-lg); letter-spacing: -.3px; }
+  .atlas__ledgerhead:not(.atlas__ledgerhead--folder), .atlas__row:not(.atlas__row--folder) { grid-template-columns: minmax(0, 1fr) 88px; }
+  .atlas__ledgerhead:not(.atlas__ledgerhead--folder) span:nth-child(2), .atlas__row:not(.atlas__row--folder) .atlas__rowwhere, .atlas__rowkind, .atlas__rowage { display: none; }
+  /* The folder ledger is already name and path, and on the narrow bay the path
+     is the half that can be dropped: the name is what a reader clicks. */
+  .atlas__ledgerhead--folder, .atlas__row--folder { grid-template-columns: minmax(0, 1fr); }
+  .atlas__row--folder .atlas__rowwhere, .atlas__ledgerhead--folder span:nth-child(2) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas__bay, .atlas__rung, .atlas__row { transition: none; }
+}

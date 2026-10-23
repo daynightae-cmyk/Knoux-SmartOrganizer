@@ -138,7 +138,7 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
         <label className="setting"><span>{t('tools.journal')}</span><input value={journalId} onChange={e => setJournalId(e.target.value)} placeholder={t('tools.journalHint')} dir="ltr" /></label>
       )}
       {tool.supportsDryRun && (
-        <label className="confirmation dryrun"><input type="checkbox" checked={dryRun} onChange={e => setDryRun(e.target.checked)} /><span>{t('tools.dryRun') ?? 'Dry run'}</span></label>
+        <label className="confirmation dryrun"><input type="checkbox" checked={dryRun} onChange={e => setDryRun(e.target.checked)} /><span>{t('tools.dryRun')}</span></label>
       )}
 
       {needsConfirm && (

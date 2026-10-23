@@ -18,7 +18,7 @@ import {
 import { buildToolRecord, normalizeQuery, searchRecords } from '../src/lib/search';
 import { direction } from '../src/locales';
 import { SMART_SCAN_TOTAL, findingTitleKey, scoreReasonKey, smartScanFindings, smartScanStageFromEvent, smartScore, smartScoreReasons } from '../src/lib/smartscan';
-import { isCatalogPage, pageGroups, pageIds } from '../src/lib/pages';
+import { isCatalogPage, pageGroups, pageIds, worldOwnsHeader } from '../src/lib/pages';
 
 const require = createRequire(import.meta.url);
 const { createToolRegistry, serializeRegistry } = require('../electron/tool-registry.cjs') as {
@@ -169,7 +169,15 @@ describe('unified shell workspace', () => {
     for (const id of ['home', 'scan', 'storage', 'files', 'applications', 'cleanup', 'startup', 'system', 'repair', 'services', 'network', 'hardware', 'automation', 'history', 'settings']) {
       expect(ids).toContain(id);
     }
-    expect(isCatalogPage('storage')).toBe(true);
+    // A world that has been built renders its own head, its own figures and its
+    // own ledger, so the shell must stop filing it under the generic catalogue.
+    for (const id of ['applications', 'files', 'storage'] as const) {
+      expect(isCatalogPage(id)).toBe(false);
+      expect(worldOwnsHeader(id)).toBe(true);
+    }
+    for (const id of ['cleanup', 'startup', 'system', 'services', 'network', 'hardware'] as const) {
+      expect(isCatalogPage(id), id).toBe(true);
+    }
     expect(isCatalogPage('home')).toBe(false);
     expect(isCatalogPage('scan')).toBe(false);
   });

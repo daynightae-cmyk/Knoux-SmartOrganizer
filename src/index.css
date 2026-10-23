@@ -1,7 +1,11 @@
 :root {
   font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Arial, sans-serif;
-  color: #f7f5ff;
-  background: #08090f;
+  /* The inherited colour has to be the token, not the dark palette's value.
+     A literal here is invisible on the light theme for every element that
+     does not set its own colour — page titles, metric numbers, band labels —
+     and the theme switch only redefines the variables. */
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   --font-scale: 1;
   --bg: #08090f;
@@ -69,25 +73,50 @@
 html, body, #root { margin: 0; min-width: 860px; min-height: 100vh; }
 html { background: var(--bg); }
 html[data-theme="light"] { --bg:#f5f5fb; --surface:#fff; --surface-raised:#f0eff8; --surface-hover:#e9e7f4; --surface-glass:#ffffffd9; --text:#171522; --muted:#626078; --border:#dfdceb; --border-soft:#17152212; --border-strong:#c8c3db; --shadow:0 24px 60px #4a3b781c; --shadow-soft:0 14px 36px #4a3b7815; --status-success-surface:#dff5e9; --status-success-text:#0f5132; --status-warning-surface:#fff1d7; --status-warning-text:#6b4708; --status-danger-surface:#fde5ea; --status-danger-text:#8a1030; }
-html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#111; --surface-hover:#222; --text:#fff; --muted:#eee; --border:#fff; --primary:#ff0; --primary-bright:#ff0; --primary-strong:#fc0; --blue:#0ff; --green:#0f0; --amber:#ff0; --red:#f66; }
+html[data-theme="high-contrast"] { --bg:#000; --surface:#000; --surface-raised:#111; --surface-hover:#222; --text:#fff; --muted:#eee; --border:#fff; --border-strong:#fff; --primary:#ff0; --primary-bright:#ff0; --primary-strong:#fc0; --blue:#0ff; --green:#0f0; --amber:#ff0; --red:#f66; }
 html[data-accent="blue"] { --primary:#5b8cff; --primary-bright:#9ec4ff; --primary-strong:#3165e8; }
 html[data-accent="green"] { --primary:#3bcf91; --primary-bright:#9df4c6; --primary-strong:#229e6d; }
 html[data-accent="amber"] { --primary:#ffb34f; --primary-bright:#ffe0a0; --primary-strong:#db8420; }
 body { background: radial-gradient(900px 540px at 76% -12%, #4f2a8a55, transparent 64%), radial-gradient(720px 480px at 12% 30%, #1f2b6430, transparent 68%), var(--bg); font-size: calc(15px * var(--font-scale)); overflow-x: hidden; }
 body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.18; background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px); background-size:64px 64px; mask-image:linear-gradient(to bottom,black,transparent 75%); }
 button, input, select, textarea { font: inherit; }
+/* One quiet scrollbar for the whole application. Every scroll region in KNOuX
+   sits on a tinted surface — the rail, the atlas lanes, the ledger — and the
+   default Chromium bar is a hard grey slab that reads as a foreign object in
+   all three themes. Thin, transparent track, colour taken from the same border
+   token the surfaces already use, and a thumb that answers the pointer. */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border: 3px solid transparent; border-radius: var(--radius-pill); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-bright); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
 .app-shell { display:flex; min-height:100vh; position:relative; }
-.sidebar { position:sticky; top:0; height:100vh; width:264px; padding:26px 16px 18px; border-inline-end:1px solid var(--border-soft); background:linear-gradient(180deg,#111320f2,#0b0d16e8); backdrop-filter:blur(22px); display:flex; flex-direction:column; z-index:7; }
+/* The rail is painted with fixed dark colours in every theme — a dark spine
+   beside a light canvas is the shell's identity. Its text therefore cannot
+   read the page tokens, or the moment the canvas turns light the navigation
+   turns dark-on-dark. The rail carries its own palette instead. */
+.sidebar {
+  --rail-text: #f7f5ff;
+  --rail-muted: #a6a5bd;
+  --rail-hover: #20233a;
+  --rail-border: #ffffff12;
+  position:sticky; top:0; height:100vh; width:264px; padding:26px 16px 18px; border-inline-end:1px solid var(--rail-border); background:linear-gradient(180deg,#111320f2,#0b0d16e8); backdrop-filter:blur(22px); display:flex; flex-direction:column; z-index:7; }
 .brand { display:flex; align-items:center; gap:12px; padding:0 10px 28px; }
 .brand-symbol { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; background:linear-gradient(145deg,#c4a6ff,#8b3dff 55%,#5b5ff8); color:#fff; font-size:21px; font-weight:900; letter-spacing:-1px; box-shadow:0 12px 32px #8b3dff55, inset 0 1px #fff8; position:relative; }
 .brand-symbol::after { content:""; position:absolute; inset:5px; border:1px solid #ffffff55; border-radius:10px; }
-.brand strong, .brand small { display:block; } .brand strong { letter-spacing:.8px; font-size:15px; } .brand small { color:var(--muted); font-size:10px; line-height:1.35; margin-top:2px; }
+.brand strong, .brand small { display:block; } .brand strong { color:var(--rail-text); letter-spacing:.4px; font-size:17px; line-height:1.15; } .brand small { color:var(--rail-muted); font-size:10px; line-height:1.35; margin-top:2px; }
+/* The rail's brand lockup: the brand word carries the weight and the product
+   word sits under it in the rail's muted tone. Two lines because the full name
+   never fitted beside its own mark in a 264px rail, and an ellipsis on the
+   product name is the one truncation nothing else can explain. */
+.brand-product { display:block; margin-top:1px; color:var(--rail-muted); font-size:var(--text-sm); font-weight:700; letter-spacing:.2px; line-height:1.2; }
 nav { display:grid; gap:4px; }
-.nav-item { border:1px solid transparent; background:transparent; color:var(--muted); padding:10px 12px; border-radius:11px; display:flex; gap:11px; align-items:center; min-width:0; cursor:pointer; text-align:start; transition:background .2s,color .2s,border-color .2s,transform .2s; }
-.nav-item:hover { background:var(--surface-hover); color:var(--text); border-color:var(--border-soft); transform:translateX(2px); }
-.nav-item.active { background:linear-gradient(100deg,#8b3dff35,#5b5ff812); color:var(--text); border-color:#a855f733; box-shadow:inset 3px 0 0 var(--primary-bright), 0 8px 24px #00000018; }
+.nav-item { border:1px solid transparent; background:transparent; color:var(--rail-muted); padding:10px 12px; border-radius:11px; display:flex; gap:11px; align-items:center; min-width:0; cursor:pointer; text-align:start; transition:background .2s,color .2s,border-color .2s,transform .2s; }
+.nav-item:hover { background:var(--rail-hover); color:var(--rail-text); border-color:var(--rail-border); transform:translateX(2px); }
+.nav-item.active { background:linear-gradient(100deg,#8b3dff35,#5b5ff812); color:var(--rail-text); border-color:#a855f733; box-shadow:inset 3px 0 0 var(--primary-bright), 0 8px 24px #00000018; }
 .sidebar-foot { margin-top:auto; padding:18px 10px 2px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.muted { color:var(--muted); font-size:11px; } .local-badge { display:inline-flex; align-items:center; gap:6px; color:var(--status-success-text); background:var(--status-success-surface); border:1px solid var(--status-success-border); padding:5px 9px; border-radius:var(--radius-pill); font-size:10px; }
+.muted { color:var(--muted); font-size:11px; } .sidebar .muted { color:var(--rail-muted); } .local-badge { display:inline-flex; align-items:center; gap:6px; color:var(--status-success-text); background:var(--status-success-surface); border:1px solid var(--status-success-border); padding:5px 9px; border-radius:var(--radius-pill); font-size:10px; }
 .main { width:min(1480px,calc(100% - 264px)); padding:28px 46px 48px; margin-inline:auto; position:relative; }
 .topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; }
 .eyebrow { margin:0 0 8px; color:var(--primary-bright); text-transform:uppercase; letter-spacing:2px; font-size:10px; font-weight:800; }

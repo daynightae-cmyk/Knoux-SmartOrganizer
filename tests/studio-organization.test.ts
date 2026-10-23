@@ -262,7 +262,15 @@ describe.skipIf(process.platform !== 'win32')('Studio real Windows transfer and 
     if ('thrown' in moved) {
       // The swap landed before the copy: the operation must refuse, and its own
       // partial destination must be gone rather than left as a decoy file.
-      expect(moved.thrown.code).toBe('STUDIO_PLAN_STALE');
+      //
+      // Two guards can catch that moment, and which one wins is a timing detail
+      // rather than a safety difference. The plain-entry check runs first, before
+      // anything opens the file, and reports a path the racer has just renamed
+      // away as STUDIO_PATH_UNSAFE because at that instant the path holds
+      // nothing. The identity comparison behind it reports the same race as
+      // STUDIO_PLAN_STALE once the racer has written its own file there. Both
+      // refuse before a byte is copied, which is what this branch grades.
+      expect(['STUDIO_PATH_UNSAFE', 'STUDIO_PLAN_STALE']).toContain(moved.thrown.code);
       expect(existsSync(destination)).toBe(false);
       expect(holdsOurBytes).toBe(true);
     } else {

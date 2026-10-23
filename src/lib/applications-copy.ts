@@ -52,7 +52,7 @@ export const applicationsCopy: Record<string, { ar: string; en: string }> = {
   'app.view.chapters': { ar: 'حسب الناشر', en: 'Publishers' },
   'app.facet.label': { ar: 'المجموعات', en: 'Collections' },
   'app.facet.all': { ar: 'الكل', en: 'All' },
-  'app.facet.recent': { ar: 'أحدث ٩٠ يومًا', en: 'Last 90 days' },
+  'app.facet.recent': { ar: 'أحدث 90 يومًا', en: 'Last 90 days' },
   'app.facet.large': { ar: 'كبيرة الحجم', en: 'Large' },
   'app.facet.desktop': { ar: 'سطح المكتب', en: 'Desktop' },
   'app.facet.packaged': { ar: 'حزم المتجر', en: 'Packaged' },

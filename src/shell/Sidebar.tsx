@@ -13,6 +13,18 @@ export default function Sidebar() {
 
   const toggleGroup = (id: GroupId) => setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
 
+  // The rail is 240px wide and the product's full name does not fit in it beside
+  // its mark: "KNOuX SmartOrganizer" came out as "KNOuX Sma…" in every
+  // screenshot, at every window size, on both languages. An ellipsis on the
+  // brand is the one truncation a product cannot afford, so the lockup breaks
+  // across two lines instead — the brand word carries the weight, the product
+  // word sits under it in the rail's muted tone. The tagline leaves the chrome
+  // with it: the rail already ends in a "Local" shield, which is the same
+  // promise in fewer words, and every world writes its own line under its own
+  // title where there is room to read it.
+  const [brandWord, ...brandRest] = t('app.name').split(' ');
+  const productWord = brandRest.join(' ');
+
   const go = (id: PageId) => {
     setPage(id);
     setHoverExpand(false);
@@ -29,8 +41,8 @@ export default function Sidebar() {
         <span className="brand-symbol" aria-hidden="true">K</span>
         {!collapsed && (
           <div className="brand-text">
-            <strong>{t('app.name')}</strong>
-            <small>{t('app.tagline')}</small>
+            <strong>{brandWord}</strong>
+            {productWord && <span className="brand-product">{productWord}</span>}
           </div>
         )}
         <button

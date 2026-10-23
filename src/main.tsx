@@ -7,5 +7,8 @@ import './states.css';
 import './clipboard.css';
 import './worlds.css';
 import './applications.css';
+import './files.css';
+import './storage.css';
+import './world-cards.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

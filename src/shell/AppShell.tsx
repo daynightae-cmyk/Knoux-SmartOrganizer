@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -14,6 +14,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { notice, sidebarCollapsed, operationOpen, setOperationOpen, t, booted, page, setPage, setPaletteOpen, setSidebarCollapsed, runById, locale, settings, update } = useStore();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [narrow, setNarrow] = useState(false);
+  const autoCollapsed = useRef(false);
+  // The breakpoint listener is registered once, so it reads the live collapse
+  // state through this ref rather than through a closure taken at mount.
+  const collapsedRef = useRef(sidebarCollapsed);
+  collapsedRef.current = sidebarCollapsed;
 
   /**
    * At the narrow width the sidebar becomes an overlay above the content.
@@ -27,7 +32,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
     const query = window.matchMedia('(max-width: 900px)');
     const apply = () => {
       setNarrow(query.matches);
-      if (query.matches) setSidebarCollapsed(true);
+      // Only the rule's own collapse is ever taken back. A rail the reader shut
+      // by hand stays shut when the window grows, because that choice is theirs
+      // and not the breakpoint's. Without this, a session that started at the
+      // minimum width keeps an icon rail after being maximised.
+      if (query.matches) {
+        if (!collapsedRef.current) {
+          autoCollapsed.current = true;
+          setSidebarCollapsed(true);
+        }
+      } else if (autoCollapsed.current) {
+        autoCollapsed.current = false;
+        setSidebarCollapsed(false);
+      }
     };
     apply();
     query.addEventListener('change', apply);

@@ -104,6 +104,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.setProperty('--font-scale', String(appearance?.fontScale || 1));
   }, [locale, settings]);
 
+  // The world on screen belongs to the document, not only to the component tree:
+  // a stylesheet, a focus layer and the visual-acceptance harness can all agree on
+  // what the user is looking at without reaching into React.
+  useEffect(() => {
+    document.documentElement.dataset.page = page;
+  }, [page]);
+
   const setPage = useCallback((next: PageId) => {
     setPageState(next);
     setQuery('');

@@ -90,6 +90,11 @@ html[data-theme="light"] .world-head { background: radial-gradient(620px 220px a
 .world-metric--accent b { color: var(--world-hue); }
 html[data-theme="light"] .world-metric--accent b { color: color-mix(in srgb, var(--world-hue) 78%, #171522); }
 html[data-theme="high-contrast"] .world-metric--accent b { color: var(--text); }
+/* A count the machine itself reports as pressure is not an accent: it is the
+   reason the page was opened. Only the figure carries the warning, so the rail
+   never turns into an error banner. */
+.world-metric--warn b { color: var(--status-warning-text); }
+.world-metric--warn span { color: var(--status-warning-text); }
 
 /* -- Coverage ribbon ------------------------------------------------------- */
 

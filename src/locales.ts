@@ -1,5 +1,7 @@
 import { serviceCopy } from './lib/service-copy';
 import { applicationsCopy } from './lib/applications-copy';
+import { filesCopy } from './lib/files-copy';
+import { storageCopy } from './lib/storage-copy';
 
 export type Locale = 'ar' | 'en';
 export type Dictionary = Record<string, string>;
@@ -9,7 +11,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     'studio.title': 'استوديو تنظيم الملفات', 'studio.subtitle': 'مكتبة ملفاتك المرئية — فهرسة محلية آمنة ومراجعة كاملة دون نقل تلقائي.',
     'app.name': 'KNOuX SmartOrganizer', 'app.tagline': 'منظّم Windows محلي وآمن', 'nav.home': 'الرئيسية', 'nav.scan': 'الفحص الذكي', 'nav.storage': 'التخزين', 'nav.files': 'الملفات', 'nav.cleanup': 'التنظيف', 'nav.startup': 'بدء التشغيل', 'nav.apps': 'التطبيقات', 'nav.system': 'النظام', 'nav.network': 'الشبكة', 'nav.hardware': 'العتاد', 'nav.history': 'السجل', 'nav.settings': 'الإعدادات',
     'home.title': 'نظرة عامة على الجهاز', 'home.subtitle': 'بيانات محلية مقاسة من Windows، بلا نتائج مصطنعة.', 'home.scan': 'بدء الفحص الذكي', 'home.health': 'صحة النظام', 'home.ready': 'جاهز للفحص', 'home.offline': 'الوظائف الأساسية تعمل دون اتصال بالإنترنت', 'home.memory': 'استخدام الذاكرة', 'home.storage': 'مساحة قرص النظام', 'home.uptime': 'وقت التشغيل', 'home.cpu': 'المعالج',
-    'tools.title': 'الأدوات المتاحة', 'tools.search': 'ابحث عن أداة أو فئة', 'tools.run': 'تشغيل الأداة', 'tools.chooseFolder': 'اختيار مجلد', 'tools.journal': 'معرّف سجل التراجع', 'confirm.organize': 'راجعت المعاينة وأؤكد نقل الملفات الظاهرة فقط.', 'confirm.startup': 'أؤكد تغيير عنصر بدء التشغيل المحدد للمستخدم الحالي فقط.', 'startup.valueName': 'اسم قيمة بدء التشغيل', 'tools.defaultFolder': 'المجلد الافتراضي: مجلد المستخدم', 'tools.noSelection': 'اختر أداة لعرض وصفها وتشغيلها.', 'tools.openHistory': 'فتح السجل', 'tools.requiresFolder': 'يتطلب اختيار مجلد', 'tools.hashFile': 'اختيار ملف للحساب',
+    'tools.title': 'الأدوات المتاحة', 'tools.search': 'ابحث عن أداة أو فئة', 'tools.run': 'تشغيل الأداة', 'tools.chooseFolder': 'اختيار مجلد', 'tools.journal': 'معرّف سجل التراجع', 'confirm.organize': 'راجعت المعاينة وأؤكد نقل الملفات الظاهرة فقط.', 'confirm.startup': 'أؤكد تغيير عنصر بدء التشغيل المحدد للمستخدم الحالي فقط.', 'startup.valueName': 'اسم قيمة بدء التشغيل', 'tools.defaultFolder': 'المجلد الافتراضي: مجلد المستخدم', 'tools.noSelection': 'اختر أداة لعرض وصفها وتشغيلها.', 'tools.openHistory': 'فتح السجل', 'tools.requiresFolder': 'يتطلب اختيار مجلد', 'tools.hashFile': 'اختيار ملف للحساب', 'tools.dryRun': 'تشغيل تجريبي دون تغيير',
     'operation.title': 'مركز العمليات', 'operation.ready': 'لا توجد عملية نشطة', 'operation.cancel': 'إلغاء العملية', 'operation.complete': 'اكتملت العملية', 'operation.failed': 'تعذر تنفيذ العملية', 'operation.empty': 'ستظهر العمليات الحقيقية هنا أثناء تنفيذها.', 'operation.items': 'عناصر النتيجة',
     'settings.title': 'الإعدادات', 'settings.subtitle': 'تُحفظ الإعدادات محلياً على الجهاز. لا توجد تحليلات استخدام أو تقارير أعطال افتراضية.', 'settings.language': 'لغة التطبيق', 'settings.theme': 'السمة', 'settings.density': 'كثافة الواجهة', 'settings.motion': 'تقليل الحركة', 'settings.largeFile': 'حد الملفات الكبيرة', 'settings.duplicate': 'أصغر حجم لتكرارات الملفات', 'settings.closeTray': 'الإغلاق إلى شريط المهام', 'settings.saved': 'تم حفظ الإعدادات', 'settings.export': 'تصدير الإعدادات', 'settings.import': 'استيراد الإعدادات', 'settings.reset': 'استعادة الافتراضي',
     'history.title': 'سجل العمليات', 'history.subtitle': 'نتائج فعلية ومحفوظة محلياً؛ لا توجد أمثلة أو نتائج وهمية.', 'history.empty': 'لم تُشغَّل أي أداة بعد.', 'history.success': 'ناجح', 'history.error': 'فشل',
@@ -20,7 +22,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     'studio.title': 'Smart Organization Studio', 'studio.subtitle': 'Your visual file library — private, read-only indexing without automatic moves.',
     'app.name': 'KNOuX SmartOrganizer', 'app.tagline': 'Private, local-first Windows utility', 'nav.home': 'Home', 'nav.scan': 'Smart Scan', 'nav.storage': 'Storage', 'nav.files': 'Files', 'nav.cleanup': 'Cleanup', 'nav.startup': 'Startup', 'nav.apps': 'Applications', 'nav.system': 'System', 'nav.network': 'Network', 'nav.hardware': 'Hardware', 'nav.history': 'History', 'nav.settings': 'Settings',
     'home.title': 'Device overview', 'home.subtitle': 'Measured local Windows data, with no fabricated results.', 'home.scan': 'Run Smart Scan', 'home.health': 'System health', 'home.ready': 'Ready to scan', 'home.offline': 'Core features work with no internet connection', 'home.memory': 'Memory usage', 'home.storage': 'System drive space', 'home.uptime': 'Uptime', 'home.cpu': 'Processor',
-    'tools.title': 'Available tools', 'tools.search': 'Search a tool or category', 'tools.run': 'Run tool', 'tools.chooseFolder': 'Choose folder', 'tools.journal': 'Undo journal ID', 'confirm.organize': 'I reviewed the preview and confirm the listed file moves only.', 'confirm.startup': 'I confirm changing the selected current-user startup item only.', 'startup.valueName': 'Startup value name', 'tools.defaultFolder': 'Default: user home folder', 'tools.noSelection': 'Select a tool to review and run it.', 'tools.openHistory': 'Open history', 'tools.requiresFolder': 'A folder is required', 'tools.hashFile': 'Choose a file to calculate',
+    'tools.title': 'Available tools', 'tools.search': 'Search a tool or category', 'tools.run': 'Run tool', 'tools.chooseFolder': 'Choose folder', 'tools.journal': 'Undo journal ID', 'confirm.organize': 'I reviewed the preview and confirm the listed file moves only.', 'confirm.startup': 'I confirm changing the selected current-user startup item only.', 'startup.valueName': 'Startup value name', 'tools.defaultFolder': 'Default: user home folder', 'tools.noSelection': 'Select a tool to review and run it.', 'tools.openHistory': 'Open history', 'tools.requiresFolder': 'A folder is required', 'tools.hashFile': 'Choose a file to calculate', 'tools.dryRun': 'Dry run — changes nothing',
     'operation.title': 'Operation center', 'operation.ready': 'No active operation', 'operation.cancel': 'Cancel operation', 'operation.complete': 'Operation completed', 'operation.failed': 'Operation failed', 'operation.empty': 'Real operations will appear here while they run.', 'operation.items': 'Result items',
     'settings.title': 'Settings', 'settings.subtitle': 'Settings are saved locally. Usage analytics and crash reports are off by default.', 'settings.language': 'Application language', 'settings.theme': 'Theme', 'settings.density': 'Interface density', 'settings.motion': 'Reduce motion', 'settings.largeFile': 'Large-file threshold', 'settings.duplicate': 'Minimum duplicate size', 'settings.closeTray': 'Close to tray', 'settings.saved': 'Settings saved', 'settings.export': 'Export settings', 'settings.import': 'Import settings', 'settings.reset': 'Restore defaults',
     'history.title': 'Operation history', 'history.subtitle': 'Real, locally stored outcomes with no sample results.', 'history.empty': 'No tool has been run yet.', 'history.success': 'Success', 'history.error': 'Failed',
@@ -163,6 +165,13 @@ const settingsCopy: Record<string, { ar: string; en: string }> = {
   'settings.value.development': { ar: 'تطوير', en: 'Development' }
   ,'tools.unavailable': { ar: 'غير متاح على هذا الجهاز', en: 'Unavailable on this device' }
   ,'common.safeWrite': { ar: 'كتابة آمنة', en: 'Safe write' }
+  // Read from the About and Clipboard panels but never defined, so `t` fell back
+  // to the key and the interface printed "settings.value.yes" where a user
+  // expected "Yes". The placeholder test in tests/copy-placeholders.test.ts now
+  // checks every literal t('…') against both dictionaries.
+  ,'settings.value.yes': { ar: 'نعم', en: 'Yes' }
+  ,'settings.value.unavailable': { ar: 'غير مُبلَغ عنه', en: 'Not reported' }
+  ,'settings.section.clipboardNote': { ar: 'ملاحظة الخصوصية', en: 'Privacy note' }
 };
 for (const [key, value] of Object.entries(settingsCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 
@@ -217,6 +226,11 @@ const repairCopy: Record<string, { ar: string; en: string }> = {
   'automation.enabled': { ar: 'مفعّل', en: 'Enabled' },
   'automation.paused': { ar: 'متوقف مؤقتاً', en: 'Paused' },
   'automation.runNow': { ar: 'تشغيل الآن', en: 'Run now' },
+  // The three icon buttons in a schedule row carry no visible text, so their
+  // labels have to name the object they act on: a screen reader reading bare
+  // "Delete" three rows down cannot say which schedule would go.
+  'automation.toggle': { ar: 'تفعيل هذا الجدول أو إيقافه', en: 'Enable or pause this schedule' },
+  'automation.remove': { ar: 'حذف هذا الجدول المحلي', en: 'Delete this local schedule' },
   'automation.pause': { ar: 'إيقاف مؤقت', en: 'Pause' },
   'automation.resume': { ar: 'استئناف', en: 'Resume' },
   'automation.delete': { ar: 'حذف', en: 'Delete' },
@@ -325,7 +339,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'home.viewAll': { ar: 'عرض الكل', en: 'View all' },
   'home.workspaces': { ar: 'مساحات العمل', en: 'Workspaces' },
   'home.installedApps': { ar: 'التطبيقات المثبتة', en: 'Installed apps' },
-  'home.eventClusters': { ar: 'تحذيرات النظام (٧ أيام)', en: 'System warnings (7 days)' },
+  'home.eventClusters': { ar: 'تحذيرات النظام (7 أيام)', en: 'System warnings (7 days)' },
   'home.pressuredDrives': { ar: 'أقراص تحت ضغط', en: 'Pressured drives' },
   'home.entries': { ar: 'عنصر', en: 'entries' },
   'home.runTool': { ar: 'تشغيل الآن', en: 'Run now' },
@@ -388,7 +402,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'age.today': { ar: 'اليوم', en: 'today' },
   'age.week': { ar: 'هذا الأسبوع', en: 'this week' },
   'age.month': { ar: 'هذا الشهر', en: 'this month' },
-  'age.quarter': { ar: 'آخر ٣ أشهر', en: 'last quarter' },
+  'age.quarter': { ar: 'آخر 3 أشهر', en: 'last quarter' },
   'age.year': { ar: 'هذه السنة', en: 'this year' },
   'age.older': { ar: 'أقدم', en: 'older' },
   'age.unknown': { ar: 'غير معروف', en: 'unknown' },
@@ -659,6 +673,11 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'common.period': { ar: 'الفترة', en: 'Period' },
   'shell.skipToContent': { ar: 'تخطَّ إلى المحتوى', en: 'Skip to main content' },
 
+  // The rail is 240px wide. The page's full title is a sentence, and the nav
+  // label is not the page heading: it is a destination in a list, and it has to
+  // fit beside its icon without an ellipsis eating the last word.
+  'nav.studio': { ar: 'استوديو التنظيم', en: 'Organization Studio' },
+
   // KNOuX Clipboard Vault
   'nav.clipboard': { ar: 'خزنة الحافظة', en: 'Clipboard Vault' },
   'clipboard.title': { ar: 'خزنة الحافظة', en: 'Clipboard Vault' },
@@ -735,5 +754,7 @@ for (const [key, value] of Object.entries(shellCopy)) { dictionaries.ar[key] = v
 
 for (const [key, value] of Object.entries(serviceCopy) ) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(applicationsCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+for (const [key, value] of Object.entries(filesCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+for (const [key, value] of Object.entries(storageCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 
 export function direction(locale: Locale) { return locale === 'ar' ? 'rtl' : 'ltr'; }

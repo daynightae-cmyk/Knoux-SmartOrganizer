@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 K:/Knoux Projects/KNOuX SmartOrganizer/Base
+
+ ✓ tests/studio-organization.test.ts (12 tests | 11 skipped) 73741ms
+   ✓ Studio real Windows transfer and undo (6)
+     ✓ loses nothing while another writer races the original path throughout a move 73739ms (repeat x400)
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 11 skipped (12)
+   Start at  00:37:05
+   Duration  74.02s (tests 100%)
+

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
-  AlertTriangle, AppWindow, Ban, Check, ChevronDown, ChevronUp, Copy, FolderOpen,
+  AlertTriangle, AppWindow, Ban, Check, Copy, FolderOpen,
   ListChecks, RefreshCw, Search, Users, X
 } from 'lucide-react';
 import AppIcon from '../components/app/AppIcon';
+import { ServicesRail } from '../components/world/ServicesRail';
 import {
   actionsFor, applyFacet, buildInventory, dossierFields, facetsFor, groupRecords, inventorySignature, parseDate,
   registryPath, sizeOf, sortRecords,
@@ -13,7 +14,6 @@ import {
 import { fill, formatBytes, formatCount } from '../lib/format';
 import { canRunTool, isActivePhase, progressOf } from '../lib/guards';
 import { iconsBusy, iconsSupported, requestIcons, resetIconCache, subscribeToActivity } from '../lib/icon-broker';
-import { countByState, servicesForWorld, stateLabelKey } from '../lib/service-catalog';
 import { useStore } from '../state/store';
 import type { Locale } from '../locales';
 
@@ -328,64 +328,6 @@ function Dossier({ record, t, locale, onClose, onAction }: DossierProps) {
 
 /* ---------------------------------------------------------------- services */
 
-function ServicesRail({ onRun, onIcons, t, locale }: { onRun: () => void; onIcons: () => void; t: (key: string) => string; locale: Locale }) {
-  const [open, setOpen] = useState(false);
-  const services = useMemo(() => servicesForWorld('applications'), []);
-  const counts = useMemo(() => countByState('applications'), []);
-  const live = counts.operational + counts.partial;
-
-  return (
-    <section className="world-services">
-      <button type="button" className="world-services__head" onClick={() => setOpen(value => !value)} aria-expanded={open}>
-        <span>
-          <h3>{t('app.services.title')}</h3>
-          <p>{t('app.services.hint')}</p>
-        </span>
-        <span className="world-services__state">
-          <span className="world-services__dots" aria-hidden="true">
-            {Array.from({ length: counts.operational }).map((_, index) => <i key={`o${index}`} className="live" />)}
-            {Array.from({ length: counts.partial }).map((_, index) => <i key={`p${index}`} className="partial" />)}
-            {Array.from({ length: counts.planned }).map((_, index) => <i key={`q${index}`} />)}
-          </span>
-          {fill(t('app.services.live'), { live: formatCount(live, locale), total: formatCount(services.length, locale) })}
-          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </span>
-      </button>
-      {open && (
-        <div className="world-services__list">
-          {services.map(service => {
-            const invokable = service.id === 'app-inventory' || service.id === 'app-identity';
-            const classes = ['world-service', `world-service--${service.state}`, invokable ? 'world-service--linked' : ''].filter(Boolean).join(' ');
-            const body = (
-              <>
-                <i className="world-service__mark" aria-hidden="true" />
-                <span>
-                  <span className="world-service__name">{t(service.nameKey)}</span>
-                  <span className="world-service__summary">{t(service.summaryKey)}</span>
-                  {service.limitKey && <span className="world-service__limit">{t(service.limitKey)}</span>}
-                </span>
-                <span className="world-service__pill">{t(stateLabelKey(service.state))}</span>
-              </>
-            );
-            if (!invokable) return <div key={service.id} className={classes}>{body}</div>;
-            return (
-              <button
-                key={service.id}
-                type="button"
-                className={classes}
-                onClick={service.id === 'app-inventory' ? onRun : onIcons}
-                title={t('app.services.openTool')}
-              >
-                {body}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-}
-
 /* -------------------------------------------------------------------- page */
 
 export default function ApplicationsPage() {
@@ -500,7 +442,11 @@ export default function ApplicationsPage() {
   const runAction = useCallback(async (action: string, record: AppRecord) => {
     if (action === 'inspect-folder' && record.installLocation) {
       try {
-        await window.knoux.openPath(record.installLocation);
+        // `shell.openPath` answers with an empty string when Explorer opened the
+        // folder and with its own message when it did not — a missing install
+        // folder is a rejection-free answer, so the text is what decides.
+        const outcome = await window.knoux.openPath(record.installLocation);
+        if (outcome) setNotice(t('app.action.openFailed'));
       } catch {
         setNotice(t('app.action.openFailed'));
       }
@@ -529,8 +475,9 @@ export default function ApplicationsPage() {
     let opened = 0;
     for (const record of targets) {
       try {
-        await window.knoux.openPath(record.installLocation as string);
-        opened += 1;
+        const outcome = await window.knoux.openPath(record.installLocation as string);
+        // Counted only when Explorer said nothing, which is its success answer.
+        if (!outcome) opened += 1;
       } catch {
         // A folder Windows no longer has on disk is skipped, not reported as a success.
       }
@@ -867,14 +814,21 @@ export default function ApplicationsPage() {
       </div>
 
       <ServicesRail
+        world="applications"
+        titleKey="app.services.title"
+        hintKey="app.services.hint"
+        liveKey="app.services.live"
+        openKey="app.services.openTool"
+        invoke={{
+          'app-inventory': () => { void load(); },
+          'app-identity': () => {
+            if (!iconsSupported()) { setNotice(t('app.dossier.iconPending')); return; }
+            resetIconCache();
+            requestIcons(visibleIds.slice(0, 96));
+          }
+        }}
         t={t}
         locale={locale}
-        onRun={load}
-        onIcons={() => {
-          if (!iconsSupported()) { setNotice(t('app.dossier.iconPending')); return; }
-          resetIconCache();
-          requestIcons(visibleIds.slice(0, 96));
-        }}
       />
     </div>
   );
