@@ -1181,6 +1181,39 @@ const EMPTIES_WAITS = [
   { selector: '.atlas__row', min: 1, ms: 240000 }
 ];
 
+/**
+ * What a service-world capture has to wait for.
+ *
+ * The hero and the twelve cards are rendered from the catalogue, so their
+ * presence proves the world itself drew. The card is the unit every category
+ * now shares: if a world shows fewer than twelve of them, its ledger is short
+ * and the capture is evidence of that, not of a world that is simply loading.
+ */
+const WORLD_WAITS = [
+  { selector: '.world-page__hero', min: 1, ms: 90000 },
+  { selector: '.svc-card', min: 12, ms: 45000 }
+];
+
+/** The preview panel, after a card has been opened by the prepare script. */
+const PREVIEW_WAITS = [
+  { selector: '.svc-preview__panel', min: 1, ms: 20000 },
+  { selector: '.svc-preview__steps li', min: 3, ms: 10000 }
+];
+
+/**
+ * Automation keeps its own page and carries the ledger beneath it, so it has
+ * cards but no world hero. Waiting for the hero there reports a missing panel
+ * that was never meant to exist.
+ */
+const AUTOMATION_WAITS = [
+  { selector: '.svc-card', min: 12, ms: 60000 }
+];
+
+/** The home portal shows every world, so eleven tiles are the signal it drew. */
+const PORTAL_WAITS = [
+  { selector: '.portal-tile', min: 11, ms: 60000 }
+];
+
 async function captureVisualEvidence(outputDirectory) {
   const fsPromises = fsp;
   await fsPromises.mkdir(outputDirectory, { recursive: true });
@@ -1263,7 +1296,25 @@ async function captureVisualEvidence(outputDirectory) {
     // same line are most likely to break the row.
     { name: 'en-storage-folder-1366x768', locale: 'en', page: 'storage', width: 1366, height: 768, waits: ATLAS_WAITS, requiresFolder: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=empties] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: EMPTIES_WAITS, interact: 'var r=document.querySelector(".atlas__row"); if(r) r.click();', scrollTo: '.atlas__inspector' },
     { name: 'ar-storage-folder-860x600', locale: 'ar', page: 'storage', width: 860, height: 600, waits: ATLAS_WAITS, requiresFolder: true, prepare: 'var b=document.querySelector(".atlas__lane[data-lane=empties] .atlas__lanefoot .world-control"); if(b) b.click();', waitsAfterPrepare: EMPTIES_WAITS, interact: 'var r=document.querySelector(".atlas__row"); if(r) r.click();', scrollTo: '.atlas__inspector' },
-    { name: 'en-storage-light-1366x768', locale: 'en', page: 'storage', theme: 'light', width: 1366, height: 768, waits: ATLAS_WAITS }
+    { name: 'en-storage-light-1366x768', locale: 'en', page: 'storage', theme: 'light', width: 1366, height: 768, waits: ATLAS_WAITS },
+    // The seven worlds that used to share one generic catalogue page, plus
+    // Automation with its ledger attached. Every one of them now carries the
+    // same twelve-card unit, so a single capture per world proves the breadth,
+    // and the Arabic, narrow and open-preview passes cover the parts that break
+    // first when a card grid meets a real locale and a small window.
+    { name: 'en-cleanup-1366x768', locale: 'en', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'ar-cleanup-1366x768', locale: 'ar', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-cleanup-860x600', locale: 'en', page: 'cleanup', width: 860, height: 600, waits: WORLD_WAITS },
+    { name: 'en-startup-1366x768', locale: 'en', page: 'startup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-system-1366x768', locale: 'en', page: 'system', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-repair-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-services-1366x768', locale: 'en', page: 'services', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-network-1366x768', locale: 'en', page: 'network', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-hardware-1366x768', locale: 'en', page: 'hardware', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-automation-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS },
+    { name: 'en-home-portal-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: PORTAL_WAITS, scrollTo: '.portal-grid' },
+    { name: 'en-repair-preview-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=repair-component-scan] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS },
+    { name: 'ar-cleanup-preview-860x600', locale: 'ar', page: 'cleanup', width: 860, height: 600, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=cleanup-temp-quarantine] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS }
   ];
   // One or more named scenarios (or page names), comma separated, so one layout
   // question gets one answer in about twenty seconds instead of a full pass over

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Cpu, Lock, ShieldCheck, X } from 'lucide-react';
 import type { ToolDefinition } from '@shared/contracts';
 import { stateLabelKey, type ServiceDefinition, type WorldDefinition } from '../../lib/service-catalog';
@@ -29,6 +29,15 @@ interface ServicePreviewProps {
 export function ServicePreview({ service, preview, world, tool, locale, t, focus, onClose, onRun }: ServicePreviewProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+
+  // The dialog holds focus while it is open and hands it back to the card that
+  // opened it. Without the return, closing a preview drops the reader at the top
+  // of the document with no idea where they were.
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => previous?.focus?.();
+  }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
@@ -44,6 +53,18 @@ export function ServicePreview({ service, preview, world, tool, locale, t, focus
     }
   }, [focus, service.id]);
 
+  /** Tab cycles inside the panel instead of wandering into the page behind it. */
+  const trapTab = (event: ReactKeyboardEvent) => {
+    if (event.key !== 'Tab' || !panelRef.current) return;
+    const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+      .filter(node => !node.hasAttribute('disabled') && node.offsetParent !== null);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  };
+
   const inputs = preview ? inputsFor(service, preview) : [];
   const risk = preview ? riskLabels[preview.risk] : null;
   const runs = Boolean(onRun) && service.state !== 'planned';
@@ -53,11 +74,13 @@ export function ServicePreview({ service, preview, world, tool, locale, t, focus
     <div className="svc-preview" role="presentation">
       <button type="button" className="svc-preview__scrim" onClick={onClose} aria-label={t('svc.preview.close')} />
       <section
+        ref={panelRef}
         className={`svc-preview__panel svc-preview__panel--${service.state}`}
         style={{ '--svc-hue': world.accent.hue } as CSSProperties}
         role="dialog"
         aria-modal="true"
         aria-labelledby="svc-preview-title"
+        onKeyDown={trapTab}
         data-service={service.id}
       >
         <header className="svc-preview__head">

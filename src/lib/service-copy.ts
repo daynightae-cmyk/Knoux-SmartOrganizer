@@ -41,6 +41,19 @@ export const serviceCopy: Record<string, { ar: string; en: string }> = {
   'svc.preview.unavailable': { ar: 'التنفيذ غير متاح', en: 'Execution unavailable' },
   'svc.preview.noPreview': { ar: 'لم تُكتب معاينة لهذه الخدمة بعد.', en: 'No preview has been written for this service yet.' },
 
+  // World landing
+  'world.page.eyebrow': { ar: 'عالم خدمة', en: 'Service world' },
+  'world.page.meter': { ar: 'نسبة الخدمات التي تعمل الآن', en: 'Share of services live today' },
+  'world.page.live': { ar: 'تعمل الآن', en: 'Live now' },
+  'world.page.partial': { ar: 'جزئية', en: 'Partial' },
+  'world.page.planned': { ar: 'قيد التخطيط', en: 'Planned' },
+  'world.page.liveOf': { ar: '{live} من {total} خدمة تستجيب اليوم', en: '{live} of {total} services respond today' },
+  'world.page.workspace': { ar: 'مساحة العمل الحقيقية', en: 'Live workspace' },
+  'world.page.workspaceHint': { ar: 'المحركات المسجّلة فقط تعمل هنا، ولا شيء يبدأ تلقائيًا.', en: 'Only registered engines run here, and nothing starts on its own.' },
+  'home.worlds': { ar: 'عوالم KNOuX', en: 'KNOuX worlds' },
+  'home.worldsHint': { ar: 'أحد عشر عالمًا، مئة واثنتان وثلاثون خدمة — كل واحدة قابلة للفتح.', en: 'Eleven worlds, 132 services — every one of them opens.' },
+  'world.page.brief': { ar: 'ما يضمنه هذا العالم', en: 'What this world guarantees' },
+
   // World labels and taglines
   'world.applications.label': { ar: 'التطبيقات', en: 'Applications' },
   'world.applications.tagline': { ar: 'كل برنامج مثبَّت وناشره وهويّته في جرد صادق واحد.', en: 'Every installed program, its publisher and identity, in one honest inventory.' },

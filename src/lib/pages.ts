@@ -79,10 +79,12 @@ export function isCatalogPage(id: PageId): boolean {
 
 /**
  * A world that owns its own head renders its own title, statistics and coverage
- * inside the page, so the shell prints no competing heading above it.
+ * inside the page, so the shell prints no competing heading above it. Every
+ * service world does this now: the landing states its own identity, and the
+ * shell would otherwise print a generic catalogue title over it.
  */
 export function worldOwnsHeader(id: PageId): boolean {
-  return id === 'applications' || id === 'files' || id === 'storage';
+  return id === 'applications' || id === 'files' || id === 'storage' || isCatalogPage(id);
 }
 
 export function pageSubtitleKey(id: PageId): string | null {

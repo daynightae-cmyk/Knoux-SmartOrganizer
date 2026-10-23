@@ -3,6 +3,7 @@ import { CalendarClock, Play, Power, Trash2 } from 'lucide-react';
 import { formatDateTime } from '../lib/format';
 import { useStore } from '../state/store';
 import { SectionTitle } from '../components/common';
+import { ServicesRail } from '../components/world/ServicesRail';
 import type { AutomationSchedule } from '../state/types';
 
 export default function AutomationPage() {
@@ -51,7 +52,6 @@ export default function AutomationPage() {
 
   return (
     <div className="automation-page">
-      <p className="page-description">{t('automation.subtitle')}</p>
       <section className="settings-section">
         <div className="settings-section-head"><h2>{t('automation.create')}</h2></div>
         <div className="settings-grid">
@@ -107,6 +107,14 @@ export default function AutomationPage() {
           </div>
         )}
       </section>
+      <ServicesRail
+        world="automation"
+        titleKey="svc.services.title"
+        hintKey="svc.services.hint"
+        liveKey="world.page.liveOf"
+        t={t}
+        locale={locale}
+      />
     </div>
   );
 }

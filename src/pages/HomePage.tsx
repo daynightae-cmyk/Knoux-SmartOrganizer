@@ -1,9 +1,10 @@
 import { Activity, ClipboardCopy, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer, FolderOpen } from 'lucide-react';
 import { motion } from 'motion/react';
+import type { CSSProperties } from 'react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
-import { filterToolsByPage } from '../lib/guards';
+import { countByState, worlds } from '../lib/service-catalog';
 import { toolIcon } from '../lib/icons';
-import { pageGroups } from '../lib/pages';
+import { pageDef } from '../lib/pages';
 import { useStore } from '../state/store';
 import { SectionTitle, StatCard } from '../components/common';
 
@@ -50,19 +51,39 @@ export default function HomePage() {
       </motion.section>
 
       {workspace.showWorkspaces && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
-        <SectionTitle title={t('home.workspaces')} subtitle={t('home.offline')} action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}</button>} />
-        <div className="workspace-grid">
-          {pageGroups.filter(g => g.id !== 'system').flatMap(g => g.pages).filter(p => p.id !== 'home').slice(0, 8).map(item => {
-            const count = filterToolsByPage(tools, item.id).length;
+        <SectionTitle title={t('home.worlds')} subtitle={t('home.worldsHint')} action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}</button>} />
+        <div className="portal-grid">
+          {worlds.map(world => {
+            const counts = countByState(world.id);
+            const target = pageDef(world.id);
+            const Icon = target?.icon;
             return (
-              <motion.button key={item.id} className="workspace-card" variants={cardMotion} onClick={() => setPage(item.id)}>
-                <span className="workspace-icon" aria-hidden="true"><item.icon size={18} /></span>
-                <strong>{t(item.nameKey)}</strong>
-                <small>{item.id === 'studio' ? t('studio.subtitle') : formatCount(count, locale) + ' ' + t('home.entries')}</small>
+              <motion.button
+                key={world.id}
+                className="portal-tile"
+                style={{ '--world-hue': world.accent.hue } as CSSProperties}
+                variants={cardMotion}
+                onClick={() => setPage(world.id)}
+              >
+                <span className="portal-tile__head">
+                  <span className="portal-tile__icon" aria-hidden="true">{Icon && <Icon size={17} />}</span>
+                  <strong>{t(world.labelKey)}</strong>
+                </span>
+                <small>{t(world.taglineKey)}</small>
+                <span className="portal-tile__counts">
+                  <i className="live" aria-hidden="true" />{formatCount(counts.operational, locale)}
+                  <i className="partial" aria-hidden="true" />{formatCount(counts.partial, locale)}
+                  <i aria-hidden="true" />{formatCount(counts.planned, locale)}
+                </span>
               </motion.button>
             );
           })}
         </div>
+        <p className="portal-legend">
+          <i className="live" aria-hidden="true" />{t('world.page.live')}
+          <i className="partial" aria-hidden="true" />{t('world.page.partial')}
+          <i aria-hidden="true" />{t('world.page.planned')}
+        </p>
       </motion.section>}
 
       {workspace.showRecent && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
