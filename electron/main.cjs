@@ -37,6 +37,7 @@ let settingsStore = null;
 let automationStore = null;
 let startupManager = null;
 let clipboardVault = null;
+let studioController = null;
 const startedAt = new Date().toISOString();
 const privilegedRunner = createPrivilegedRunner();
 const toolDefinitions = createToolRegistry(engine => (context, inputs) => runTool(context, { engine }, inputs), { availabilityResolver: engine => ['serviceControl', 'serviceStartupUndo'].includes(engine) ? privilegedRunner.probeService() : privilegedRunner.probe(engine) });
@@ -1261,11 +1262,12 @@ function createWindow() {
   mainWindow.on('close', async event => {
     if (app.isQuiting) return;
     if (settingsCache?.general.closeBehavior === 'tray') { event.preventDefault(); mainWindow.hide(); return; }
-    const shouldAsk = settingsCache?.general.closeBehavior === 'ask' || (settingsCache?.general.confirmExitActiveOperations && operations.size > 0);
+    const hasActiveOperations = operations.size > 0 || studioController?.isBusy();
+    const shouldAsk = settingsCache?.general.closeBehavior === 'ask' || (settingsCache?.general.confirmExitActiveOperations && hasActiveOperations);
     if (shouldAsk) {
       event.preventDefault();
       const arabic = settingsCache?.localization.locale === 'ar';
-      const answer = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: arabic ? ['إلغاء', 'خروج'] : ['Cancel', 'Exit'], defaultId: 0, cancelId: 0, title: 'KNOuX SmartOrganizer', message: operations.size > 0 ? (arabic ? 'لا تزال هناك عمليات نشطة. هل تريد الخروج؟' : 'Operations are still active. Exit anyway?') : (arabic ? 'هل تريد الخروج من KNOuX SmartOrganizer؟' : 'Exit KNOuX SmartOrganizer?') });
+      const answer = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: arabic ? ['إلغاء', 'خروج'] : ['Cancel', 'Exit'], defaultId: 0, cancelId: 0, title: 'KNOuX SmartOrganizer', message: hasActiveOperations ? (arabic ? 'لا تزال هناك عمليات نشطة. هل تريد الخروج؟' : 'Operations are still active. Exit anyway?') : (arabic ? 'هل تريد الخروج من KNOuX SmartOrganizer؟' : 'Exit KNOuX SmartOrganizer?') });
       if (answer.response === 1) { app.isQuiting = true; shutdownBackgroundWorkers(); app.quit(); }
     }
   });
@@ -1291,6 +1293,17 @@ app.whenReady().then(async () => {
   const scheduledId = automationArgument();
   if (scheduledId) { const schedule = await automationStore.find(scheduledId); if (!schedule || !schedule.enabled) { app.exit(2); return; } const completed = await execute({ toolId: schedule.toolId, inputs: {} }); await automationStore.recordRun(schedule.id, completed); app.exit(completed.success ? 0 : 1); return; }
   createWindow(); createTray();
+  // Smart Organization Studio: native-granted library and destination registry,
+  // verified plan execution, durable journal and bounded thumbnails.
+  studioController = require('./studio/register-studio-ipc.cjs').registerStudioIpc({
+    ipcMain,
+    dialog,
+    shell,
+    windowProvider: () => mainWindow,
+    settingsProvider: getSettings,
+    nativeImage,
+    userDataPath: app.getPath('userData')
+  });
   ipcMain.handle('knoux:app-info', async () => ({ version: app.getVersion(), startedAt, platform: process.platform, arch: process.arch, isPackaged: app.isPackaged, electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, releaseChannel: 'stable', codeSigning: signingInfoCache }));
   ipcMain.handle('knoux:tools-list', () => serializeRegistry(toolDefinitions));
   ipcMain.handle('knoux:settings-get', getSettings);
@@ -1338,7 +1351,7 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); else mainWindow.show(); });
 // Every exit path stops the background workers first, so no watcher is still
 // polling the operating system while the runtime is being torn down.
-app.on('before-quit', () => { app.isQuiting = true; shutdownBackgroundWorkers(); });
+app.on('before-quit', () => { app.isQuiting = true; try { if (studioController) studioController.dispose(); } catch { /* Studio already closed */ } shutdownBackgroundWorkers(); });
 // A crash is recorded rather than left as an unexplained exit. The runtime
 // reports the reason and the status code, so a failure names its own cause.
 app.on('render-process-gone', (_event, _webContents, details) => { log('error', 'renderer-gone', { reason: details?.reason || 'unknown', exitCode: details?.exitCode ?? null }); });

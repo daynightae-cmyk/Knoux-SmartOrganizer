@@ -6,7 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { Locale } from '../locales';
 
 export type PageId =
-  | 'home' | 'scan' | 'clipboard' | 'storage' | 'files' | 'applications' | 'cleanup' | 'startup'
+  | 'home' | 'scan' | 'studio' | 'clipboard' | 'storage' | 'files' | 'applications' | 'cleanup' | 'startup'
   | 'system' | 'repair' | 'services' | 'network' | 'hardware' | 'automation' | 'history' | 'settings';
 
 export type GroupId = 'home' | 'organize' | 'optimize' | 'care' | 'automation' | 'system';
@@ -27,6 +27,7 @@ export const pageGroups: Array<{ id: GroupId; nameKey: string; pages: PageDef[] 
     page('clipboard', 'nav.clipboard', ClipboardCopy, 'home')
   ] },
   { id: 'organize', nameKey: 'nav.group.organize', pages: [
+    page('studio', 'studio.title', FolderOpen, 'organize'),
     page('storage', 'nav.storage', HardDrive, 'organize'),
     page('files', 'nav.files', FolderOpen, 'organize'),
     page('applications', 'nav.apps', AppWindow, 'organize')
@@ -64,6 +65,7 @@ export function pageDef(id: string): PageDef | undefined {
 /** Page title translation key: categories use the tools catalogue title. */
 export function pageTitleKey(id: PageId): string {
   if (id === 'home') return 'home.title';
+  if (id === 'studio') return 'studio.title';
   if (id === 'history') return 'history.title';
   if (id === 'settings') return 'settings.title';
   if (id === 'automation') return 'nav.automation';
@@ -72,11 +74,12 @@ export function pageTitleKey(id: PageId): string {
 }
 
 export function isCatalogPage(id: PageId): boolean {
-  return !['home', 'scan', 'clipboard', 'automation', 'history', 'settings'].includes(id);
+  return !['home', 'scan', 'studio', 'clipboard', 'automation', 'history', 'settings'].includes(id);
 }
 
 export function pageSubtitleKey(id: PageId): string | null {
   if (id === 'home') return 'home.subtitle';
+  if (id === 'studio') return 'studio.subtitle';
   if (id === 'history') return 'history.subtitle';
   if (id === 'settings') return 'settings.subtitle';
   if (id === 'automation') return 'automation.subtitle';
