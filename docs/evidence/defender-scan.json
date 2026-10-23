@@ -1,11 +1,11 @@
 {
-  "startedAt": "2026-10-23T04:11:47.5745851+04:00",
+  "startedAt": "2026-10-23T06:16:32.0048574+04:00",
   "antivirusEnabled": true,
   "realTimeProtectionEnabled": true,
   "quickScanEndTime": "2026-10-22T23:02:02.4870000+04:00",
-  "customScanStartedAt": "2026-10-23T04:12:06.8707011+04:00",
-  "customScanCompletedAt": "2026-10-23T04:12:08.6204200+04:00",
-  "scannedPath": "Release\\KNOuX-SmartOrganizer-Setup-x64.exe",
+  "customScanStartedAt": "2026-10-23T06:16:38.6145796+04:00",
+  "customScanCompletedAt": "2026-10-23T06:16:40.1769054+04:00",
+  "scannedPath": "release\\KNOuX-SmartOrganizer-Setup-x64.exe (source 5315e48 + deps fix, Electron 43.8.3)",
   "threatsFoundMatchingScannedPath": 0,
-  "completedAt": "2026-10-23T04:12:08.7862270+04:00"
+  "completedAt": "2026-10-23T06:16:40.4350557+04:00"
 }
