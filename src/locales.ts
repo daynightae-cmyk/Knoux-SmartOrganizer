@@ -3,6 +3,7 @@ import { stageCopy } from './lib/stage-copy';
 import { applicationsCopy } from './lib/applications-copy';
 import { filesCopy } from './lib/files-copy';
 import { storageCopy } from './lib/storage-copy';
+import { flowCopy } from './lib/flow-copy';
 
 export type Locale = 'ar' | 'en';
 export type Dictionary = Record<string, string>;
@@ -758,5 +759,6 @@ for (const [key, value] of Object.entries(stageCopy)) { dictionaries.ar[key] = v
 for (const [key, value] of Object.entries(applicationsCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(filesCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 for (const [key, value] of Object.entries(storageCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
+for (const [key, value] of Object.entries(flowCopy)) { dictionaries.ar[key] = value.ar; dictionaries.en[key] = value.en; }
 
 export function direction(locale: Locale) { return locale === 'ar' ? 'rtl' : 'ltr'; }

@@ -201,6 +201,27 @@ async function main() {
           }
         }
       }
+      // Flow Studio is a four-panel editor. A capture that only proves the
+      // twelve cards still drew is the old Automation page, so each panel and
+      // the draft canvas are required, and an opened preview must be a native
+      // modal whose focus stayed inside and returned to its card after Escape.
+      if (!wrongWorld && scenario.page === 'automation') {
+        if (!(scenario.flowNodes >= 5)) failures.push(`${scenario.name}: the flow canvas rendered ${scenario.flowNodes ?? 0} nodes; five canonical steps are required.`);
+        if (!scenario.flowLibrary) failures.push(`${scenario.name}: the Flow Studio library is missing.`);
+        if (!scenario.flowCanvas) failures.push(`${scenario.name}: the Flow Studio canvas is missing.`);
+        if (!scenario.flowConfig) failures.push(`${scenario.name}: the Flow Studio node configuration rail is missing.`);
+        if (!scenario.flowPreview) failures.push(`${scenario.name}: the Flow Studio execution preview is missing.`);
+        if (scenario.requiresEditedFlow && !(scenario.flowNodes >= 6)) failures.push(`${scenario.name}: adding a node through the canvas control left ${scenario.flowNodes ?? 0} nodes; the editor is not interactive.`);
+      }
+      if (scenario.requiresDialog) {
+        if (!scenario.dialogOpen) failures.push(`${scenario.name}: the service preview dialog did not open.`);
+        if (!scenario.dialogModal) failures.push(`${scenario.name}: the preview dialog is open but not modal, so the page behind it remains interactive.`);
+        if (!scenario.dialogFocusInside) failures.push(`${scenario.name}: focus did not enter the preview dialog.`);
+        const keyboard = scenario.dialogKeyboard || {};
+        if (keyboard.tabStayedInside !== true) failures.push(`${scenario.name}: Tab moved focus out of the modal preview.`);
+        if (keyboard.closedOnEscape !== true) failures.push(`${scenario.name}: Escape did not close the preview dialog.`);
+        if (keyboard.focusRestoredToCard !== true) failures.push(`${scenario.name}: focus was not restored to the card that opened the preview (ended on ${keyboard.activeClassAfterEscape || 'nothing'}).`);
+      }
       // Text that cannot be read is not a matter of taste. Anything below a
       // two-to-one ratio against every background it could be sitting on is
       // invisible, and the usual cause is a theme that repaints the surfaces

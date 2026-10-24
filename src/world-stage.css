@@ -152,3 +152,89 @@ button.stage__row:hover { background: var(--surface-hover); }
   .stage__head h2 { font-size: var(--text-2xl); }
   .stage__flow { flex-direction: column; }
 }
+
+/* ---------------------------------------------------------- shared lighting
+   The reference set gives every world a lit header and a composed surface
+   rather than a flat dark card. These are shared tokens, not per-world
+   rewrites: the seven specialist stages inherit them untouched. */
+
+.stage__head {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(62% 130% at 88% -18%, color-mix(in srgb, var(--world-hue) 17%, transparent), transparent 64%),
+    radial-gradient(46% 110% at 6% 120%, color-mix(in srgb, #6366f1 12%, transparent), transparent 68%),
+    linear-gradient(158deg, color-mix(in srgb, var(--world-hue) 8%, var(--surface-raised)), var(--surface));
+  box-shadow: inset 0 1px 0 #ffffff0d, 0 22px 54px #00000018;
+}
+.stage__head::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, #ffffff07 1px, transparent 1px);
+  background-size: 96px 100%;
+  mask-image: linear-gradient(90deg, transparent, black 32%, black 70%, transparent);
+  opacity: .55;
+}
+.stage__head::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 14%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--world-hue) 62%, white 38%), transparent);
+  opacity: .5;
+}
+.stage__head-row { position: relative; z-index: 1; }
+.stage__glyph {
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--world-hue) 22%, transparent), color-mix(in srgb, var(--world-hue) 8%, transparent));
+  box-shadow: inset 0 1px 0 #ffffff2b, 0 10px 22px color-mix(in srgb, var(--world-hue) 13%, transparent);
+}
+.stage__panel {
+  background:
+    linear-gradient(168deg, color-mix(in srgb, var(--surface-raised) 50%, transparent), transparent 26%),
+    var(--surface);
+  box-shadow: inset 0 1px 0 #ffffff0a, 0 16px 38px #00000012;
+}
+.stage__stat {
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--world-hue) 8%, transparent), transparent 58%),
+    var(--surface);
+  box-shadow: inset 0 1px 0 #ffffff08;
+}
+
+/* The light theme is not the dark theme with the lights on: accent text is
+   mixed toward the ink token, selected rows get a real selected background,
+   and every glyph that used white in its colour mix is re-mixed for paper. */
+html[data-theme="light"] .stage__head {
+  background:
+    radial-gradient(62% 130% at 88% -18%, color-mix(in srgb, var(--world-hue) 15%, #fff), transparent 64%),
+    radial-gradient(46% 110% at 6% 120%, #6366f10d, transparent 68%),
+    linear-gradient(158deg, #ffffff, var(--surface-raised));
+  box-shadow: inset 0 1px 0 #fff, 0 18px 42px #29315e10;
+}
+html[data-theme="light"] .stage__head::before { background-image: linear-gradient(90deg, #17152208 1px, transparent 1px); opacity: .7; }
+html[data-theme="light"] .stage__head::after { opacity: .7; }
+html[data-theme="light"] .stage__glyph {
+  color: color-mix(in srgb, var(--world-hue) 56%, #171522);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--world-hue) 13%, #fff), #fff);
+  border-color: color-mix(in srgb, var(--world-hue) 26%, #fff);
+  box-shadow: inset 0 1px 0 #fff, 0 8px 18px color-mix(in srgb, var(--world-hue) 10%, transparent);
+}
+html[data-theme="light"] .stage__stat { background: #fff; box-shadow: 0 8px 22px #29315e0b; }
+html[data-theme="light"] .stage__stat > svg { color: color-mix(in srgb, var(--world-hue) 58%, #171522); }
+html[data-theme="light"] .stage__step b {
+  color: color-mix(in srgb, var(--world-hue) 58%, #171522);
+  background: color-mix(in srgb, var(--world-hue) 10%, #fff);
+  border-color: color-mix(in srgb, var(--world-hue) 24%, #fff);
+}
+html[data-theme="light"] .stage__row--on {
+  background: color-mix(in srgb, var(--world-hue) 9%, #fff);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--world-hue) 62%, #171522);
+}
+html[dir="rtl"][data-theme="light"] .stage__row--on { box-shadow: inset -3px 0 0 color-mix(in srgb, var(--world-hue) 62%, #171522); }
+html[data-theme="light"] .stage__panel { background: linear-gradient(168deg, #fff, var(--surface-raised) 82%); box-shadow: 0 12px 30px #29315e0c; }

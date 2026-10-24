@@ -137,24 +137,31 @@
    Docked at the inline end. It explains before it offers to act: the run
    control is the only disabled thing when the engine is not there. */
 
+/* A native modal dialog, not a positioned sheet. showModal() puts it in the
+   top layer, so the page behind it is genuinely inert while it is open; the
+   ::backdrop replaces the old scrim button. */
 .svc-preview {
   --svc-dir: 1;
   position: fixed;
   inset: 0;
   z-index: 60;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
   display: flex;
   justify-content: flex-end;
+  overflow: hidden;
 }
+.svc-preview:not([open]) { display: none; }
+.svc-preview::backdrop { background: #05030bcc; backdrop-filter: blur(3px); }
 html[dir="rtl"] .svc-preview { --svc-dir: -1; }
-
-.svc-preview__scrim {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: #05030bcc;
-  backdrop-filter: blur(3px);
-  cursor: pointer;
-}
+body:has(dialog.svc-preview[open]) { overflow: hidden; }
 
 .svc-preview__panel {
   position: relative;
@@ -511,3 +518,14 @@ html[dir="rtl"] .svc-preview { --svc-dir: -1; }
   border: 1px solid var(--border-soft); background: var(--surface-raised);
   color: var(--muted); font-size: 10px;
 }
+
+/* Light theme: card glyphs, primary buttons and the modal boundary need ink,
+   not white, mixed into their accent. */
+html[data-theme="light"] .svc-card { box-shadow: 0 10px 26px #29315e0d; }
+html[data-theme="light"] .svc-card:hover { box-shadow: 0 18px 40px #29315e18; }
+html[data-theme="light"] .svc-card__icon { color: color-mix(in srgb, var(--svc-hue) 58%, #171522); background: color-mix(in srgb, var(--svc-hue) 11%, #fff); border-color: color-mix(in srgb, var(--svc-hue) 26%, #fff); }
+html[data-theme="light"] .svc-card__primary { color: color-mix(in srgb, var(--svc-hue) 52%, #171522); background: color-mix(in srgb, var(--svc-hue) 10%, #fff); border-color: color-mix(in srgb, var(--svc-hue) 32%, var(--border)); }
+html[data-theme="light"] .svc-card__run { color: color-mix(in srgb, var(--primary) 78%, #171522); }
+html[data-theme="light"] .svc-preview::backdrop { background: #171522a8; }
+html[data-theme="light"] .svc-preview__panel { box-shadow: -30px 0 90px #17152233; }
+html[data-theme="light"] .svc-preview__step-n { background: color-mix(in srgb, var(--svc-hue) 12%, #fff); border-color: color-mix(in srgb, var(--svc-hue) 30%, #fff); }

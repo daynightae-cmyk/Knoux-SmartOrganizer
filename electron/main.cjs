@@ -1201,11 +1201,15 @@ const PREVIEW_WAITS = [
 ];
 
 /**
- * Automation keeps its own page and carries the ledger beneath it, so it has
- * cards but no world hero. Waiting for the hero there reports a missing panel
- * that was never meant to exist.
+ * Automation is the Flow Studio now: the library, the node canvas, the node
+ * rail and the execution preview all draw from local state, and the twelve
+ * canonical cards sit beneath them. A capture that found cards but no canvas
+ * would be a picture of the old page filed under the new name.
  */
 const AUTOMATION_WAITS = [
+  { selector: '.flowstudio', min: 1, ms: 60000 },
+  { selector: '.flow-node', min: 5, ms: 30000 },
+  { selector: '.flow-preview', min: 1, ms: 30000 },
   { selector: '.svc-card', min: 12, ms: 60000 }
 ];
 
@@ -1313,7 +1317,23 @@ async function captureVisualEvidence(outputDirectory) {
     { name: 'en-hardware-1366x768', locale: 'en', page: 'hardware', width: 1366, height: 768, waits: WORLD_WAITS },
     { name: 'ar-startup-1366x768', locale: 'ar', page: 'startup', width: 1366, height: 768, waits: WORLD_WAITS },
     { name: 'en-repair-860x600', locale: 'en', page: 'repair', width: 860, height: 600, waits: WORLD_WAITS, scrollTo: '.stage__flow' },
-    { name: 'en-automation-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS },
+    { name: 'en-automation-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, scrollTo: '.flowstudio' },
+    // Flow Studio evidence: the editor at desktop density, the same editor in
+    // Arabic, a light-theme pass, the narrow window and the execution preview.
+    { name: 'en-flow-studio-1920x1080', locale: 'en', page: 'automation', width: 1920, height: 1080, waits: AUTOMATION_WAITS, scrollTo: '.flowstudio' },
+    { name: 'ar-flow-studio-1920x1080', locale: 'ar', page: 'automation', width: 1920, height: 1080, waits: AUTOMATION_WAITS, scrollTo: '.flowstudio' },
+    { name: 'en-flow-studio-light-1366x768', locale: 'en', theme: 'light', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, scrollTo: '.flow-canvas' },
+    { name: 'en-flow-studio-860x600', locale: 'en', page: 'automation', width: 860, height: 600, waits: AUTOMATION_WAITS, scrollTo: '.flow-canvas' },
+    { name: 'en-flow-studio-head-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS },
+    // The canvas must be interactive, not an illustration: load a template,
+    // then add a node through the real control and wait for the sixth card.
+    { name: 'en-flow-studio-edited-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, prepare: 'var tpl=document.querySelector(".flow-item--template .flow-item__main"); if(tpl) tpl.click(); setTimeout(function(){ var add=document.querySelector(".flow-add .world-control"); if(add) add.click(); }, 420);', waitsAfterPrepare: [{ selector: '.flow-node', min: 6, ms: 12000 }], requiresEditedFlow: true, scrollTo: '.flowstudio' },
+    { name: 'en-cleanup-light-1366x768', locale: 'en', theme: 'light', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-flow-preview-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, scrollTo: '.flow-preview' },
+    // The native dialog pass proves modal semantics from the live document and
+    // then exercises Tab and Escape with real input events after the frame is
+    // taken, so the keyboard evidence does not need a second screenshot.
+    { name: 'en-automation-preview-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, prepare: 'var c=document.querySelector("[data-service=auto-smart-scan] .svc-card__primary"); if(c){ c.focus(); c.click(); }', waitsAfterPrepare: PREVIEW_WAITS, requiresDialog: true },
     { name: 'en-home-portal-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: PORTAL_WAITS, scrollTo: '.portal-grid' },
     { name: 'en-repair-preview-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=repair-component-scan] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS },
     { name: 'ar-cleanup-preview-860x600', locale: 'ar', page: 'cleanup', width: 860, height: 600, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=cleanup-temp-quarantine] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS }
@@ -1781,7 +1801,12 @@ async function captureVisualEvidence(outputDirectory) {
               // The world is part of the ask, and the app only honours a stored page
               // when it restores the previous section — so a page that never arrived
               // is caught here, in nine seconds, rather than by a 180-second wait.
-              if (scenario.page && state.page && state.page !== scenario.page) { await settle(200); continue; }
+              // An empty data-page is still the renderer's boot state, not the
+              // requested world. Accepting it here lets the harness begin a
+              // multi-minute data wait against whichever page finishes restoring
+              // later, and can file Startup pixels under a Storage scenario.
+              // Require the renderer to name the exact world before grading it.
+              if (scenario.page && state.page !== scenario.page) { await settle(200); continue; }
               scenarioState = state;
             }
             if (!scenarioState) {
@@ -2043,6 +2068,19 @@ async function captureVisualEvidence(outputDirectory) {
               if (!rect.width || !parentRect.width) return false;
               return rect.right > parentRect.right + 4 || rect.left < parentRect.left - 4;
             }).slice(0, 6).map(node => ({ tag: node.tagName.toLowerCase(), className: String(node.className || '').slice(0, 90), width: Math.round(node.getBoundingClientRect().width), parentWidth: Math.round(node.parentElement.getBoundingClientRect().width) })),
+            // Flow Studio evidence: the canvas nodes, the three panels that
+            // make it an editor, and the state of a native modal when one is
+            // open. :modal is the browser's own answer that the dialog has been
+            // lifted out of the page, which is what makes the background inert.
+            flowNodes: document.querySelectorAll('.flow-node').length,
+            flowLibrary: !!document.querySelector('.flow-lib'),
+            flowCanvas: !!document.querySelector('.flow-canvas'),
+            flowConfig: !!document.querySelector('.flow-config'),
+            flowPreview: !!document.querySelector('.flow-preview'),
+            flowMode: document.querySelector('.flow-canvas__mode')?.textContent?.trim() || null,
+            dialogOpen: (() => { const dialog = document.querySelector('dialog.svc-preview'); return !!dialog && dialog.open; })(),
+            dialogModal: (() => { const dialog = document.querySelector('dialog.svc-preview'); return !!dialog && dialog.matches(':modal'); })(),
+            dialogFocusInside: (() => { const dialog = document.querySelector('dialog.svc-preview'); return !!dialog && dialog.contains(document.activeElement); })(),
             focusable: document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').length,
             headings: Array.from(document.querySelectorAll('h1, h2')).slice(0, 6).map(node => (node.textContent || '').trim()).filter(Boolean)
           }))()`);
@@ -2054,6 +2092,44 @@ async function captureVisualEvidence(outputDirectory) {
           await progress(`captured ${scenario.name}`);
           const file = path.join(outputDirectory, `${scenario.name}.png`);
           await fsPromises.writeFile(file, image.toPNG());
+          // A dialog that is visually open is not necessarily modal. After the
+          // frame is written, press Tab and Escape as real input events and
+          // read the document back: focus must stay inside while open, and it
+          // must return to the card that opened the preview after Escape.
+          let dialogKeyboard = null;
+          if (scenario.requiresDialog && metrics.dialogOpen) {
+            mainWindow.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' });
+            mainWindow.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Tab' });
+            await settle(180);
+            const afterTab = await mainWindow.webContents.executeJavaScript(`(() => {
+              const dialog = document.querySelector('dialog.svc-preview');
+              return {
+                open: !!dialog && dialog.open,
+                modal: !!dialog && dialog.matches(':modal'),
+                focusInside: !!dialog && dialog.contains(document.activeElement),
+                activeClass: String(document.activeElement && document.activeElement.className || '')
+              };
+            })()`).catch(() => ({}));
+            mainWindow.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' });
+            mainWindow.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' });
+            await settle(320);
+            const afterEscape = await mainWindow.webContents.executeJavaScript(`(() => ({
+              previewOpen: !!document.querySelector('dialog.svc-preview[open]'),
+              restoredService: (document.activeElement && document.activeElement.closest('[data-service]') && document.activeElement.closest('[data-service]').getAttribute('data-service')) || null,
+              activeClass: String(document.activeElement && document.activeElement.className || '')
+            }))()`).catch(() => ({}));
+            dialogKeyboard = {
+              modalAtOpen: metrics.dialogModal,
+              focusInsideAtOpen: metrics.dialogFocusInside,
+              tabStayedInside: afterTab.focusInside === true,
+              modalAfterTab: afterTab.modal === true,
+              closedOnEscape: afterEscape.previewOpen === false,
+              focusRestoredToCard: afterEscape.restoredService === 'auto-smart-scan',
+              restoredService: afterEscape.restoredService || null,
+              activeClassAfterEscape: afterEscape.activeClass || ''
+            };
+            await progress(`dialog-keyboard ${scenario.name} ${JSON.stringify(dialogKeyboard)}`);
+          }
           const capturedBounds = mainWindow.getBounds();
           const frame = image.getSize();
           const scale = display.scaleFactor || 1;
@@ -2067,7 +2143,7 @@ async function captureVisualEvidence(outputDirectory) {
           const sizeMatches = capture.boundsBeforeFrame.width === target.width
             && capture.boundsBeforeFrame.height === target.height && frameMatches;
           if (!sizeMatches) await progress(`size-drift ${scenario.name} target=${target.width}x${target.height} before=${capture.boundsBeforeFrame.width}x${capture.boundsBeforeFrame.height} content=${capture.contentBeforeFrame.width}x${capture.contentBeforeFrame.height} frame=${frame.width}x${frame.height} after=${capturedBounds.width}x${capturedBounds.height}`);
-          results.push({ ...scenario, ...metrics, expectedTheme: scenario.theme || null, page: scenario.page, documentPage: metrics.page || null, pageReached: metrics.page === scenario.page, requestedWidth: scenario.width, requestedHeight: scenario.height, targetWidth: target.width, targetHeight: target.height, clampedToWorkArea: clamped, workArea, displayScale: scale, capturedWidth: capture.boundsBeforeFrame.width, capturedHeight: capture.boundsBeforeFrame.height, viewportWidth: capture.contentBeforeFrame.width, viewportHeight: capture.contentBeforeFrame.height, boundsAfterCaptureWidth: capturedBounds.width, boundsAfterCaptureHeight: capturedBounds.height, frameWidth: frame.width, frameHeight: frame.height, frameMatches, boundsReasserts: capture.reasserts, surfaceNudges: capture.nudges, maximizeRecoveries: maximizeRecoveries - recoveriesBefore, minimizeRecoveries: minimizeRecoveries - minimisesBefore, scrolledTo: capture.scrolledAtFrame || scrolledTo, captureSizeMatches: sizeMatches, file: path.basename(file), captured: true });
+          results.push({ ...scenario, ...metrics, expectedTheme: scenario.theme || null, page: scenario.page, documentPage: metrics.page || null, pageReached: metrics.page === scenario.page, requestedWidth: scenario.width, requestedHeight: scenario.height, targetWidth: target.width, targetHeight: target.height, clampedToWorkArea: clamped, workArea, displayScale: scale, capturedWidth: capture.boundsBeforeFrame.width, capturedHeight: capture.boundsBeforeFrame.height, viewportWidth: capture.contentBeforeFrame.width, viewportHeight: capture.contentBeforeFrame.height, boundsAfterCaptureWidth: capturedBounds.width, boundsAfterCaptureHeight: capturedBounds.height, frameWidth: frame.width, frameHeight: frame.height, frameMatches, boundsReasserts: capture.reasserts, surfaceNudges: capture.nudges, maximizeRecoveries: maximizeRecoveries - recoveriesBefore, minimizeRecoveries: minimizeRecoveries - minimisesBefore, scrolledTo: capture.scrolledAtFrame || scrolledTo, captureSizeMatches: sizeMatches, dialogKeyboard, file: path.basename(file), captured: true });
           completed = true;
         } catch (error) {
           lastError = error;

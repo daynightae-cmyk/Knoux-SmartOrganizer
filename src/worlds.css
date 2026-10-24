@@ -198,3 +198,29 @@ html[data-theme="light"] .world-facet[aria-pressed="true"] b { color: color-mix(
   .world-metric { padding-inline: var(--space-3); }
   .world-ribbon__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Light theme: pressed/selected controls must not borrow the dark world tint.
+   --world-quiet is a dark surface by design, so a selected facet in the light
+   theme used to read as a hole in the page. These are shared across worlds. */
+html[data-theme="light"] .world-facet[aria-pressed="true"],
+html[data-theme="light"] .world-control-group button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--world-hue) 12%, #fff);
+  color: var(--text);
+}
+html[data-theme="light"] .world-control {
+  box-shadow: inset 0 1px 0 #fff, 0 2px 6px #29315e08;
+}
+html[data-theme="light"] .world-control:hover {
+  background: #fff;
+  border-color: color-mix(in srgb, var(--world-hue) 42%, var(--border));
+  box-shadow: 0 6px 16px #29315e12;
+}
+.world-control { box-shadow: inset 0 1px 0 #ffffff0d; }
+.world-control:hover { box-shadow: 0 7px 20px #00000020, inset 0 1px 0 #ffffff12; }
+.world-control--primary {
+  box-shadow: 0 9px 24px color-mix(in srgb, var(--world-hue) 14%, transparent), inset 0 1px 0 #ffffff24;
+}
+.world-control--primary:hover {
+  background: linear-gradient(103deg, color-mix(in srgb, var(--world-hue) 44%, var(--surface)), var(--surface-raised));
+  border-color: color-mix(in srgb, var(--world-hue) 54%, var(--border));
+}

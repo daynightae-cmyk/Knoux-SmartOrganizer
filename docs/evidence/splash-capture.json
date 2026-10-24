@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-10-24T00:38:37.085Z",
+  "source": "packaged application, real boot after Page.reload()",
+  "screenshot": "docs/evidence/visual-acceptance/en-splash-startup.png",
+  "captureTechnique": "debugger pause of the live Splash state; CSS transition settles on the compositor",
+  "splashVisibleAtMs": 100,
+  "frozenAtMs": 168,
+  "splashMountedAtPause": true,
+  "artificialDelayInApplication": false,
+  "fabricatedProgress": false,
+  "note": "No component, timer or progress value was added to the product. The renderer was paused for the shutter, then resumed into its normal boot."
+}

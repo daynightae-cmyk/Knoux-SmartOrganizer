@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useRef, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Cpu, Lock, ShieldCheck, X } from 'lucide-react';
 import type { ToolDefinition } from '@shared/contracts';
 import { stateLabelKey, type ServiceDefinition, type WorldDefinition } from '../../lib/service-catalog';
@@ -8,11 +8,18 @@ import type { Locale } from '../../locales';
 /**
  * The preview every card opens.
  *
- * It answers four questions in order — why the service exists, what you would
- * configure, what it does step by step, and what you get back — then states the
- * authority it needs. A service with a real engine offers "Run in workspace",
- * which hands over to the existing runner rather than duplicating it; a service
- * without one shows the same design and disables exactly that one control.
+ * It is a native modal `<dialog>`: `showModal()` lifts it into the top layer,
+ * which makes the application behind it inert in the engine itself rather than
+ * hiding a few focusable nodes with aria-hidden. Focus enters the panel,
+ * Tab is trapped by both the platform and the fallback below, Escape cancels,
+ * and the cleanup returns focus to the card that opened it.
+ *
+ * The preview answers four questions in order — why the service exists, what
+ * you would configure, what it does step by step, and what you get back — then
+ * states the authority it needs. A service with a real engine offers "Run in
+ * workspace", which hands over to the existing runner rather than duplicating
+ * it; a service without one shows the same design and disables exactly that
+ * one control.
  */
 interface ServicePreviewProps {
   service: ServiceDefinition;
@@ -27,18 +34,49 @@ interface ServicePreviewProps {
 }
 
 export function ServicePreview({ service, preview, world, tool, locale, t, focus, onClose, onRun }: ServicePreviewProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
 
-  // The dialog holds focus while it is open and hands it back to the card that
-  // opened it. Without the return, closing a preview drops the reader at the top
-  // of the document with no idea where they were.
+  // Open as a real modal, then put focus on the close control. The previous
+  // element is captured first so the cleanup can hand focus back to the card.
   useEffect(() => {
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    return () => previous?.focus?.();
+    restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    if (dialog) {
+      if (typeof dialog.showModal === 'function' && !dialog.open) {
+        try { dialog.showModal(); } catch { dialog.setAttribute('open', ''); }
+      } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+      }
+    }
+    closeRef.current?.focus();
+    return () => {
+      const node = dialogRef.current;
+      if (node) {
+        if (node.open && typeof node.close === 'function') {
+          try { node.close(); } catch { node.removeAttribute('open'); }
+        } else {
+          node.removeAttribute('open');
+        }
+      }
+      const restore = restoreRef.current;
+      restoreRef.current = null;
+      // A programmatic open (a harness click, a keyboard shortcut) may leave
+      // focus on <body> when the dialog mounts. The card is still the invoker,
+      // so it is the fallback focus target rather than letting focus fall out
+      // of the ledger entirely.
+      const cardFallback = Array.from(document.querySelectorAll<HTMLElement>('.svc-card'))
+        .find(card => card.dataset.service === service.id)
+        ?.querySelector<HTMLElement>('.svc-card__primary') ?? null;
+      const target = restore?.isConnected ? restore : cardFallback;
+      if (target) window.requestAnimationFrame(() => target.focus());
+    };
   }, []);
 
+  // Escape also works when a harness or a test DOM has no native dialog cancel.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -53,7 +91,7 @@ export function ServicePreview({ service, preview, world, tool, locale, t, focus
     }
   }, [focus, service.id]);
 
-  /** Tab cycles inside the panel instead of wandering into the page behind it. */
+  /** Tab cycles inside the panel even where the dialog fallback is a plain node. */
   const trapTab = (event: ReactKeyboardEvent) => {
     if (event.key !== 'Tab' || !panelRef.current) return;
     const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
@@ -65,23 +103,30 @@ export function ServicePreview({ service, preview, world, tool, locale, t, focus
     else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
   };
 
+  const closeFromBackdrop = (event: ReactMouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+
   const inputs = preview ? inputsFor(service, preview) : [];
   const risk = preview ? riskLabels[preview.risk] : null;
   const runs = Boolean(onRun) && service.state !== 'planned';
   const unavailable = tool && tool.availability.available === false ? tool.availability.reason : null;
 
   return (
-    <div className="svc-preview" role="presentation">
-      <button type="button" className="svc-preview__scrim" onClick={onClose} aria-label={t('svc.preview.close')} />
+    <dialog
+      ref={dialogRef}
+      className="svc-preview"
+      aria-labelledby="svc-preview-title"
+      aria-modal="true"
+      onCancel={event => { event.preventDefault(); onClose(); }}
+      onClick={closeFromBackdrop}
+      onKeyDown={trapTab}
+      data-service={service.id}
+    >
       <section
         ref={panelRef}
         className={`svc-preview__panel svc-preview__panel--${service.state}`}
         style={{ '--svc-hue': world.accent.hue } as CSSProperties}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="svc-preview-title"
-        onKeyDown={trapTab}
-        data-service={service.id}
       >
         <header className="svc-preview__head">
           <div>
@@ -207,6 +252,6 @@ export function ServicePreview({ service, preview, world, tool, locale, t, focus
           </button>
         </footer>
       </section>
-    </div>
+    </dialog>
   );
 }
