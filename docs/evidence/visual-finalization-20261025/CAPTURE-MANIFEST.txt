@@ -19,3 +19,5 @@ files:
   - storage-1920x1080-en.png
   - studio-1920x1080-en.png
   - system-1920x1080-en.png
+  - studio-titles-1920x1080-en.png (after the header identity change)
+  - studio-1366x768-ar-rtl.png (Arabic RTL, 1366x768)
