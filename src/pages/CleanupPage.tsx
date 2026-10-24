@@ -1,4 +1,5 @@
 import { Boxes, FlaskConical, HardDriveDownload, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote, StageEmpty } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, sumField, summaryNumber } from '../components/world/EngineConsole';
@@ -14,14 +15,21 @@ import { formatBytes, formatCount } from '../lib/format';
  * happened.
  */
 export default function CleanupPage() {
-  const { t, locale, result } = useStore();
+  const { t, locale, result, runById, event } = useStore();
   const scan = result && result.toolId.startsWith('temp-cleanup') ? result : null;
   const candidates = scan ? scan.items.length : null;
   const bytes = scan ? sumField(scan.items, ['sizeBytes', 'bytes', 'size']) : null;
   const flagged = summaryNumber(scan, 'reviewRequired');
 
+  useEffect(() => {
+    if (!scan && event?.toolId !== 'temp-cleanup-preview') void runById('temp-cleanup-preview', { limit: 500 }, true);
+  // A read-only preview is the page's inventory, not an action. Run it once on
+  // entry so the Clean Room opens on measured candidates rather than fiction.
+  // One run per mount is the contract here, so the dependency list stays empty.
+  }, []);
+
   return (
-    <Stage world="cleanup">
+    <Stage world="cleanup" state={scan ? 'ready' : event?.toolId === 'temp-cleanup-preview' ? 'reading' : 'idle'}>
       <StageHead
         icon={FlaskConical}
         title={t('stage.cleanup.name')}

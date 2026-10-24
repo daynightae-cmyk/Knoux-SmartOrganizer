@@ -756,6 +756,21 @@ html[data-theme="light"] .activity-item:hover, html[data-theme="light"] .quick-r
   .splash__orbit--inner { width: 92px; height: 92px; }
   .splash__foot { display: none; }
 }
+
+/* Premium desktop density. At the owner's 1366 px acceptance viewport the
+   old 264 px rail plus 64 px content gutters consumed almost a quarter of the
+   working surface. The compact rail keeps every label while returning that
+   space to the page-specific register and inspector. */
+@media (min-width: 901px) and (max-width: 1500px) {
+  .sidebar { width: 228px; padding-inline: 13px; }
+  .main { width: calc(100% - 228px); padding: 14px 22px 42px; }
+  .app-shell.collapsed .main { width: calc(100% - 76px); }
+  .topbar { min-height: 46px; margin-bottom: 11px; }
+  .topbar-context { min-height: 42px; padding: 5px 8px 5px 5px; }
+  .topbar-context__crest { width: 30px; height: 30px; }
+  .top-actions .knx-btn { min-height: 40px; }
+  .search-trigger { min-width: 220px; }
+}
 @media (max-height: 700px) {
   .splash__content { gap: 14px; }
   .splash__emblem { width: 118px; height: 94px; margin-bottom: 2px; }

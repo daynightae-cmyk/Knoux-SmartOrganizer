@@ -1,4 +1,5 @@
 import { Cpu, Database, Thermometer, Usb } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageEmpty } from '../components/world/Stage';
 import { EngineConsole, WorldLedger } from '../components/world/EngineConsole';
@@ -13,13 +14,19 @@ import { formatCount } from '../lib/format';
  * it, which is the honest version of a gauge.
  */
 export default function HardwarePage() {
-  const { t, locale, result } = useStore();
+  const { t, locale, result, runById, event } = useStore();
   const read = result && ['hardware-inventory', 'battery-status'].includes(result.toolId) ? result : null;
   const components = read ? read.items.length : null;
   const providers = Array.isArray(read?.summary.providers) ? (read.summary.providers as unknown[]).length : null;
 
+  useEffect(() => {
+    if (!read && event?.toolId !== 'hardware-inventory') void runById('hardware-inventory', {}, true);
+  // A read-only inventory is the page's data source, not an action. One run per
+  // mount, so the dependency list stays deliberately empty.
+  }, []);
+
   return (
-    <Stage world="hardware">
+    <Stage world="hardware" state={read ? 'ready' : event?.toolId === 'hardware-inventory' ? 'reading' : 'idle'}>
       <StageHead
         icon={Cpu}
         title={t('stage.hardware.name')}

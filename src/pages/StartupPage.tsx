@@ -1,4 +1,5 @@
 import { CircleDashed, ListChecks, Power, Rocket, RotateCcw } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, summaryNumber } from '../components/world/EngineConsole';
@@ -13,14 +14,20 @@ import { formatCount } from '../lib/format';
  * measurement, so it carries no numbers of its own.
  */
 export default function StartupPage() {
-  const { t, locale, result } = useStore();
+  const { t, locale, result, runById, event } = useStore();
   const read = result && result.toolId === 'startup-items' ? result : null;
   const entries = read ? read.items.length : null;
   const managed = summaryNumber(read, 'managedSources');
   const sources = Array.isArray(read?.summary.sources) ? (read.summary.sources as unknown[]).length : null;
 
+  useEffect(() => {
+    if (!read && event?.toolId !== 'startup-items') void runById('startup-items', {}, true);
+  // The inventory is read-only and bounded to the providers documented below.
+  // One read per mount, so the dependency list stays deliberately empty.
+  }, []);
+
   return (
-    <Stage world="startup">
+    <Stage world="startup" state={read ? 'ready' : event?.toolId === 'startup-items' ? 'reading' : 'idle'}>
       <StageHead
         icon={Rocket}
         title={t('stage.startup.name')}

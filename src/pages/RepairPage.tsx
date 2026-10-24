@@ -27,7 +27,7 @@ export default function RepairPage() {
   const tools = useMemo(() => serviceCatalog.filter(service => service.world === 'repair' && service.engine), []);
 
   return (
-    <Stage world="repair">
+    <Stage world="repair" state={run ? 'ready' : 'idle'}>
       <StageHead
         icon={ShieldPlus}
         title={t('stage.repair.name')}

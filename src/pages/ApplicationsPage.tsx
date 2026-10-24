@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
-  AlertTriangle, AppWindow, Ban, Check, Copy, FolderOpen,
-  ListChecks, RefreshCw, Search, Users, X
+  AlertTriangle, AppWindow, Ban, Boxes, Building2, Check, Copy, FolderOpen,
+  HardDrive, ListChecks, RefreshCw, Search, ShieldCheck, Users, X
 } from 'lucide-react';
 import AppIcon from '../components/app/AppIcon';
+import { ApplicationCommandBar, ApplicationOperationPreview } from '../components/app/ApplicationCommandSurface';
+import '../applications-ref02.css';
 import { ServicesRail } from '../components/world/ServicesRail';
 import {
   actionsFor, applyFacet, buildInventory, dossierFields, facetsFor, groupRecords, inventorySignature, parseDate,
@@ -171,6 +173,7 @@ function LedgerRow({ record, active, staged, t, locale, onOpen, onToggle }: RowP
         ) : <i className="appx__empty">—</i>}
       </span>
       <span className={`appx__cell appx__cell--faint appx__cell--date${installed === '—' ? ' appx__empty' : ''}`}>{installed}</span>
+      <span className="appref__row-actions"><button type="button" onClick={() => onOpen(record)} aria-label={t('app.dossier.label') + ': ' + record.name}><AppWindow size={14}/></button></span>
     </div>
   );
 }
@@ -244,6 +247,17 @@ function Dossier({ record, t, locale, onClose, onAction }: DossierProps) {
         </div>
         <button type="button" className="knx-btn knx-btn--icon appx__dclose" onClick={onClose} aria-label={t('app.dossier.close')} title={t('app.dossier.close')}>
           <X size={15} />
+        </button>
+      </div>
+      <div className="appref__dquick" role="group" aria-label={t('app.dossier.actions')}>
+        <button type="button" disabled={!record.installLocation} onClick={() => onAction('inspect-folder', record)} title={!record.installLocation ? t('app.action.reason.noLocation') : undefined}>
+          <FolderOpen size={14} />{locale === 'ar' ? 'عرض المجلد' : 'Reveal folder'}
+        </button>
+        <button type="button" onClick={() => onAction('copy-summary', record)}>
+          <Copy size={14} />{locale === 'ar' ? 'نسخ التفاصيل' : 'Copy details'}
+        </button>
+        <button type="button" disabled title={t('app.action.reason.noUninstallEngine')}>
+          <Ban size={14} />{locale === 'ar' ? 'إزالة' : 'Uninstall'}
         </button>
       </div>
 
@@ -365,11 +379,12 @@ export default function ApplicationsPage() {
     signatureRef.current = signature;
     setSnapshot(completed);
     if (!unchanged) {
-      setActiveUid(null);
+      const firstByName = sortRecords(completed.records, 'name', 'ascending', locale)[0];
+      setActiveUid(firstByName?.uid ?? null);
       setStaged(new Set());
     }
     setPhase(ok ? 'ready' : 'failed');
-  }, []);
+  }, [locale]);
 
   const load = useCallback(async () => {
     if (!inventoryTool) return;
@@ -520,12 +535,13 @@ export default function ApplicationsPage() {
     : t('app.head.refresh');
 
   return (
-    <div className="world appx" data-world="applications" onKeyDown={onRootKeyDown}>
+    <div className="world appx appref" data-world="applications" onKeyDown={onRootKeyDown}>
       <section className="world-head">
         <div className="world-head__row">
           <div className="world-head__identity">
             <span className="world-tile"><AppWindow size={22} /></span>
             <div>
+              <span className="appref__kicker">KNOuX / SOFTWARE OPERATIONS</span>
               <h2 className="world-head__title">{t('app.head.title')}</h2>
               <p className="world-head__subtitle">{t('app.head.subtitle')}</p>
             </div>
@@ -546,29 +562,34 @@ export default function ApplicationsPage() {
           <>
             <div className="world-metrics">
               <div className="world-metric world-metric--accent">
+                <span className="appref__metric-icon appref__metric-icon--blue"><Boxes size={19}/></span>
                 <b>{formatCount(snapshot.totals.all, locale)}</b>
                 <span>{t('app.head.programs')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--violet"><ShieldCheck size={19}/></span>
                 <b>{formatCount(snapshot.totals.machineWide, locale)} · {formatCount(snapshot.totals.userOnly, locale)}</b>
                 <span>{t('app.stat.machine')} / {t('app.stat.user')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--purple"><Building2 size={19}/></span>
                 <b>{formatCount(snapshot.totals.distinctPublishers, locale)}</b>
                 <span>{t('app.stat.publishers')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--green"><HardDrive size={19}/></span>
                 <b>{snapshot.totals.withAdvertisedSize ? formatBytes(snapshot.totals.totalAdvertisedBytes, locale) : '—'}</b>
                 <span>{t('app.stat.declared')}</span>
                 <i>{t('app.stat.declaredNote')}</i>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--amber"><ListChecks size={19}/></span>
                 <b>{formatCount(snapshot.totals.uninstallSupported, locale)}</b>
                 <span>{t('app.stat.uninstallable')}</span>
                 <i>{t('app.stat.uninstallableNote')}</i>
               </div>
             </div>
-            <CoverageRibbon coverage={snapshot.coverage} t={t} />
+            <details className="appref__coverage"><summary>{locale === 'ar' ? 'تغطية بيانات البرامج' : 'Inventory data coverage'} <span>{locale === 'ar' ? 'تفاصيل اكتمال بيانات Windows' : 'See recorded-field completeness'}</span></summary><CoverageRibbon coverage={snapshot.coverage} t={t} /></details>
           </>
         )}
       </section>
@@ -645,6 +666,18 @@ export default function ApplicationsPage() {
 
       <div className="appx__body">
         <div className="appx__column">
+      <ApplicationCommandBar
+        record={activeRecord}
+        stagedCount={stagedRecords.length}
+        locale={locale}
+        loading={busy || phase === 'loading'}
+        onRefresh={() => { void load(); }}
+        onShowDetails={() => document.querySelector('.appx__dossier')?.scrollIntoView({ block: 'nearest' })}
+        onInspectFolder={() => { if (activeRecord) void runAction('inspect-folder', activeRecord); }}
+        onCopySummary={() => { if (activeRecord) void runAction('copy-summary', activeRecord); }}
+        onReviewStartup={() => setPage('startup')}
+        onCopyBatchManifest={() => { void copyManifest(); }}
+      />
           {(snapshot?.partial || (snapshot?.warnings.length ?? 0) > 0) && phase === 'ready' && (
             <p className="appx__warn">
               <AlertTriangle size={15} />
@@ -722,6 +755,7 @@ export default function ApplicationsPage() {
                     <span className="appx__col--version">{t('app.col.version')}</span>
                     <span className="is-num">{t('app.col.size')}</span>
                     <span className="appx__col--date">{t('app.col.installed')}</span>
+                    <span className="appref__row-actions-head">{locale === 'ar' ? 'إجراءات' : 'Actions'}</span>
                   </div>
                   {rows.map(record => (
                     <LedgerRow
@@ -810,7 +844,16 @@ export default function ApplicationsPage() {
           )}
         </div>
 
-        <Dossier record={activeRecord} t={t} locale={locale} onClose={() => setActiveUid(null)} onAction={(action, record) => { void runAction(action, record); }} />
+        <div className="appref__rightstack">
+          <Dossier record={activeRecord} t={t} locale={locale} onClose={() => setActiveUid(null)} onAction={(action, record) => { void runAction(action, record); }} />
+          <ApplicationOperationPreview
+            record={activeRecord}
+            locale={locale}
+            onInspectFolder={() => { if (activeRecord) void runAction('inspect-folder', activeRecord); }}
+            onCopySummary={() => { if (activeRecord) void runAction('copy-summary', activeRecord); }}
+            onReviewStartup={() => setPage('startup')}
+          />
+        </div>
       </div>
 
       <ServicesRail

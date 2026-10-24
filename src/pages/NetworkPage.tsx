@@ -1,4 +1,5 @@
 import { Globe2, Radio, Router, ShieldCheck } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageEmpty } from '../components/world/Stage';
 import { EngineConsole, WorldLedger } from '../components/world/EngineConsole';
@@ -13,12 +14,18 @@ import { formatCount } from '../lib/format';
  * say so instead of showing a plausible picture.
  */
 export default function NetworkPage() {
-  const { t, locale, result } = useStore();
+  const { t, locale, result, runById, event } = useStore();
   const read = result && result.toolId === 'network-diagnostics' ? result : null;
   const interfaces = read ? read.items.length : null;
 
+  useEffect(() => {
+    if (!read && event?.toolId !== 'network-diagnostics') void runById('network-diagnostics', {}, true);
+  // A read-only diagnostic sweep is the page's data source, not an action. One
+  // run per mount, so the dependency list stays deliberately empty.
+  }, []);
+
   return (
-    <Stage world="network">
+    <Stage world="network" state={read ? 'ready' : event?.toolId === 'network-diagnostics' ? 'reading' : 'idle'}>
       <StageHead
         icon={Radio}
         title={t('stage.network.name')}
