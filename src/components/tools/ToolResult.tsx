@@ -90,7 +90,7 @@ export function ToolResultView({ result }: { result: ToolResult }) {
                 <div key={key} className="result-item">
                   <code dir="ltr" title={String(path)}>{path ? (String(path).length > 90 ? `…${String(path).slice(-89)}` : String(path)) : shortHash(JSON.stringify(item))}</code>
                   {path && (
-                    <button className="icon-button" onClick={() => copy(String(path))} aria-label={t('files.copy')} title={copied === String(path) ? t('files.copied') : t('files.copy')}>
+                    <button className="knx-btn knx-btn--icon" onClick={() => copy(String(path))} aria-label={t('files.copy')} title={copied === String(path) ? t('files.copied') : t('files.copy')}>
                       <Copy size={13} />
                     </button>
                   )}

@@ -23,7 +23,6 @@ export default function SettingsPage() {
 
   return (
     <section className="settings-page">
-      <p className="page-description">{t('settings.subtitle')}</p>
       <SettingsSection title={t('settings.section.general')} resetLabel={t('settings.resetSection')} onReset={() => resetSection('general')}>
         <Toggle label={t('settings.startWithWindows')} checked={settings.general.startWithWindows} onChange={value => change('general', { ...settings.general, startWithWindows: value })} />
         <Toggle label={t('settings.startMinimized')} checked={settings.general.startMinimized} onChange={value => change('general', { ...settings.general, startMinimized: value })} />
@@ -142,17 +141,17 @@ export default function SettingsPage() {
         {signing?.timestamped && <Setting label={t('settings.timestamped')}><output>{t('settings.value.yes')}</output></Setting>}
       </SettingsSection>
       <div className="settings-actions">
-        <button className="secondary" onClick={() => window.knoux.exportSettings()}>{t('settings.export')}</button>
-        <button className="secondary" onClick={async () => { const imported = await window.knoux.importSettings(); if (imported) void update(imported); }}>{t('settings.import')}</button>
-        <button className="secondary" onClick={async () => { const saved = await window.knoux.exportDiagnostics(); if (saved) setNotice(`${t('diagnostics.exported')} — ${saved}`); }}>{t('diagnostics.export')}</button>
-        <button className="secondary danger" onClick={async () => update(await window.knoux.resetSettings())}>{t('settings.reset')}</button>
+        <button className="knx-btn knx-btn--secondary" onClick={() => window.knoux.exportSettings()}>{t('settings.export')}</button>
+        <button className="knx-btn knx-btn--secondary" onClick={async () => { const imported = await window.knoux.importSettings(); if (imported) void update(imported); }}>{t('settings.import')}</button>
+        <button className="knx-btn knx-btn--secondary" onClick={async () => { const saved = await window.knoux.exportDiagnostics(); if (saved) setNotice(`${t('diagnostics.exported')} — ${saved}`); }}>{t('diagnostics.export')}</button>
+        <button className="knx-btn knx-btn--destructive" onClick={async () => update(await window.knoux.resetSettings())}>{t('settings.reset')}</button>
       </div>
     </section>
   );
 }
 
 function SettingsSection({ title, resetLabel, onReset, children }: { title: string; resetLabel?: string; onReset?: () => void; children: ReactNode }) {
-  return <section className="settings-section"><div className="settings-section-head"><h2>{title}</h2>{onReset && <button className="text-button" onClick={onReset}>{resetLabel}</button>}</div><div className="settings-grid">{children}</div></section>;
+  return <section className="settings-section"><div className="settings-section-head"><h2>{title}</h2>{onReset && <button className="knx-btn knx-btn--ghost" onClick={onReset}>{resetLabel}</button>}</div><div className="settings-grid">{children}</div></section>;
 }
 
 function Setting({ label, children }: { label: string; children: ReactNode }) {

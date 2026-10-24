@@ -65,6 +65,7 @@ export function pageDef(id: string): PageDef | undefined {
 /** Page title translation key: categories use the tools catalogue title. */
 export function pageTitleKey(id: PageId): string {
   if (id === 'home') return 'home.title';
+  if (id === 'scan') return 'nav.scan';
   if (id === 'studio') return 'studio.title';
   if (id === 'history') return 'history.title';
   if (id === 'settings') return 'settings.title';

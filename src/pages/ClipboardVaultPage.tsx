@@ -139,7 +139,7 @@ export default function ClipboardVaultPage() {
           </span>
         </div>
         <div className="automation-actions">
-          <button className={policy?.enabled ? 'secondary' : 'primary'} onClick={() => { void toggleCapture(); }}>
+          <button className={policy?.enabled ? 'knx-btn knx-btn--secondary' : 'knx-btn knx-btn--primary'} onClick={() => { void toggleCapture(); }}>
             {policy?.enabled ? <Pause size={14} /> : <Play size={14} />}
             {policy?.enabled ? t('clipboard.disableCapture') : t('clipboard.enableCapture')}
           </button>
@@ -154,7 +154,7 @@ export default function ClipboardVaultPage() {
       )}
 
       <div className="clipboard-controls">
-        <label className="search">
+        <label className="knx-search">
           <Search size={15} />
           <input
             value={query}
@@ -184,7 +184,7 @@ export default function ClipboardVaultPage() {
       <div className="clipboard-privacy">
         <h3>{t('clipboard.privacyTitle')}</h3>
         <div className="clipboard-privacy-grid">
-          <label className="setting">
+          <label className="setting toggle">
             <span>{t('clipboard.pauseCapture')}</span>
             <input
               type="checkbox"
@@ -193,7 +193,7 @@ export default function ClipboardVaultPage() {
               onChange={e => { void patchPolicy({ paused: e.target.checked }); }}
             />
           </label>
-          <label className="setting">
+          <label className="setting toggle">
             <span>{t('clipboard.privateModeLabel')}</span>
             <input
               type="checkbox"
@@ -201,7 +201,7 @@ export default function ClipboardVaultPage() {
               onChange={e => { void patchPolicy({ privateMode: e.target.checked }); }}
             />
           </label>
-          <label className="setting">
+          <label className="setting toggle">
             <span>{t('clipboard.sensitiveProtection')}</span>
             <input
               type="checkbox"
@@ -209,7 +209,7 @@ export default function ClipboardVaultPage() {
               onChange={e => { void patchPolicy({ sensitiveProtection: e.target.checked }); }}
             />
           </label>
-          <label className="setting">
+          <label className="setting toggle">
             <span>{t('clipboard.captureImages')}</span>
             <input
               type="checkbox"
@@ -217,7 +217,7 @@ export default function ClipboardVaultPage() {
               onChange={e => { void patchPolicy({ captureImages: e.target.checked }); }}
             />
           </label>
-          <label className="setting">
+          <label className="setting toggle">
             <span>{t('clipboard.captureFiles')}</span>
             <input
               type="checkbox"
@@ -257,7 +257,7 @@ export default function ClipboardVaultPage() {
           <p className="muted small">{t('clipboard.skippedSensitive').replace('{count}', formatCount(status.skippedSensitive, locale))}</p>
         )}
         <div className="automation-actions">
-          <button className="danger" onClick={() => { void clearAll(); }}>
+          <button className="knx-btn knx-btn--destructive" onClick={() => { void clearAll(); }}>
             {confirmClear ? <X size={14} /> : <Trash2 size={14} />}
             {confirmClear ? t('clipboard.confirmClear') : t('clipboard.clearAll')}
           </button>
@@ -299,21 +299,21 @@ export default function ClipboardVaultPage() {
                       </div>
                     </div>
                     <div className="clipboard-card-actions">
-                      <button className="icon-button" onClick={() => { void copyBack(item); }} aria-label={t('clipboard.copyBack')} title={t('clipboard.copyBack')}>
+                      <button className="knx-btn knx-btn--icon" onClick={() => { void copyBack(item); }} aria-label={t('clipboard.copyBack')} title={t('clipboard.copyBack')}>
                         <ClipboardCopy size={14} />
                       </button>
-                      <button className="icon-button" onClick={() => { void togglePin(item); }} aria-label={item.pinned ? t('clipboard.unpin') : t('clipboard.pin')} title={item.pinned ? t('clipboard.unpin') : t('clipboard.pin')}>
+                      <button className="knx-btn knx-btn--icon" onClick={() => { void togglePin(item); }} aria-label={item.pinned ? t('clipboard.unpin') : t('clipboard.pin')} title={item.pinned ? t('clipboard.unpin') : t('clipboard.pin')}>
                         {item.pinned ? <PinOff size={14} /> : <Pin size={14} />}
                       </button>
                       {item.type === 'files' && (
-                        <button className="icon-button" onClick={() => { void openSource(item); }} aria-label={t('clipboard.openSource')} title={t('clipboard.openSource')}>
+                        <button className="knx-btn knx-btn--icon" onClick={() => { void openSource(item); }} aria-label={t('clipboard.openSource')} title={t('clipboard.openSource')}>
                           <FolderOpen size={14} />
                         </button>
                       )}
-                      <button className="icon-button" onClick={() => setExpanded(isExpanded ? null : item.id)} aria-label={t('clipboard.preview')} title={t('clipboard.preview')} aria-expanded={isExpanded}>
+                      <button className="knx-btn knx-btn--icon" onClick={() => setExpanded(isExpanded ? null : item.id)} aria-label={t('clipboard.preview')} title={t('clipboard.preview')} aria-expanded={isExpanded}>
                         <FileText size={14} />
                       </button>
-                      <button className="icon-button" onClick={() => { void removeItem(item); }} aria-label={t('clipboard.remove')} title={t('clipboard.remove')}>
+                      <button className="knx-btn knx-btn--icon" onClick={() => { void removeItem(item); }} aria-label={t('clipboard.remove')} title={t('clipboard.remove')}>
                         <Trash2 size={14} />
                       </button>
                     </div>

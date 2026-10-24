@@ -242,7 +242,7 @@ function Dossier({ record, t, locale, onClose, onAction }: DossierProps) {
             {record.isFramework === true && <em className="appx__badge appx__badge--runtime">{t('app.row.framework')}</em>}
           </div>
         </div>
-        <button type="button" className="icon-button appx__dclose" onClick={onClose} aria-label={t('app.dossier.close')} title={t('app.dossier.close')}>
+        <button type="button" className="knx-btn knx-btn--icon appx__dclose" onClick={onClose} aria-label={t('app.dossier.close')} title={t('app.dossier.close')}>
           <X size={15} />
         </button>
       </div>

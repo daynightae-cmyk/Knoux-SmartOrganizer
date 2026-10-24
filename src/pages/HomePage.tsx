@@ -111,7 +111,7 @@ export default function HomePage() {
           <p>{t('home.studioBody')}</p>
           <span className="studio-gateway__facts"><ShieldCheck size={13} aria-hidden="true" />{t('home.studioFacts')}</span>
         </div>
-        <button className="primary studio-gateway__cta" onClick={() => setPage('studio')}>
+        <button className="knx-btn knx-btn--primary studio-gateway__cta" onClick={() => setPage('studio')}>
           {t('home.studioCta')}<ArrowRight size={16} />
         </button>
       </motion.section>

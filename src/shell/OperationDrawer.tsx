@@ -40,7 +40,7 @@ export default function OperationDrawer() {
             <h2 id="operation-drawer-title">{t('operation.title')}</h2>
             <p>{event?.message || t('operation.ready')}</p>
           </div>
-          <button className="icon-button" onClick={close} aria-label={t('common.close')} title={t('common.close')} data-autofocus>
+          <button className="knx-btn knx-btn--icon" onClick={close} aria-label={t('common.close')} title={t('common.close')} data-autofocus>
             <X size={18} />
           </button>
         </div>
@@ -74,10 +74,10 @@ export default function OperationDrawer() {
         )}
         <div className="drawer-actions">
           {canCancel && (
-            <button className="secondary" onClick={cancel}><Ban size={16} />{t('operation.cancel')}</button>
+            <button className="knx-btn knx-btn--secondary" onClick={cancel}><Ban size={16} />{t('operation.cancel')}</button>
           )}
           {!running && (tool || event) && (
-            <button className="secondary" onClick={openWorkspace}>{t('operation.viewWorkspace')}</button>
+            <button className="knx-btn knx-btn--secondary" onClick={openWorkspace}>{t('operation.viewWorkspace')}</button>
           )}
           {!running && !result && <p className="drawer-empty">{t('operation.empty')}</p>}
         </div>

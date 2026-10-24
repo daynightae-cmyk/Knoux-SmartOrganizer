@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Ban, CheckCircle2, Circle, CircleDot, Loader2, LockKeyhole, Play } from 'lucide-react';
+import { Ban, CheckCircle2, Circle, CircleDot, LockKeyhole, Play, ScanSearch } from 'lucide-react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
 import { isActivePhase, progressOf, resolveTool } from '../lib/guards';
 import { SMART_SCAN_STAGES, findingTitleKey, smartScanFindings, smartScanStageFromEvent, smartScore, smartScoreReasons, scoreReasonKey } from '../lib/smartscan';
@@ -21,47 +21,55 @@ export default function SmartScanPage() {
 
   return (
     <div className="scan-page">
-      <p className="page-description">{t('smartScan.subtitle')}</p>
-
-      <section className="panel scan-hero">
-        <div>
-          <span className="local-badge"><LockKeyhole size={13} />{t('common.local')}</span>
-          <h2>{t('nav.scan')}</h2>
+      <section className={activeForScan ? 'panel scan-hero is-running' : 'panel scan-hero'}>
+        <div className="scan-hero__copy">
+          <span className="scan-hero__glyph" aria-hidden="true"><ScanSearch size={22} /></span>
+          <div className="scan-hero__top">
+            <span className="local-badge"><LockKeyhole size={13} />{t('common.local')}</span>
+            <span className="scan-hero__state" aria-live={activeForScan ? 'polite' : undefined}>
+              <span className="scan-hero__dot" aria-hidden="true" />
+              {activeForScan ? activeForScan.message : lastHistory ? `${t('smartScan.lastRun')}: ${formatDateTime(lastHistory.finishedAt, locale)}` : t('smartScan.neverRun')}
+            </span>
+          </div>
+          <h2 className="visually-hidden">{t('nav.scan')}</h2>
           {activeForScan ? (
             <>
-              <p aria-live="polite"><Loader2 size={14} className="spin" /> {activeForScan.message}</p>
               <div className="progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={t('tools.progress')}>
                 <i style={{ width: `${progress}%` }} />
               </div>
-              <p className="muted small" dir="ltr">{activeForScan.current ?? '—'} / {activeForScan.total ?? 7} · {progress}%</p>
-              {tool?.supportsCancel && <button className="secondary" onClick={cancel}><Ban size={15} />{t('operation.cancel')}</button>}
+              <p className="scan-hero__counter" dir="ltr">{activeForScan.current ?? '—'} / {activeForScan.total ?? 7} · {progress}%</p>
+              {tool?.supportsCancel && <button className="knx-btn knx-btn--secondary" onClick={cancel}><Ban size={15} />{t('operation.cancel')}</button>}
             </>
           ) : (
             <>
-              <p className="muted">{lastHistory ? `${t('smartScan.lastRun')}: ${formatDateTime(lastHistory.finishedAt, locale)}` : t('smartScan.neverRun')}</p>
-              <button className="primary" disabled={!tool?.availability.available} onClick={start}>
+              <button className="knx-btn knx-btn--primary scan-hero__start" disabled={!tool?.availability.available} onClick={start}>
                 <Play size={16} />{lastResult ? t('smartScan.again') : t('smartScan.start')}
               </button>
               {!tool?.availability.available && <p className="notice">{tool?.availability.reason || t('tools.unavailable')}</p>}
+              <p className="scan-hero__note">{t('smartScan.metadataNote')}</p>
             </>
           )}
         </div>
-        <ol className="scan-stages" aria-label={t('smartScan.checks')}>
-          {SMART_SCAN_STAGES.map(item => {
-            const done = activeForScan ? item.index <= stage : !!lastResult;
-            const current = activeForScan && item.index === Math.max(1, stage + (stage >= 7 ? 0 : 1)) && stage < 7;
-            return (
-              <li key={item.index} className={done ? 'done' : current ? 'current' : ''}>
-                {done ? <CheckCircle2 size={15} /> : current ? <CircleDot size={15} /> : <Circle size={15} />}
-                <span>{t(item.key)}</span>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="scan-checks">
+          <p className="scan-checks__label">{t('smartScan.checks')}</p>
+          <ol className="scan-stages" aria-label={t('smartScan.checks')}>
+            {SMART_SCAN_STAGES.map(item => {
+              const done = activeForScan ? item.index <= stage : !!lastResult;
+              const current = activeForScan && item.index === Math.max(1, stage + (stage >= 7 ? 0 : 1)) && stage < 7;
+              return (
+                <li key={item.index} className={done ? 'done' : current ? 'current' : ''}>
+                  <span className="scan-stage__n" aria-hidden="true">{String(item.index).padStart(2, '0')}</span>
+                  <span className="scan-stage__copy">{t(item.key)}</span>
+                  {done ? <CheckCircle2 size={15} /> : current ? <CircleDot size={15} /> : <Circle size={15} />}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </section>
 
       {lastResult && (
-        <section className="panel">
+        <section className="panel scan-report">
           <h3>{t('smartScan.score')}: <strong dir="ltr">{score == null ? '—' : formatCount(score, locale)}</strong></h3>
           {reasons.length > 0 && (
             <>

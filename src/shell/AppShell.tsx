@@ -126,7 +126,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 function ShortcutHelp({ open, onClose, t }: { open: boolean; onClose: () => void; t: (key: string) => string }) {
   return <AnimatePresence>{open && <motion.div className="shortcut-help-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
     <motion.section className="shortcut-help" role="dialog" aria-modal="true" aria-labelledby="shortcut-help-title" initial={{ opacity: 0, y: 18, scale: .96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: .98 }} transition={{ type: 'spring', stiffness: 360, damping: 28 }} onClick={event => event.stopPropagation()}>
-      <div className="shortcut-help-head"><div><p className="eyebrow">KNOuX / CONTROL LAYER</p><h2 id="shortcut-help-title">{t('shortcuts.title')}</h2><p>{t('shortcuts.subtitle')}</p></div><button className="icon-button" onClick={onClose} aria-label="Close">×</button></div>
+      <div className="shortcut-help-head"><div><p className="eyebrow">KNOuX / CONTROL LAYER</p><h2 id="shortcut-help-title">{t('shortcuts.title')}</h2><p>{t('shortcuts.subtitle')}</p></div><button className="knx-btn knx-btn--icon" onClick={onClose} aria-label="Close">×</button></div>
       <div className="shortcut-list">
         {[
           ['Ctrl / ⌘ K', t('shortcuts.search')], ['Ctrl / ⌘ ⇧ S', t('shortcuts.scan')], ['Ctrl / ⌘ ⇧ O', t('shortcuts.operations')], ['Ctrl / ⌘ B', t('shortcuts.sidebar')], ['Ctrl / ⌘ 1–9', t('shortcuts.pages')], ['Alt ← / →', t('shortcuts.previousNext')], ['Ctrl / ⌘ Alt L', t('shortcuts.language')], ['Ctrl / ⌘ Alt 1–3', t('shortcuts.palettes')], ['? or /', t('shortcuts.help')]

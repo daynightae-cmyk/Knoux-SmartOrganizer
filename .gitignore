@@ -38,3 +38,7 @@ release/
 # Source icon required by Electron Builder
 !build/
 !build/icon.ico
+
+# Local scratch archives and review captures
+src.rar
+traycer-usage-*.png

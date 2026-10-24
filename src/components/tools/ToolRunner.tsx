@@ -101,13 +101,13 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
       {['large-files', 'duplicate-files', 'empty-folders', 'organize-downloads-preview', 'organize-downloads-apply'].includes(tool.id) && (
         <div className="input-group">
           <label>{t('common.folder')}</label>
-          <div><input value={folder} readOnly placeholder={t('tools.defaultFolder')} aria-label={t('common.folder')} /><button className="secondary" onClick={chooseFolder}>{t('tools.chooseFolder')}</button></div>
+          <div><input value={folder} readOnly placeholder={t('tools.defaultFolder')} aria-label={t('common.folder')} /><button className="knx-btn knx-btn--secondary" onClick={chooseFolder}>{t('tools.chooseFolder')}</button></div>
         </div>
       )}
       {tool.id === 'file-hash' && (
         <div className="input-group">
           <label>{t('tools.hashFile')}</label>
-          <div><input value={file} readOnly placeholder={t('tools.hashFile')} aria-label={t('tools.hashFile')} /><button className="secondary" onClick={chooseFile}>{t('tools.hashFile')}</button></div>
+          <div><input value={file} readOnly placeholder={t('tools.hashFile')} aria-label={t('tools.hashFile')} /><button className="knx-btn knx-btn--secondary" onClick={chooseFile}>{t('tools.hashFile')}</button></div>
         </div>
       )}
       {tool.id === 'service-control' && (
@@ -158,10 +158,10 @@ export function ToolRunner({ tool, folder, file }: { tool: ToolDefinition; folde
       )}
 
       <div className="runner-actions">
-        <button className="primary run-button" disabled={!available || busy || !!activeForTool || (needsConfirm && !confirmed)} onClick={execute}>
+        <button className="knx-btn knx-btn--primary run-button" disabled={!available || busy || !!activeForTool || (needsConfirm && !confirmed)} onClick={execute}>
           <Play size={16} /> {t('tools.run')}
         </button>
-        {showCancel && <button className="secondary" onClick={cancel}><Ban size={16} />{t('operation.cancel')}</button>}
+        {showCancel && <button className="knx-btn knx-btn--secondary" onClick={cancel}><Ban size={16} />{t('operation.cancel')}</button>}
         {showUndo && undoToolId == null && <span className="pill ok"><RotateCcw size={11} /> {t('cap.undo')}</span>}
       </div>
 
