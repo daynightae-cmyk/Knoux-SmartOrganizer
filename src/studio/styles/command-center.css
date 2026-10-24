@@ -142,4 +142,50 @@ html[dir="rtl"] .st-command__source.is-active {box-shadow:inset -3px 0 0 var(--p
   .st-command__category-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
   .st-command__gallery {grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+/* REF-01 authorization rail: the four facts the board is standing on, read
+   from the same state the rest of the surface uses. */
+.st-command__strip {
+  display:flex;align-items:stretch;gap:0;min-width:0;
+  padding:9px 6px;border:1px solid var(--border);border-radius:var(--radius-lg);
+  background:linear-gradient(120deg,color-mix(in srgb,var(--primary) 7%,var(--surface-raised)),var(--surface) 46%);
+  box-shadow:inset 0 1px 0 #ffffff0d,0 10px 26px #00000014;
+}
+.st-command__strip-cell {display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:2px 14px}
+.st-command__strip-cell + .st-command__strip-cell {border-inline-start:1px solid var(--border-soft)}
+.st-command__strip-cell>div {display:grid;gap:2px;min-width:0}
+.st-command__strip-cell small {font-size:10px;letter-spacing:.3px;color:var(--muted);text-transform:none}
+.st-command__strip-cell strong {font-size:var(--text-md);font-weight:680;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.st-command__strip-icon {display:grid;place-items:center;flex:none;width:33px;height:33px;border-radius:10px;border:1px solid var(--border-soft);background:var(--surface-raised);color:var(--muted)}
+.st-command__strip-icon[data-state="ok"] {color:var(--status-success-text);border-color:var(--status-success-border);background:var(--status-success-surface)}
+.st-command__strip-icon[data-state="busy"] {color:var(--primary-bright);border-color:var(--primary);background:var(--st-command-glow)}
+.st-command__refresh {flex:none;align-self:center;margin-inline-start:6px}
+/* REF-01 decision bar: the counts the plan is made of, then the four ways
+   forward. The primary CTA keeps the reference's weight. */
+.st-command__footer {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;
+  padding:11px 14px;border:1px solid color-mix(in srgb,var(--primary) 28%,var(--border));border-radius:var(--radius-lg);
+  background:radial-gradient(ellipse at 90% 120%,var(--st-command-glow),transparent 55%),linear-gradient(150deg,var(--surface-raised),var(--surface));
+  box-shadow:0 -10px 26px #0000001a;
+}
+.st-command__footsum {display:flex;align-items:center;gap:16px;min-width:0;flex-wrap:wrap}
+.st-command__footsum span {display:flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--muted);min-width:0}
+.st-command__footsum span svg {color:var(--primary-bright);flex:none}
+.st-command__footsum b {color:var(--text);font-variant-numeric:tabular-nums}
+.st-command__footactions {display:flex;align-items:center;gap:8px;flex:none}
+.st-command__footactions .st-btn--primary {padding-inline:19px;min-height:40px}
+@media (max-width:1150px) {
+  .st-command__strip {flex-wrap:wrap}
+  .st-command__strip-cell {flex:1 1 46%;padding-block:6px}
+  .st-command__strip-cell:nth-child(odd) {border-inline-start:0}
+  .st-command__footer {flex-wrap:wrap}
+}
+@media (max-width:760px) {
+  .st-command__strip-cell {flex:1 1 100%}
+  .st-command__strip-cell + .st-command__strip-cell {border-inline-start:0;border-top:1px solid var(--border-soft)}
+  .st-command__footactions {width:100%;flex-wrap:wrap}
+  .st-command__footactions .st-btn {flex:1}
+}
+@media (prefers-reduced-motion:reduce) {.st-command__strip *,.st-command__footer *{animation:none!important;transition:none!important}}
+
+
 @media (prefers-reduced-motion:reduce) {.st-command * {animation:none!important;transition:none!important}}

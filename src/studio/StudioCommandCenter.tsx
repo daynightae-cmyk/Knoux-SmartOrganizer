@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight, Check, Eye, FolderOpen, FolderPlus, Images,
-  LayoutGrid, List, Loader2, Lock, RefreshCw, Search, ShieldCheck, Workflow
+  ArrowRight, Check, Clock, Database, Eye, FolderOpen, FolderPlus, Images,
+  LayoutGrid, List, Loader2, Lock, RefreshCw, Search, ShieldCheck, Trash2, Workflow
 } from 'lucide-react';
 import { formatBytes, formatCount } from '../lib/format';
 import { CATEGORY_LABELS, CATEGORY_ORDER } from './copy';
@@ -55,7 +55,25 @@ export function StudioCommandCenter() {
     move: 'نقل الملفات',
     safe: 'المعاينة والفهرسة لا يغيران الملفات. التنفيذ يتطلب مراجعة واعتماد الخطة.',
     latest: 'الملفات المعروضة من نتائج الفهرس',
-    preview: 'معاينة الملف'
+    preview: 'معاينة الملف',
+    stripAuth: 'تصريح المصادر',
+    stripAuthNone: 'لا يوجد مجلد مصرح به',
+    stripFolders: 'مجلدات مصرح بها',
+    stripScan: 'حالة الفهرسة',
+    stripScanning: 'الفهرسة جارية الآن',
+    stripComplete: 'اكتملت الفهرسة',
+    stripPartial: 'فهرسة جزئية',
+    stripAwaiting: 'بانتظار أول فهرسة',
+    stripFiles: 'ملفات مفهرسة',
+    stripRead: 'قُرئ الفهرس',
+    stripReadPending: 'لم تُقرأ بيانات بعد',
+    refresh: 'إعادة فهرسة المجلد',
+    footerCategories: 'تصنيفات مقاسة',
+    footerPlanned: 'ضمن الخطة',
+    footerEdit: 'تحرير التصنيفات',
+    footerDestination: 'تغيير الوجهة',
+    footerClear: 'إلغاء التحديد',
+    footerReview: 'مراجعة خطة التنظيم'
   } : {
     heading: 'Smart Organization Command Center',
     caption: 'Sources, categories and decisions in one connected workspace.',
@@ -91,23 +109,69 @@ export function StudioCommandCenter() {
     move: 'Move files',
     safe: 'Indexing and preview never modify files. Execution requires an explicit plan review and approval.',
     latest: 'Files displayed from the real inventory query',
-    preview: 'File preview'
+    preview: 'File preview',
+    stripAuth: 'Source authorization',
+    stripAuthNone: 'No folder authorized',
+    stripFolders: 'folders authorized',
+    stripScan: 'Scan state',
+    stripScanning: 'Indexing now',
+    stripComplete: 'Index complete',
+    stripPartial: 'Partial index',
+    stripAwaiting: 'Awaiting first index',
+    stripFiles: 'Files indexed',
+    stripRead: 'Index read',
+    stripReadPending: 'Nothing read yet',
+    refresh: 'Re-index folder',
+    footerCategories: 'categories measured',
+    footerPlanned: 'in plan',
+    footerEdit: 'Edit categories',
+    footerDestination: 'Change destination',
+    footerClear: 'Clear selection',
+    footerReview: 'Review Organization Plan'
   };
   const totalFiles = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalFiles ?? 0), 0);
-  const categoryRows = index ? CATEGORY_ORDER.map((key) => ({
-    key,
-    stat: index.categories.find((entry) => entry.key === key)
-  })) : [];
+  const totalBytes = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalBytes ?? 0), 0);
+  const measuredCategories = index ? index.categories.filter(entry => entry.count > 0).length : 0;
+  const plannedBytes = s.basket.reduce((sum, item) => sum + ('bytes' in item ? item.bytes : item.file.size), 0);
+  const [readAt, setReadAt] = useState<Date | null>(null);
+  useEffect(() => {
+    setPreviewId(null);
+    // The clock here is when this window read the index, not a timestamp the
+    // engine claims to own — the summary carries no capture time of its own.
+    setReadAt(index ? new Date() : null);
+  }, [source?.id, index?.inventoryId]);
   const preview: FileInfo | null = useMemo(
     () => s.page?.rows.find((file) => file.id === previewId) ?? s.page?.rows[0] ?? null,
     [s.page, previewId]
   );
-  useEffect(() => {
-    setPreviewId(null);
-  }, [source?.id, index?.inventoryId]);
+  const categoryRows = index ? CATEGORY_ORDER.map((key) => ({
+    key,
+    stat: index.categories.find((entry) => entry.key === key)
+  })) : [];
 
   return (
     <section className="st-command" aria-label={words.heading}>
+      <div className="st-command__strip">
+        <div className="st-command__strip-cell">
+          <span className="st-command__strip-icon" data-state={s.sources.length ? 'ok' : 'wait'}><ShieldCheck size={17} /></span>
+          <div><small>{words.stripAuth}</small><strong>{s.sources.length ? `${formatCount(s.sources.length, s.locale)} ${words.stripFolders}` : words.stripAuthNone}</strong></div>
+        </div>
+        <div className="st-command__strip-cell">
+          <span className="st-command__strip-icon" data-state={s.scanRunning ? 'busy' : index ? 'ok' : 'wait'}>{s.scanRunning ? <Loader2 className="st-spin" size={17} /> : index ? <Check size={17} /> : <Clock size={17} />}</span>
+          <div><small>{words.stripScan}</small><strong>{s.scanRunning ? words.stripScanning : index ? (index.partial ? words.stripPartial : words.stripComplete) : words.stripAwaiting}</strong></div>
+        </div>
+        <div className="st-command__strip-cell">
+          <span className="st-command__strip-icon" data-state={totalFiles ? 'ok' : 'wait'}><Database size={17} /></span>
+          <div><small>{words.stripFiles}</small><strong>{totalFiles ? `${formatCount(totalFiles, s.locale)} · ${formatBytes(totalBytes, s.locale)}` : '—'}</strong></div>
+        </div>
+        <div className="st-command__strip-cell">
+          <span className="st-command__strip-icon" data-state={readAt ? 'ok' : 'wait'}><Clock size={17} /></span>
+          <div><small>{words.stripRead}</small><strong>{readAt ? new Intl.DateTimeFormat(s.locale === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(readAt) : words.stripReadPending}</strong></div>
+        </div>
+        <button type="button" className="st-btn st-btn--small st-command__refresh" disabled={!source || !!s.scanRunning} onClick={() => source ? void s.beginScan(source.id) : void s.pickSource()}>
+          <RefreshCw size={14} />{words.refresh}
+        </button>
+      </div>
       <header className="st-command__headline">
         <div className="st-command__identity">
           <span className="st-command__mark"><Workflow size={24} /></span>
@@ -215,6 +279,20 @@ export function StudioCommandCenter() {
           <button type="button" className="st-btn st-btn--primary st-command__plan" disabled={!s.basketCount} onClick={() => s.goto('builder')}><Workflow size={16} />{words.plan}<ArrowRight size={15} /></button>
         </aside>
       </div>
+
+      <footer className="st-command__footer">
+        <div className="st-command__footsum">
+          <span><Images size={15} /><b>{formatCount(measuredCategories, s.locale)} / {CATEGORY_ORDER.length}</b>{words.footerCategories}</span>
+          <span><Check size={15} /><b>{formatCount(s.basketCount, s.locale)}</b>{words.footerPlanned}</span>
+          <span><Database size={15} /><b>{formatBytes(plannedBytes, s.locale)}</b></span>
+        </div>
+        <div className="st-command__footactions">
+          <button type="button" className="st-btn st-btn--small" disabled={!index} onClick={() => s.goto('library')}>{words.footerEdit}</button>
+          <button type="button" className="st-btn st-btn--small" onClick={() => s.goto('destinations')} disabled={s.mode === 'virtual'}><FolderOpen size={14} />{words.footerDestination}</button>
+          <button type="button" className="st-btn st-btn--small" disabled={!s.basket.length} onClick={s.clearBasket}><Trash2 size={14} />{words.footerClear}</button>
+          <button type="button" className="st-btn st-btn--primary" disabled={!s.basketCount} onClick={() => s.goto('builder')}>{words.footerReview}<ArrowRight size={15} /></button>
+        </div>
+      </footer>
     </section>
   );
 }

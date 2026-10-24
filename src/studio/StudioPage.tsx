@@ -821,9 +821,9 @@ function StudioWorkspace({ bridge, locale }: { bridge: StudioBridge; locale: 'ar
       <div className="st-root">
         <StudioHero />
         <StudioBanners />
+        <SurfaceRail />
         {surface === 'sources' && <StudioCommandCenter />}
         <div className="st-shell">
-          <SurfaceRail />
           <div className="st-stage" id="studio-stage" tabIndex={-1}>
             <StudioStage />
           </div>
