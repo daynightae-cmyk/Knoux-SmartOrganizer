@@ -19,7 +19,7 @@ export default function Header() {
             <strong>{ContextIcon && <ContextIcon size={14} aria-hidden="true" />}{t(current?.nameKey ?? 'nav.home')}</strong>
           </span>
           <span className="topbar-context__status">
-            <i aria-hidden="true" />
+            <span className="activity-dot" aria-hidden="true" />
             {t('common.local')}
           </span>
         </div>
@@ -32,7 +32,7 @@ export default function Header() {
       )}
       <div className="top-actions">
         <button
-          className="icon-button narrow-menu-button"
+          className="knx-btn knx-btn--icon narrow-menu-button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           aria-label={t('shell.toggleSidebar')}
           title={t('shell.toggleSidebar')}
@@ -41,7 +41,7 @@ export default function Header() {
           <Menu size={19} />
         </button>
         <button
-          className="search search-trigger"
+          className="knx-btn knx-btn--ghost search-trigger"
           onClick={() => setPaletteOpen(true)}
           aria-label={t('shell.searchPlaceholder')}
           aria-keyshortcuts="Control+K"
@@ -52,16 +52,16 @@ export default function Header() {
           <kbd>Ctrl K</kbd>
         </button>
         <button
-          className="icon-button activity-button"
+          className="knx-btn knx-btn--icon activity-button"
           onClick={() => setOperationOpen(true)}
           aria-label={t('shell.openActivity')}
           title={t('shell.openActivity')}
         >
           <ListChecks size={19} />
-          {active && <i className="activity-dot" aria-hidden="true" />}
+          {active && <span className="activity-dot" aria-hidden="true" />}
         </button>
         <button
-          className="locale-button"
+          className="knx-btn knx-btn--ghost locale-button"
           onClick={() => settings && update({ localization: { ...settings.localization, locale: locale === 'ar' ? 'en' : 'ar' } })}
           aria-label="locale"
         >

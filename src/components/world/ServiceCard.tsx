@@ -80,14 +80,14 @@ export function ServiceCard({ service, preview, locale, t, hue, onOpen, onRun }:
       </div>
 
       <footer className="svc-card__actions">
-        <button type="button" className="svc-card__primary" onClick={() => onOpen('preview')}>
+        <button type="button" className="knx-btn knx-btn--primary svc-card__primary" onClick={() => onOpen('preview')}>
           {t('svc.card.preview')}
         </button>
-        <button type="button" className="svc-card__ghost" onClick={() => onOpen('details')}>
+        <button type="button" className="knx-btn knx-btn--ghost svc-card__ghost" onClick={() => onOpen('details')}>
           {t('svc.card.details')}
         </button>
         {onRun && (
-          <button type="button" className="svc-card__run" onClick={onRun}>
+          <button type="button" className="knx-btn knx-btn--secondary svc-card__run" onClick={onRun}>
             {t('svc.card.open')}
           </button>
         )}

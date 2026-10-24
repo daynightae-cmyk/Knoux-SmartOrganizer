@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   const toggleGroup = (id: GroupId) => setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
 
-  // The rail is 240px wide and the product's full name does not fit in it beside
+  // The rail is 280px wide and the product's full name does not fit in it beside
   // its mark: "KNOuX SmartOrganizer" came out as "KNOuX Sma…" in every
   // screenshot, at every window size, on both languages. An ellipsis on the
   // brand is the one truncation a product cannot afford, so the lockup breaks
@@ -46,7 +46,7 @@ export default function Sidebar() {
           </div>
         )}
         <button
-          className="icon-button collapse-button"
+          className="knx-btn knx-btn--icon collapse-button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           aria-label={t('shell.toggleSidebar')}
           title={t('shell.toggleSidebar')}

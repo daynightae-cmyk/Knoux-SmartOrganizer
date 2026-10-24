@@ -13,5 +13,6 @@ import './world-cards.css';
 import './world-stage.css';
 import './flow-studio.css';
 import './aurora.css';
+import './knoux-ui.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

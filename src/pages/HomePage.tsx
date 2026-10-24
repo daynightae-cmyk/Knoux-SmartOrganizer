@@ -50,10 +50,10 @@ export default function HomePage() {
           <h2>{t('home.today')}</h2>
           <p className="hero__lead">{t('home.subtitle')}</p>
           <div className="hero-actions">
-            <button className="primary hero__primary" onClick={() => setPage('studio')}><FolderOpen size={18} />{t('studio.title')}<ArrowRight size={15} /></button>
-            <button className="secondary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
-            <button className="secondary" onClick={() => setPage('clipboard')}><ClipboardCopy size={16} />{t('nav.clipboard')}</button>
-            <button className="secondary" onClick={() => setPage('history')}><History size={16} />{t('home.recent')}</button>
+            <button className="knx-btn knx-btn--primary hero__primary" onClick={() => setPage('studio')}><FolderOpen size={18} />{t('studio.title')}<ArrowRight size={15} /></button>
+            <button className="knx-btn knx-btn--secondary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
+            <button className="knx-btn knx-btn--secondary" onClick={() => setPage('clipboard')}><ClipboardCopy size={16} />{t('nav.clipboard')}</button>
+            <button className="knx-btn knx-btn--secondary" onClick={() => setPage('history')}><History size={16} />{t('home.recent')}</button>
           </div>
           <p className="hero__last">
             <span className="hero__pulse" aria-hidden="true" />
