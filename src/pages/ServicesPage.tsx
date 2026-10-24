@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, summaryNumber } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatCount } from '../lib/format';
 
 /**
@@ -71,6 +72,7 @@ export default function ServicesPage() {
       </StagePanel>
 
       <WorldLedger world="services" t={t} locale={locale} />
+      <WorldDock world="services" count={total} tone={read ? 'ready' : event?.toolId === 'services-inventory' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

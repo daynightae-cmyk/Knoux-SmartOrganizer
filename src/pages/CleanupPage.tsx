@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote, StageEmpty } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, sumField, summaryNumber } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatBytes, formatCount } from '../lib/format';
 
 /**
@@ -72,6 +73,7 @@ export default function CleanupPage() {
       </StagePanel>
 
       <WorldLedger world="cleanup" t={t} locale={locale} />
+      <WorldDock world="cleanup" count={candidates} bytes={bytes} tone={scan ? 'ready' : event?.toolId === 'temp-cleanup-preview' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote, StageKv } from '../components/world/Stage';
 import { EngineConsole, WorldLedger } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatBytes, formatCount } from '../lib/format';
 
 /**
@@ -74,6 +75,7 @@ export default function SystemPage() {
       </StagePanel>
 
       <WorldLedger world="system" t={t} locale={locale} />
+      <WorldDock world="system" count={read ? read.items.length : null} tone={read ? 'ready' : event?.toolId === 'system-health' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

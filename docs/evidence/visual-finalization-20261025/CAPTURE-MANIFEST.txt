@@ -21,3 +21,5 @@ files:
   - system-1920x1080-en.png
   - studio-titles-1920x1080-en.png (after the header identity change)
   - studio-1366x768-ar-rtl.png (Arabic RTL, 1366x768)
+  - cleanup/startup/services/system 1920x1080 en dark with the world dock (from ef51d89)
+  - docked-files-1920x1080-en.png (Files decision dock)

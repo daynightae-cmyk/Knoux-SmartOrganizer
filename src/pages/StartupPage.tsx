@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, summaryNumber } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatCount } from '../lib/format';
 
 /**
@@ -69,6 +70,7 @@ export default function StartupPage() {
       </StagePanel>
 
       <WorldLedger world="startup" t={t} locale={locale} />
+      <WorldDock world="startup" count={entries} tone={read ? 'ready' : event?.toolId === 'startup-items' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

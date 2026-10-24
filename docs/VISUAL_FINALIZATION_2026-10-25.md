@@ -46,13 +46,13 @@ They are an evaluator's judgement of fidelity, not a pixel-diff percentage.
 |---|---:|---:|---|---|---|---|
 | REF-01 Organization Studio | ~55% | ~78% | `studio…`, `settled-studio…` | stage rail navigates, source select, category filter, mode radios, plan gate | `e84ca29` pushed | PARTIAL — populated library not photographed |
 | REF-02 Applications | ~70% | ~88% | `settled-applications…` (149 real programs) | command bar, row opens dossier, checkbox staging | `b1b80fb` pushed | CLOSE TO TARGET |
-| REF-03 Files | not scored | ~72% | `settled-files…` | search, pills, ledger, inspector groups | `b1b80fb` | PARTIAL |
+| REF-03 Files | not scored | ~90% | `docked-files-1920x1080-en.png` | search, type/age band filters, ledger, inspector, dock | `ef51d89` | CLOSE TO TARGET — no thumbnails (the read is metadata-only) |
 | REF-04 Storage | not scored | ~65% | `settled-storage…` | walk lanes, ledger, inspector | `b1b80fb` | PARTIAL — treemap absent |
-| REF-05 Cleanup | not scored | ~70% | `cleanup…` | preview run, dry-run gate, quarantine tabs | `b1b80fb` | PARTIAL |
-| REF-06 Startup | not scored | ~70% | `startup…` | tool tabs, register read, sequence rail | `b1b80fb` | PARTIAL |
-| REF-07 System | not scored | NOT VERIFIED | `system…` captured, not yet compared | — | `b1b80fb` | NOT VERIFIED |
+| REF-05 Cleanup | not scored | ~78% | `cleanup-1920x1080-en.png` | preview run, dry-run gate, quarantine tabs, dock | `b96c27c`+ | PARTIAL — candidate table waits on a 25 s scan |
+| REF-06 Startup | not scored | ~76% | `startup-1920x1080-en.png` | tool tabs, register read, six-step rail, dock | `b96c27c`+ | PARTIAL — no staging deck yet |
+| REF-07 System | not scored | ~72% | `system-1920x1080-en.png` | sample run, ledger, dock | `b96c27c`+ | PARTIAL — no ring gauges or timeline chart |
 | REF-08 Repair | not scored | ~72% | `repair…` | command tabs, preview, privilege notice | `b1b80fb` | PARTIAL |
-| REF-09 Services | not scored | ~62% | `services…` | inventory read, protected badges | `b1b80fb` | PARTIAL |
+| REF-09 Services | not scored | ~68% | `services-1920x1080-en.png` | inventory read, protected badges, dock | `b96c27c`+ | PARTIAL — no register or dependency graph |
 | REF-10 Automation | not scored | ~65% | `automation…` | draft select, step preview, service cards | `b1b80fb` | PARTIAL |
 
 What the seven world screens (REF-03 to REF-09) already share, and why they

@@ -516,3 +516,29 @@ html[data-theme="light"] .stage .data-table-wrap { background: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .stage[data-stage-state="reading"] .stage__stamp::before { animation: none; }
 }
+
+/* REF-04..REF-09 decision dock. Every approved workspace closes with a bar that
+   says what was measured and what the next real step is, so the shared stage
+   grows one here instead of seven near-duplicates. */
+.world-dock {
+  position: sticky; bottom: 12px; z-index: 4;
+  display: flex; align-items: center; gap: 13px; min-width: 0;
+  padding: 11px 15px;
+  border: 1px solid color-mix(in srgb, hsl(var(--world-hue, 258) 70% 62%) 34%, var(--border));
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 5% -45%, hsl(var(--world-hue, 258) 78% 58% / 16%), transparent 62%), linear-gradient(150deg, var(--surface-raised), var(--surface));
+  box-shadow: 0 -10px 30px #00000026, inset 0 1px #ffffff0d;
+}
+.world-dock__mark { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); box-shadow: 0 0 0 4px hsl(var(--world-hue, 258) 70% 55% / 12%); }
+.world-dock--busy .world-dock__mark { background: var(--primary-bright); animation: world-dock-pulse 1.3s ease-in-out infinite; }
+.world-dock--ready .world-dock__mark { background: var(--status-success-text); box-shadow: 0 0 12px color-mix(in srgb, var(--status-success-text) 55%, transparent); }
+.world-dock--warn .world-dock__mark { background: var(--status-warning-text); }
+.world-dock__read { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.world-dock__read b { font-size: var(--text-md); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dock__read small { font-size: var(--text-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dock__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.world-dock__actions .world-control--primary svg { flex: none; }
+html[dir="rtl"] .world-dock__actions .world-control--primary svg { transform: scaleX(-1); }
+@keyframes world-dock-pulse { 50% { opacity: .35; } }
+@media (max-width: 860px) { .world-dock { flex-wrap: wrap; } .world-dock__actions { width: 100%; } .world-dock__actions .world-control { flex: 1; } }
+@media (prefers-reduced-motion: reduce) { .world-dock--busy .world-dock__mark { animation: none; } }
