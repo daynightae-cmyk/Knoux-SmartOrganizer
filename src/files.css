@@ -574,3 +574,29 @@ html[data-theme="light"] .filex__exposurehead svg { color: color-mix(in srgb, va
 }
 html[data-motion="reduced"] .filex__seg, html[data-motion="reduced"] .filex__glancetile { transition: none; }
 html[data-motion="reduced"] .filex__seg--on { transform: none; }
+
+/* REF-03 decision dock: what is open, what was measured, and the one next
+   step. Sticky so the register can scroll under it the way the reference
+   composes its bottom bar, and honest when nothing has been read yet. */
+.filex__dock {
+  position: sticky; bottom: 12px; z-index: 4;
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 6% -40%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 62%), linear-gradient(150deg, var(--surface-raised), var(--surface));
+  box-shadow: 0 -10px 30px #00000026, inset 0 1px #ffffff0d;
+}
+.filex__dockpick { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.filex__dockmark { display: grid; place-items: center; flex: none; width: 21px; height: 21px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: transparent; }
+.filex__dockmark.is-on { border-color: var(--primary); background: var(--primary-strong); color: var(--text-on-accent); }
+.filex__dockwho { display: grid; gap: 2px; min-width: 0; }
+.filex__dockwho bdi { font-size: var(--text-md); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+.filex__dockwho small { font-size: var(--text-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filex__dockline { flex: none; margin: 0; font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.filex__dockactions { display: flex; align-items: center; gap: 8px; flex: none; }
+.filex__dockreview { min-height: 38px; padding-inline: 16px; }
+.filex__dockreview svg { flex: none; }
+html[dir="rtl"] .filex__dockreview svg { transform: scaleX(-1); }
+@media (max-width: 1180px) { .filex__dockline { display: none; } }
+@media (max-width: 860px) { .filex__dock { flex-wrap: wrap; } .filex__dockactions { width: 100%; } .filex__dockactions .world-control { flex: 1; } }

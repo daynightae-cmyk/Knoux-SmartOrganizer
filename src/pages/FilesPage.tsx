@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
-  AlertTriangle, ArrowDown, ArrowUp, Check, Download, FolderOpen, FolderSearch,
+  AlertTriangle, ArrowDown, ArrowRight, ArrowUp, Check, Download, FolderOpen, FolderSearch,
   Hash, Search, ShieldAlert, Undo2, X
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -480,7 +480,7 @@ function Inspector({ record, snapshot, hash, hashing, busy, bucket, extension, o
 /* -------------------------------------------------------------------- page */
 
 export default function FilesPage() {
-  const { t, locale, tools, runById, result, event, setNotice } = useStore();
+  const { t, locale, tools, runById, result, event, setNotice, setPage } = useStore();
 
   const [snapshot, setSnapshot] = useState<FileSnapshot | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -619,6 +619,18 @@ export default function FilesPage() {
     const completed = await runById('organize-downloads-preview', {}, true);
     if (!completed || !completed.success) setPlanPhase('failed');
   }, [organizeTool, runById, setNotice, t]);
+
+  /**
+   * The dock's next step: ask the existing preview engine for a plan and bring
+   * the plan section into view, so the button never looks like it did nothing
+   * when the answer lands below the fold.
+   */
+  const reviewPlan = useCallback(() => {
+    void preview();
+    window.requestAnimationFrame(() => {
+      document.querySelector('.filex__plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [preview]);
 
   const apply = useCallback(async () => {
     if (!confirmed || !applyTool || !canRunTool(applyTool) || !plan) return;
@@ -1071,6 +1083,39 @@ export default function FilesPage() {
         t={t}
         locale={locale}
       />
+
+      <footer className="filex__dock" aria-label={locale === 'ar' ? 'حالة التحديد والخطوة التالية' : 'Selection and next step'}>
+        <div className="filex__dockpick">
+          <span className={activeRecord ? 'filex__dockmark is-on' : 'filex__dockmark'} aria-hidden="true">{activeRecord ? <Check size={13} /> : null}</span>
+          <div className="filex__dockwho">
+            <bdi>{activeRecord ? activeRecord.name : (locale === 'ar' ? 'لم يُفتح ملف بعد' : 'No entry open yet')}</bdi>
+            <small>
+              {activeRecord
+                ? [activeRecord.type, activeRecord.sizeKnown ? formatBytes(activeRecord.size, locale) : (locale === 'ar' ? 'بحجم غير مقاس' : 'size unmeasured'), activeRecord.folder || (locale === 'ar' ? 'الجذر' : 'root')].join(' · ')
+                : (locale === 'ar' ? 'اختر صفاً من السجل ليفحصه المراقب' : 'Pick a row in the register to open it in the inspector')}
+            </small>
+          </div>
+        </div>
+        <p className="filex__dockline">
+          {snapshot
+            ? fill(locale === 'ar' ? '{count} عنصر مقاس في هذا المجلد · {plan}' : '{count} measured entries in this folder · {plan}', {
+              count: formatCount(snapshot.records.length, locale),
+              plan: planPhase === 'previewing' ? (locale === 'ar' ? 'تُبنى الخطة الآن' : 'plan is being built')
+                : plan ? (locale === 'ar' ? 'خطة جاهزة للمراجعة' : 'plan ready to review')
+                  : (locale === 'ar' ? 'لا خطة بعد' : 'no plan yet')
+            })
+            : (locale === 'ar' ? 'لم تُقرأ قائمة التنزيلات بعد' : 'The Downloads listing has not been read yet')}
+        </p>
+        <div className="filex__dockactions">
+          <button type="button" className="world-control" onClick={() => setPage('studio')}>
+            {locale === 'ar' ? 'استوديو التنظيم' : 'Organization Studio'}
+          </button>
+          <button type="button" className="world-control world-control--primary filex__dockreview" onClick={reviewPlan} disabled={planning || !organizeTool}>
+            {planning ? (locale === 'ar' ? 'تُبنى الخطة…' : 'Building plan…') : (locale === 'ar' ? 'مراجعة خطة التنظيم' : 'Review organization plan')}
+            <ArrowRight size={15} />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
