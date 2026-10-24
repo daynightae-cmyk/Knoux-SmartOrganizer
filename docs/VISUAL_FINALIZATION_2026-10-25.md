@@ -152,7 +152,9 @@ tokens. No new dependency was added.
 | Local gates at `e84ca29` | `npm run check` PASS · `npm run lint` PASS · `npm test` 426/426 PASS · `tests/studio-workspace.test.tsx` 12/12 PASS · `npm run build` PASS |
 | CI at `b1b80fb` | Source verification SUCCESS (check, lint, tests, build). Windows packaged runtime verification FAILED at the visual acceptance step: `EBUSY: resource busy or locked, unlink '...\knoux-visual-*\user-data\DIPS'` |
 | CI at `e84ca29` | Source verification SUCCESS. Visual acceptance: the EBUSY is gone, and the step then hit its own ceiling — `smoke timed out after 1800 seconds`. 56 real captures each boot the packaged app and wait for a genuine Windows read, which does not fit one 30-minute step. |
-| `33b51f1` | The matrix is split into two bounded slices in `ci.yml` (data-driven worlds, then workspaces and shells), each with its own ceiling. Same scenarios, same assertions, nothing skipped. Outcome pending at the time of writing. |
+| `33b51f1` | Matrix split into two bounded slices. Slice 1 (applications, files, storage, automation — 31 of the 56 scenarios) still exceeded its 1500-second ceiling on the runner, so the reload-per-scenario cost, not the photograph, is the real driver. |
+| `60c5dd3` | The matrix is cut further: applications alone, files+storage, automation alone, then the ten lighter worlds. Same 56 scenarios, same assertions, each step bounded so a slow world names itself instead of eating the job. |
+| Open | The acceptance gate has not gone green on any mission SHA yet. If the four-way cut still overruns, the next honest step is to stop reloading the application between scenarios of the same world, which is the measured cost, rather than to raise a ceiling again. |
 
 Harness repairs in `scripts/visual-acceptance-smoke.cjs`, all aimed at the
 recorded CI failures and none of them a weakened assertion:
