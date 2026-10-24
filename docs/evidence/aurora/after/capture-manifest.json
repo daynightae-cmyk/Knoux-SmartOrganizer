@@ -1,0 +1,468 @@
+{
+  "capturedAt": "2026-10-24T02:13:20.121Z",
+  "source": "packaged Electron build, CDP Page.captureScreenshot at the requested viewport; naturalViewport and emulatedViewport state the native/emulated values",
+  "shots": [
+    {
+      "shot": "after-en-home-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-home-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "home",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-ar-home-1366x768",
+      "file": "docs/evidence/aurora/after/after-ar-home-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "ar",
+        "theme": "dark",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "ar",
+        "dir": "rtl",
+        "theme": "dark",
+        "page": "home",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-home-light-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-home-light-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "light",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "light",
+        "page": "home",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-home-860x600",
+      "file": "docs/evidence/aurora/after/after-en-home-860x600.png",
+      "requested": {
+        "width": 860,
+        "height": 600,
+        "locale": "en",
+        "theme": "dark",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "home",
+        "viewport": [
+          860,
+          600
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 860,
+        "height": 600
+      }
+    },
+    {
+      "shot": "after-ar-home-860x600",
+      "file": "docs/evidence/aurora/after/after-ar-home-860x600.png",
+      "requested": {
+        "width": 860,
+        "height": 600,
+        "locale": "ar",
+        "theme": "dark",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "ar",
+        "dir": "rtl",
+        "theme": "dark",
+        "page": "home",
+        "viewport": [
+          860,
+          600
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 860,
+        "height": 600
+      }
+    },
+    {
+      "shot": "after-en-home-portal-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-home-portal-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "home"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "home",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": "ready"
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-applications-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-applications-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "applications"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "applications",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-cleanup-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-cleanup-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "cleanup"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "cleanup",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-cleanup-light-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-cleanup-light-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "light",
+        "page": "cleanup"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "light",
+        "page": "cleanup",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-services-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-services-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "services"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "services",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-repair-preview-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-repair-preview-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "repair"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "repair",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-flow-studio-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-flow-studio-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "automation"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "automation",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-ar-flow-studio-1366x768",
+      "file": "docs/evidence/aurora/after/after-ar-flow-studio-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "ar",
+        "theme": "dark",
+        "page": "automation"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "ar",
+        "dir": "rtl",
+        "theme": "dark",
+        "page": "automation",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    },
+    {
+      "shot": "after-en-studio-1366x768",
+      "file": "docs/evidence/aurora/after/after-en-studio-1366x768.png",
+      "requested": {
+        "width": 1366,
+        "height": 768,
+        "locale": "en",
+        "theme": "dark",
+        "page": "studio"
+      },
+      "naturalViewport": {
+        "width": 1464,
+        "height": 875
+      },
+      "emulatedViewport": true,
+      "metrics": {
+        "lang": "en",
+        "dir": "ltr",
+        "theme": "dark",
+        "page": "studio",
+        "viewport": [
+          1366,
+          768
+        ],
+        "scrollbar": false,
+        "drawer": false,
+        "health": null
+      },
+      "image": {
+        "width": 1366,
+        "height": 768
+      }
+    }
+  ]
+}

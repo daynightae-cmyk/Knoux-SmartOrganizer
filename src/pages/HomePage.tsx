@@ -1,4 +1,7 @@
-import { Activity, ClipboardCopy, Cpu, HardDrive, History, LockKeyhole, MemoryStick, ScanSearch, Timer, FolderOpen } from 'lucide-react';
+import {
+  Activity, ArrowRight, ArrowUpRight, CheckCircle2, ClipboardCopy, Cpu, FolderOpen,
+  History, LockKeyhole, MemoryStick, ScanSearch, ShieldCheck, Timer, XCircle
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import type { CSSProperties } from 'react';
 import { formatBytes, formatCount, formatDateTime } from '../lib/format';
@@ -6,10 +9,10 @@ import { countByState, worlds } from '../lib/service-catalog';
 import { toolIcon } from '../lib/icons';
 import { pageDef } from '../lib/pages';
 import { useStore } from '../state/store';
-import { SectionTitle, StatCard } from '../components/common';
+import { SectionTitle } from '../components/common';
 
 const sectionMotion = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: .34, ease: [0.22, 1, 0.36, 1] as const } } };
-const cardMotion = { hidden: { opacity: 0, y: 10, scale: .98 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: .28, ease: [0.22, 1, 0.36, 1] as const } } };
+const cardMotion = { hidden: { opacity: 0, y: 10, scale: .985 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: .28, ease: [0.22, 1, 0.36, 1] as const } } };
 
 export default function HomePage() {
   const { tools, health, history, settings, t, locale, runById, setPage, openTool } = useStore();
@@ -27,33 +30,100 @@ export default function HomePage() {
 
   return (
     <div className={`home-workspace workspace-density-${workspace.cardDensity}`}>
-      <motion.section className="hero" aria-label={t('home.today')} variants={sectionMotion} initial="hidden" animate="show">
-        <div>
-          <span className="local-badge"><LockKeyhole size={14} />{t('common.local')}</span>
+      <motion.section
+        className={`hero hero--aurora${workspace.showMetrics ? '' : ' hero--solo'}`}
+        aria-label={t('home.today')}
+        variants={sectionMotion}
+        initial="hidden"
+        animate="show"
+      >
+        <div className="hero__scene" aria-hidden="true">
+          <span className="hero__stars" />
+          <span className="hero__horizon" />
+          <span className="hero__flare" />
+        </div>
+        <div className="hero__copy">
+          <div className="hero__meta">
+            <span className="local-badge"><LockKeyhole size={13} />{t('common.local')}</span>
+            <span className="hero__chip">{t('home.commandDeck')}</span>
+          </div>
           <h2>{t('home.today')}</h2>
-          <p>{t('home.subtitle')}</p>
+          <p className="hero__lead">{t('home.subtitle')}</p>
           <div className="hero-actions">
-            <button className="primary" onClick={() => setPage('studio')}><FolderOpen size={18} />{t('studio.title')}</button>
+            <button className="primary hero__primary" onClick={() => setPage('studio')}><FolderOpen size={18} />{t('studio.title')}<ArrowRight size={15} /></button>
             <button className="secondary" onClick={startScan}><ScanSearch size={18} />{t('home.scan')}</button>
             <button className="secondary" onClick={() => setPage('clipboard')}><ClipboardCopy size={16} />{t('nav.clipboard')}</button>
             <button className="secondary" onClick={() => setPage('history')}><History size={16} />{t('home.recent')}</button>
           </div>
-          <p className="muted small">
+          <p className="hero__last">
+            <span className="hero__pulse" aria-hidden="true" />
             {lastScan ? `${t('smartScan.lastRun')}: ${formatDateTime(lastScan.finishedAt, locale)}` : t('smartScan.neverRun')}
           </p>
         </div>
-        {workspace.showMetrics && <div className="hero-side">
-          <StatCard label={t('home.memory')} value={memPercent == null ? '—' : `${memPercent}%`} detail={health ? `${t('home.freeSpace')}: ${formatBytes(health.memoryFreeBytes, locale)}` : t('common.loading')} icon={<MemoryStick size={18} />} />
-          <StatCard label={t('home.storage')} value={diskFree != null && Number.isFinite(diskFree) ? formatBytes(diskFree, locale) : '—'} detail={diskPercent == null ? t('common.loading') : `${t('common.used')} ${diskPercent}%`} icon={<HardDrive size={18} />} />
-          <StatCard label={t('home.uptime')} value={typeof health?.uptimeSeconds === 'number' ? uptime(health.uptimeSeconds as number, locale) : '—'} detail={t('home.ready')} icon={<Timer size={18} />} />
-          <StatCard label={t('home.cpu')} value={health?.cpuCores != null ? String(health.cpuCores) : '—'} detail={String(health?.cpuModel || t('common.loading')).slice(0, 42)} icon={<Cpu size={18} />} />
+        {workspace.showMetrics && <div className="hero__instrument" data-health={diskPercent == null ? 'loading' : 'ready'}>
+          <div className="instrument-head">
+            <span><Activity size={14} aria-hidden="true" />{t('home.systemPulse')}</span>
+            <small>{t('stage.measured')}</small>
+          </div>
+          <div className="instrument-core">
+            <div className="instrument-ring" style={{ '--score': `${diskPercent ?? 0}%` } as CSSProperties}>
+              <span className="instrument-ring__inner">
+                <strong>{diskPercent == null ? '—' : `${diskPercent}%`}</strong>
+                <small>{t('home.storage')}</small>
+              </span>
+            </div>
+            <div className="instrument-lines">
+              <div className="instrument-line">
+                <MemoryStick size={15} aria-hidden="true" />
+                <span>{t('home.memory')}</span>
+                <b>{memPercent == null ? '—' : `${memPercent}%`}</b>
+                <small>{health ? `${t('home.freeSpace')}: ${formatBytes(health.memoryFreeBytes, locale)}` : t('common.loading')}</small>
+              </div>
+              <div className="instrument-line">
+                <Timer size={15} aria-hidden="true" />
+                <span>{t('home.uptime')}</span>
+                <b>{typeof health?.uptimeSeconds === 'number' ? uptime(health.uptimeSeconds as number, locale) : '—'}</b>
+                <small>{t('home.ready')}</small>
+              </div>
+            </div>
+          </div>
+          <div className="instrument-foot">
+            <Cpu size={15} aria-hidden="true" />
+            <span title={String(health?.cpuModel || '')}>{String(health?.cpuModel || t('common.loading'))}</span>
+            <b>{health?.cpuCores != null ? formatCount(health.cpuCores as number, locale) : '—'}</b>
+          </div>
         </div>}
       </motion.section>
 
-      {workspace.showWorkspaces && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
-        <SectionTitle title={t('home.worlds')} subtitle={t('home.worldsHint')} action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}</button>} />
+      <motion.section className="studio-gateway" variants={sectionMotion} initial="hidden" animate="show" aria-labelledby="home-studio-title">
+        <span className="studio-gateway__aura" aria-hidden="true" />
+        <div className="studio-gateway__visual" aria-hidden="true">
+          <span className="studio-gateway__orbit studio-gateway__orbit--a" />
+          <span className="studio-gateway__orbit studio-gateway__orbit--b" />
+          <span className="studio-gateway__core"><FolderOpen size={25} /></span>
+          <span className="studio-gateway__node studio-gateway__node--one" />
+          <span className="studio-gateway__node studio-gateway__node--two" />
+          <span className="studio-gateway__node studio-gateway__node--three" />
+        </div>
+        <div className="studio-gateway__copy">
+          <span className="eyebrow">{t('home.flagship')}</span>
+          <h2 id="home-studio-title">{t('studio.title')}</h2>
+          <p>{t('home.studioBody')}</p>
+          <span className="studio-gateway__facts"><ShieldCheck size={13} aria-hidden="true" />{t('home.studioFacts')}</span>
+        </div>
+        <button className="primary studio-gateway__cta" onClick={() => setPage('studio')}>
+          {t('home.studioCta')}<ArrowRight size={16} />
+        </button>
+      </motion.section>
+
+      {workspace.showWorkspaces && <motion.section className="section world-portal" variants={sectionMotion} initial="hidden" animate="show">
+        <SectionTitle
+          title={t('home.worlds')}
+          subtitle={t('home.worldsHint')}
+          action={<button className="text-button" onClick={() => setPage('scan')}>{t('home.viewAll')}<ArrowRight size={13} /></button>}
+        />
         <div className="portal-grid">
-          {worlds.map(world => {
+          {worlds.map((world, index) => {
             const counts = countByState(world.id);
             const target = pageDef(world.id);
             const Icon = target?.icon;
@@ -64,16 +134,27 @@ export default function HomePage() {
                 style={{ '--world-hue': world.accent.hue } as CSSProperties}
                 variants={cardMotion}
                 onClick={() => setPage(world.id)}
+                aria-label={`${t('home.openWorld')}: ${t(world.labelKey)}`}
               >
+                <span className="portal-tile__wash" aria-hidden="true" />
                 <span className="portal-tile__head">
-                  <span className="portal-tile__icon" aria-hidden="true">{Icon && <Icon size={17} />}</span>
-                  <strong>{t(world.labelKey)}</strong>
+                  <span className="portal-tile__icon" aria-hidden="true">{Icon && <Icon size={18} />}</span>
+                  <span className="portal-tile__title">
+                    <strong>{t(world.labelKey)}</strong>
+                    <small>{String(index + 1).padStart(2, '0')}</small>
+                  </span>
+                  <span className="portal-tile__arrow" aria-hidden="true"><ArrowUpRight size={15} /></span>
                 </span>
-                <small>{t(world.taglineKey)}</small>
+                <small className="portal-tile__tagline">{t(world.taglineKey)}</small>
+                <span className="portal-tile__meter" aria-hidden="true">
+                  <i className="live" style={{ flexGrow: counts.operational }} />
+                  <i className="partial" style={{ flexGrow: counts.partial }} />
+                  <i style={{ flexGrow: counts.planned }} />
+                </span>
                 <span className="portal-tile__counts">
-                  <i className="live" aria-hidden="true" />{formatCount(counts.operational, locale)}
-                  <i className="partial" aria-hidden="true" />{formatCount(counts.partial, locale)}
-                  <i aria-hidden="true" />{formatCount(counts.planned, locale)}
+                  <span><i className="live" aria-hidden="true" />{formatCount(counts.operational, locale)}</span>
+                  <span><i className="partial" aria-hidden="true" />{formatCount(counts.partial, locale)}</span>
+                  <span><i aria-hidden="true" />{formatCount(counts.planned, locale)}</span>
                 </span>
               </motion.button>
             );
@@ -86,41 +167,53 @@ export default function HomePage() {
         </p>
       </motion.section>}
 
-      {workspace.showRecent && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
-        <SectionTitle title={t('home.recent')} action={<button className="text-button" onClick={() => setPage('history')}>{t('home.viewAll')}</button>} />
-        {recent.length === 0 ? (
-          <p className="muted">{t('home.noRecentOps')}</p>
-        ) : (
-          <div className="history-list compact">
-            {recent.map(record => (
-              <motion.article key={record.operationId} className="history-card" variants={cardMotion}>
-                <div>
-                  <span className={record.success ? 'status success' : 'status error'}>{record.success ? t('history.success') : t('history.error')}</span>
-                  <strong dir="ltr">{record.toolId}</strong>
-                  <small>{formatDateTime(record.finishedAt, locale)}</small>
-                </div>
-                <span className="muted small" dir="ltr">{formatCount(record.items.length, locale)}</span>
-              </motion.article>
-            ))}
-          </div>
-        )}
-      </motion.section>}
+      {(workspace.showRecent || workspace.showQuickTools) && <div className="home-lower">
+        {workspace.showRecent && <motion.section className="section home-activity" variants={sectionMotion} initial="hidden" animate="show">
+          <SectionTitle title={t('home.recent')} action={<button className="text-button" onClick={() => setPage('history')}>{t('home.viewAll')}<ArrowRight size={13} /></button>} />
+          {recent.length === 0 ? (
+            <div className="home-empty">
+              <span><Activity size={19} /></span>
+              <p>{t('home.noRecentOps')}</p>
+            </div>
+          ) : (
+            <div className="activity-rail">
+              {recent.map(record => {
+                const tool = tools.find(item => item.id === record.toolId);
+                return (
+                  <motion.article key={record.operationId} className="activity-item" variants={cardMotion}>
+                    <span className={`activity-orb${record.success ? ' is-success' : ' is-error'}`} aria-hidden="true">
+                      {record.success ? <CheckCircle2 size={15} /> : <XCircle size={15} />}
+                    </span>
+                    <div className="activity-copy">
+                      <strong>{tool ? t(tool.nameKey) : record.toolId}</strong>
+                      <small>{formatDateTime(record.finishedAt, locale)}</small>
+                    </div>
+                    <span className="activity-state">{record.success ? t('history.success') : t('history.error')}</span>
+                    <span className="activity-count" dir="ltr">{formatCount(record.items.length, locale)}</span>
+                  </motion.article>
+                );
+              })}
+            </div>
+          )}
+        </motion.section>}
 
-      {workspace.showQuickTools && <motion.section className="section" variants={sectionMotion} initial="hidden" animate="show">
-        <SectionTitle title={t('tools.title')} subtitle={t('home.offline')} />
-        <div className="quick-grid">
-          {tools.slice(0, 6).map(tool => {
-            const Icon = toolIcon(tool.icon);
-            return (
-              <motion.button key={tool.id} className="quick-card" variants={cardMotion} disabled={!tool.availability.available} onClick={() => openTool(tool)}>
-                <Icon size={18} />
-                <span><strong>{t(tool.nameKey)}</strong><small>{t(tool.descriptionKey)}</small></span>
-              </motion.button>
-            );
-          })}
-        </div>
-        <p className="muted small"><Activity size={12} /> {formatCount(tools.length, locale)} {t('home.entries')}</p>
-      </motion.section>}
+        {workspace.showQuickTools && <motion.section className="section home-quick" variants={sectionMotion} initial="hidden" animate="show">
+          <SectionTitle title={t('tools.title')} subtitle={t('home.offline')} />
+          <div className="quick-list">
+            {tools.slice(0, 6).map(tool => {
+              const Icon = toolIcon(tool.icon);
+              return (
+                <motion.button key={tool.id} className="quick-row" variants={cardMotion} disabled={!tool.availability.available} onClick={() => openTool(tool)}>
+                  <span className="quick-row__icon" aria-hidden="true"><Icon size={17} /></span>
+                  <span className="quick-row__copy"><strong>{t(tool.nameKey)}</strong><small>{t(tool.descriptionKey)}</small></span>
+                  <ArrowUpRight size={14} aria-hidden="true" />
+                </motion.button>
+              );
+            })}
+          </div>
+          <p className="quick-note"><Activity size={12} aria-hidden="true" /> {formatCount(tools.length, locale)} {t('home.entries')}</p>
+        </motion.section>}
+      </div>}
     </div>
   );
 }

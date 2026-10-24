@@ -84,7 +84,7 @@ export function isCatalogPage(id: PageId): boolean {
  * shell would otherwise print a generic catalogue title over it.
  */
 export function worldOwnsHeader(id: PageId): boolean {
-  return id === 'applications' || id === 'files' || id === 'storage' || id === 'automation' || isCatalogPage(id);
+  return id === 'applications' || id === 'files' || id === 'storage' || id === 'automation' || id === 'studio' || isCatalogPage(id);
 }
 
 export function pageSubtitleKey(id: PageId): string | null {

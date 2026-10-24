@@ -30,6 +30,14 @@ describe('stage stylesheet wiring', () => {
   it('imports the shared stage sheet and the Flow Studio sheet into the renderer', () => {
     expect(main).toContain("import './world-stage.css';");
     expect(main).toContain("import './flow-studio.css';");
+    expect(main).toContain("import './aurora.css';");
+  });
+
+  it('carries the AURORA hero, portal and splash layers in the same bundle', () => {
+    const aurora = readFileSync(path.join(ROOT, 'aurora.css'), 'utf8');
+    for (const selector of ['.hero--aurora', '.studio-gateway', '.portal-tile', '.splash__planet', '.svc-card']) {
+      expect(aurora, selector).toContain(selector);
+    }
   });
 
   it('carries the chrome every specialist world composes', () => {

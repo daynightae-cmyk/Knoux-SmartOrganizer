@@ -1335,6 +1335,12 @@ async function captureVisualEvidence(outputDirectory) {
     // taken, so the keyboard evidence does not need a second screenshot.
     { name: 'en-automation-preview-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, prepare: 'var c=document.querySelector("[data-service=auto-smart-scan] .svc-card__primary"); if(c){ c.focus(); c.click(); }', waitsAfterPrepare: PREVIEW_WAITS, requiresDialog: true },
     { name: 'en-home-portal-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: PORTAL_WAITS, scrollTo: '.portal-grid' },
+    // AURORA home evidence waits for the measured instrument rather than a
+    // fixed delay, so the captured panel contains real readings.
+    { name: 'en-home-aurora-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: [{ selector: '.hero__instrument[data-health="ready"]', min: 1, ms: 45000 }] },
+    { name: 'ar-home-aurora-1366x768', locale: 'ar', page: 'home', width: 1366, height: 768, waits: [{ selector: '.hero__instrument[data-health="ready"]', min: 1, ms: 45000 }] },
+    { name: 'en-home-aurora-portal-1366x768', locale: 'en', page: 'home', width: 1366, height: 768, waits: [{ selector: '.hero__instrument[data-health="ready"]', min: 1, ms: 45000 }], scrollTo: '.world-portal' },
+    { name: 'en-studio-aurora-1366x768', locale: 'en', page: 'studio', width: 1366, height: 768, waits: [{ selector: '.st-hero', min: 1, ms: 60000 }] },
     { name: 'en-repair-preview-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=repair-component-scan] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS },
     { name: 'ar-cleanup-preview-860x600', locale: 'ar', page: 'cleanup', width: 860, height: 600, waits: WORLD_WAITS, prepare: 'var c=document.querySelector("[data-service=cleanup-temp-quarantine] .svc-card__primary"); if(c) c.click();', waitsAfterPrepare: PREVIEW_WAITS }
   ];

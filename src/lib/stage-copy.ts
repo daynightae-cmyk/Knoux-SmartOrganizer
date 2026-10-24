@@ -6,10 +6,13 @@
  * rather than dressing it up.
  */
 export const stageCopy: Record<string, { ar: string; en: string }> = {
+  'stage.splash.kicker': { ar: 'ذكاء ويندوز المحلي', en: 'Local Windows intelligence' },
   'stage.splash.tagline': { ar: 'دقّة. ذكاء. تحكّم.', en: 'Precision. Intelligence. Control.' },
   'stage.splash.private': { ar: 'خصوصية', en: 'Private' },
   'stage.splash.powerful': { ar: 'قادر', en: 'Powerful' },
   'stage.splash.working': { ar: 'تهيئة بيئة KNOuX…', en: 'Initialising the KNOuX environment…' },
+  'stage.splash.core': { ar: 'النواة المحلية', en: 'Local core' },
+  'stage.splash.footer': { ar: 'محلي أولًا · بلا سحابة · ملكك', en: 'Local-first · No cloud · Yours' },
 
   'stage.measured': { ar: 'مقيس على هذا الجهاز', en: 'Measured on this device' },
   'stage.awaiting': { ar: 'بانتظار قراءة', en: 'Awaiting a reading' },

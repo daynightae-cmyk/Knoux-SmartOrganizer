@@ -56,7 +56,7 @@ export default function Sidebar() {
       </div>
       <nav aria-label={t('app.name')} className="sidebar-nav">
         {pageGroups.map(group => (
-          <div key={group.id} className="nav-group">
+          <div key={group.id} className="nav-group" data-group={group.id}>
             {!collapsed && (
               <button className="nav-group-head" onClick={() => toggleGroup(group.id)} aria-expanded={openGroups[group.id]}>
                 <span>{t(group.nameKey)}</span>
@@ -69,6 +69,7 @@ export default function Sidebar() {
                   <button
                     key={item.id}
                     className={page === item.id ? 'nav-item active' : 'nav-item'}
+                    data-page={item.id}
                     onClick={() => go(item.id)}
                     aria-current={page === item.id ? 'page' : undefined}
                     title={collapsed ? t(item.nameKey) : undefined}

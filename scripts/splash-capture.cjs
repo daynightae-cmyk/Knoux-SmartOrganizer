@@ -127,7 +127,7 @@ async function main() {
 
     // The splash is frozen. Let the CSS fade finish without letting React
     // unmount it, then photograph the window.
-    await sleep(320);
+    await sleep(760);
     const shot = await send('Page.captureScreenshot', { format: 'png', fromSurface: true });
     const frame = shot.result?.data ? Buffer.from(shot.result.data, 'base64') : null;
     await send('Debugger.resume');

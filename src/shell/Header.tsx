@@ -1,17 +1,31 @@
 import { ListChecks, Menu, Search } from 'lucide-react';
-import { localeLabel, pageSubtitleKey, pageTitleKey, worldOwnsHeader } from '../lib/pages';
+import { localeLabel, pageDef, pageSubtitleKey, pageTitleKey, worldOwnsHeader } from '../lib/pages';
 import { useStore } from '../state/store';
 
 export default function Header() {
   const { page, t, locale, settings, update, setPaletteOpen, setOperationOpen, active, sidebarCollapsed, setSidebarCollapsed } = useStore();
   const subtitleKey = pageSubtitleKey(page);
   const ownsHead = worldOwnsHeader(page);
+  const current = pageDef(page);
+  const ContextIcon = current?.icon;
 
   return (
     <header className={`topbar${ownsHead ? ' topbar--bare' : ''}`}>
-      {!ownsHead && (
+      {ownsHead ? (
+        <div className="topbar-context">
+          <span className="topbar-context__crest" aria-hidden="true">K</span>
+          <span className="topbar-context__copy">
+            <small>KNOuX / {t('app.tagline')}</small>
+            <strong>{ContextIcon && <ContextIcon size={14} aria-hidden="true" />}{t(current?.nameKey ?? 'nav.home')}</strong>
+          </span>
+          <span className="topbar-context__status">
+            <i aria-hidden="true" />
+            {t('common.local')}
+          </span>
+        </div>
+      ) : (
         <div className="topbar-title">
-          <p className="eyebrow">{t('app.tagline')}</p>
+          <p className="eyebrow"><span className="eyebrow-dot" aria-hidden="true" />{t('app.tagline')}</p>
           <h1>{t(pageTitleKey(page))}</h1>
           {subtitleKey && <p className="page-description">{t(subtitleKey)}</p>}
         </div>
@@ -30,6 +44,8 @@ export default function Header() {
           className="search search-trigger"
           onClick={() => setPaletteOpen(true)}
           aria-label={t('shell.searchPlaceholder')}
+          aria-keyshortcuts="Control+K"
+          title={t('shell.searchPlaceholder')}
         >
           <Search size={16} />
           <span>{t('shell.searchPlaceholder')}</span>
