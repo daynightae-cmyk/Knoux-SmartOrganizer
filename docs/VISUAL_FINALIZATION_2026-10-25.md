@@ -130,6 +130,13 @@ Changed so far:
   ESLint plugin, so the directives referenced a rule that does not exist and
   `eslint .` failed with six "definition for rule not found" errors.
 
+* `src/studio/copy.ts` — the Studio header now leads with the workspace name the
+  reference puts largest on the page, with the tagline moved into the subtitle,
+  in both languages.
+* `docs/evidence/visual-finalization-20261025/` — fourteen working-loop frames
+  with `CAPTURE-MANIFEST.txt`, including the first Arabic RTL frame of the
+  Studio at 1366 × 768: rail, strip, board and hero all mirror without overflow.
+
 Components reused rather than duplicated: `Stage`, `StageHead`, `StageStats`,
 `StageSplit`, `StagePanel`, `StageFlow`, `EngineConsole`, `WorldLedger`,
 `StudioThumb`, `CategoryIcon`, the `knx-btn` system and the existing design
@@ -144,7 +151,8 @@ tokens. No new dependency was added.
 | Remote branch | `origin/feat/visual-finalization-20261025` |
 | Local gates at `e84ca29` | `npm run check` PASS · `npm run lint` PASS · `npm test` 426/426 PASS · `tests/studio-workspace.test.tsx` 12/12 PASS · `npm run build` PASS |
 | CI at `b1b80fb` | Source verification SUCCESS (check, lint, tests, build). Windows packaged runtime verification FAILED at the visual acceptance step: `EBUSY: resource busy or locked, unlink '...\knoux-visual-*\user-data\DIPS'` |
-| CI at `e84ca29` | running |
+| CI at `e84ca29` | Source verification SUCCESS. Visual acceptance: the EBUSY is gone, and the step then hit its own ceiling — `smoke timed out after 1800 seconds`. 56 real captures each boot the packaged app and wait for a genuine Windows read, which does not fit one 30-minute step. |
+| `33b51f1` | The matrix is split into two bounded slices in `ci.yml` (data-driven worlds, then workspaces and shells), each with its own ceiling. Same scenarios, same assertions, nothing skipped. Outcome pending at the time of writing. |
 
 Harness repairs in `scripts/visual-acceptance-smoke.cjs`, all aimed at the
 recorded CI failures and none of them a weakened assertion:
