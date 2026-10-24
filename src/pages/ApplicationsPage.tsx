@@ -704,25 +704,25 @@ export default function ApplicationsPage() {
 
           {snapshot && phase === 'ready' && rows.length > 0 && (
             <section className="appx__ledger" aria-label={t('app.head.title')}>
-              <div className="appx__ledger-head">
-                <span />
-                <span className="is-name appx__colhead">
-                  <input
-                    ref={headCheckRef}
-                    type="checkbox"
-                    aria-label={t('app.deck.selectAll')}
-                    checked={staged.size > 0 && staged.size === rows.length}
-                    onChange={() => setStaged(current => (current.size === rows.length ? new Set<string>() : new Set(rows.map(record => record.uid))))}
-                  />
-                  {t('app.col.app')}
-                </span>
-                <span className="appx__col--publisher">{t('app.col.publisher')}</span>
-                <span className="appx__col--version">{t('app.col.version')}</span>
-                <span className="is-num">{t('app.col.size')}</span>
-                <span className="appx__col--date">{t('app.col.installed')}</span>
-              </div>
               {view === 'register' ? (
                 <div className="appx__rows" ref={rowsRef} onKeyDown={onRowsKeyDown}>
+                  <div className="appx__ledger-head">
+                    <span />
+                    <span className="is-name appx__colhead">
+                      <input
+                        ref={headCheckRef}
+                        type="checkbox"
+                        aria-label={t('app.deck.selectAll')}
+                        checked={staged.size > 0 && staged.size === rows.length}
+                        onChange={() => setStaged(current => (current.size === rows.length ? new Set<string>() : new Set(rows.map(record => record.uid))))}
+                      />
+                      {t('app.col.app')}
+                    </span>
+                    <span className="appx__col--publisher">{t('app.col.publisher')}</span>
+                    <span className="appx__col--version">{t('app.col.version')}</span>
+                    <span className="is-num">{t('app.col.size')}</span>
+                    <span className="appx__col--date">{t('app.col.installed')}</span>
+                  </div>
                   {rows.map(record => (
                     <LedgerRow
                       key={record.uid}

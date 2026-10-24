@@ -271,11 +271,11 @@ html[data-theme="light"] .appx__deckcount b { color: color-mix(in srgb, var(--wo
 }
 @container (max-width: 620px) {
   .appx__ledger-head, .appx__row { grid-template-columns: 26px 34px minmax(120px, 2.6fr) 82px 88px; }
-  .appx__col--publisher, .appx__cell--publisher { display: none; }
+  .appx__col--publisher, .appx__cell--publisher, .appx__publisher { display: none; }
 }
 @container (max-width: 520px) {
   .appx__ledger-head, .appx__row { grid-template-columns: 26px 34px minmax(110px, 2.6fr) 88px; }
-  .appx__col--version, .appx__cell--version { display: none; }
+  .appx__col--version, .appx__cell--version, .appx__version { display: none; }
 }
 
 @media (max-width: 1180px) {
