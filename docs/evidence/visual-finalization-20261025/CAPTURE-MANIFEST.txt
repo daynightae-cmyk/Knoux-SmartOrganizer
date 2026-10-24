@@ -1,0 +1,21 @@
+capturedAt: 2026-10-24T22:33:22Z
+sourceSha: e84ca29f5e0a0949959df01ad5378804a3e8daae
+branch: feat/visual-finalization-20261025
+appVersion: 0.4.0 (Electron 43.8.3)
+display: work area clamps a 1920x1080 request to 1464x875 content
+path: local CDP driver over the same application binary; the packaged acceptance harness is separate
+files:
+  - applications-1920x1080-en.png
+  - automation-1920x1080-en.png
+  - cleanup-1920x1080-en.png
+  - files-1920x1080-en.png
+  - repair-1920x1080-en.png
+  - services-1920x1080-en.png
+  - settled-applications-1920x1080-en.png
+  - settled-files-1920x1080-en.png
+  - settled-storage-1920x1080-en.png
+  - settled-studio-1920x1080-en.png
+  - startup-1920x1080-en.png
+  - storage-1920x1080-en.png
+  - studio-1920x1080-en.png
+  - system-1920x1080-en.png
