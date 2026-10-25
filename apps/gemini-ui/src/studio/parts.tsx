@@ -54,6 +54,7 @@ import {
 import { useStudio } from './context';
 import { useNavigation } from '../context/NavigationContext';
 import { KNOuXLogo, KNOuXSidebar, KNOuXAssistantTrigger, windowControlProps } from '../components/shell/KNOuXShellComponents';
+import { controlNativeWindow } from '../native/client';
 import { CategoryKey, StudioStageId } from './types';
 
 // Map icon name to Lucide component
@@ -106,7 +107,7 @@ export function WindowsTitleBar() {
   const { setLocale: navSetLocale } = useNavigation();
 
   return (
-    <div className="h-10 bg-[#040a16] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-50 shrink-0">
+    <div className="knoux-titlebar h-10 bg-[#040a16] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-50 shrink-0">
       <div className="flex items-center gap-2">
         <KNOuXLogo size="sm" />
         <span className="text-[10px] text-slate-500 hidden sm:inline-block border-l border-[#0d213d] pl-2">
@@ -150,18 +151,21 @@ export function WindowsTitleBar() {
         <div className="flex items-center">
           <button
             {...windowControlProps('minimize')}
+            onClick={() => void controlNativeWindow('minimize')}
             className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <button
             {...windowControlProps('maximize')}
+            onClick={() => void controlNativeWindow('maximize')}
             className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <Square className="w-3 h-3" />
           </button>
           <button
             {...windowControlProps('close')}
+            onClick={() => void controlNativeWindow('close')}
             className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600 transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <X className="w-3.5 h-3.5" />
@@ -377,19 +381,35 @@ export function HorizontalStagesBar() {
 /**
  * 08 — Sticky Footer with Selection Summary and Actions
  */
+function formatSelectionBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let value = bytes;
+  let index = 0;
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024;
+    index += 1;
+  }
+  return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
 export function StickyFooter({ dpiControl }: { dpiControl?: React.ReactNode }) {
   const {
     selectedFileIds,
     files,
     categories,
+    deselectAllFiles,
     openModal,
     setActiveStageId,
+    chooseNativeDestination,
+    native,
+    operationMode,
     locale,
   } = useStudio();
 
-  // Compute selected count and aggregate size
-  const selectedCount = selectedFileIds.size > 0 ? selectedFileIds.size : 3246;
-  const selectedSize = selectedFileIds.size > 0 ? (selectedCount === 1 ? '4.6 MB' : '82.4 GB') : '82.4 GB';
+  const selectedFiles = files.filter((file) => selectedFileIds.has(file.id));
+  const selectedCount = selectedFiles.length;
+  const selectedSize = formatSelectionBytes(selectedFiles.reduce((sum, file) => sum + file.sizeBytes, 0));
 
   return (
     <footer className="h-12 bg-[#050e1f] border-t border-[#132c52] px-6 flex items-center justify-between select-none z-40 shrink-0">
@@ -407,6 +427,10 @@ export function StickyFooter({ dpiControl }: { dpiControl?: React.ReactNode }) {
         <span className="text-cyan-300 font-mono font-medium">
           {selectedSize}
         </span>
+        <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-mono font-bold border ${native.mode === 'measured' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40' : 'bg-amber-950/60 text-amber-300 border-amber-500/40'}`}>
+          {native.mode === 'measured' ? (locale === 'en' ? 'MEASURED' : 'مقيس') : (locale === 'en' ? 'FIXTURE' : 'تجريبي')}
+        </span>
+        <span className="text-slate-500 font-mono uppercase text-[9px]">{operationMode}</span>
       </div>
 
       {/* Center slot — hosts the DPI preview switch so it can never be painted
@@ -424,7 +448,7 @@ export function StickyFooter({ dpiControl }: { dpiControl?: React.ReactNode }) {
         </button>
 
         <button
-          onClick={() => openModal('change_destination')}
+          onClick={() => (native.available ? void chooseNativeDestination() : openModal('change_destination'))}
           className="px-3 py-1.5 rounded-md bg-[#0a182d] hover:bg-[#122b4e] text-slate-300 hover:text-white border border-[#1b3f70] text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
         >
           <Folder className="w-3.5 h-3.5 text-slate-400" />
@@ -432,13 +456,9 @@ export function StickyFooter({ dpiControl }: { dpiControl?: React.ReactNode }) {
         </button>
 
         <button
-          onClick={() => {
-            // Cancel staging or reset selection
-            if (selectedFileIds.size > 0) {
-              // Reset
-            }
-          }}
-          className="px-3 py-1.5 rounded-md bg-transparent hover:bg-[#0d1e36] text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors cursor-pointer"
+          onClick={deselectAllFiles}
+          disabled={selectedFileIds.size === 0}
+          className="px-3 py-1.5 rounded-md bg-transparent hover:bg-[#0d1e36] disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors cursor-pointer"
         >
           {locale === 'en' ? 'Cancel' : 'إلغاء'}
         </button>

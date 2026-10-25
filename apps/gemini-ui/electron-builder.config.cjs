@@ -27,6 +27,15 @@ module.exports = {
       from: '../../electron/windows-providers.cjs',
       to: 'native/windows-providers.cjs',
     },
+    {
+      from: '../../electron/windows-fs-metadata.cjs',
+      to: 'native/windows-fs-metadata.cjs',
+    },
+    {
+      from: '../../electron/studio',
+      to: 'native/studio',
+      filter: ['**/*.cjs'],
+    },
   ],
   extraMetadata: {
     main: 'electron/main.cjs',

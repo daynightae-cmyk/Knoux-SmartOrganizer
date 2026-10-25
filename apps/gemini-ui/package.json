@@ -19,7 +19,8 @@
     "desktop:pack": "npm run build && electron-builder --config electron-builder.config.cjs --dir --publish never",
     "desktop:packaged-smoke": "node scripts/native-smoke.cjs --packaged",
     "desktop:pack:temp": "npm run build && node scripts/pack-to-temp.cjs",
-    "test:native": "node scripts/native-contract-test.cjs"
+    "test:native": "node scripts/native-contract-test.cjs",
+    "test:studio": "node scripts/studio-native-test.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

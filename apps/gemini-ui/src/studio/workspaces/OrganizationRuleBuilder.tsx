@@ -57,8 +57,8 @@ export function OrganizationRuleBuilder() {
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-xl">
               {locale === 'en'
-                ? 'Configure deterministic renaming templates and folder hierarchy structures. Rules are verified locally against existing schemas before committing.'
-                : 'اضبط نماذج إعادة التسمية وهياكل المجلدات الحتمية. يتم التحقق من القواعد محلياً ضد المخطط قبل الاعتماد.'}
+                ? 'Draft deterministic renaming templates and folder hierarchy structures. Native preview plans apply only the category/flat structure and the collision guard shown below; custom tokens are not executed in this read-only build.'
+                : 'صِغ نماذج إعادة تسمية وهياكل مجلدات حتمية. تطبق معاينات الخطط الأصلية بنية الفئة/المستوي المسطح وحارس التعارض فقط؛ لا تُنفذ الرموز المخصصة في هذا البناء للقراءة فقط.'}
             </p>
           </div>
 
@@ -163,7 +163,16 @@ export function OrganizationRuleBuilder() {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setFolderPattern(scheme.value)}
+                  onClick={() => {
+                    setFolderPattern(scheme.value);
+                    setGroupingRule((prev) => ({
+                      ...prev,
+                      groupBy: scheme.value === 'Flat' ? 'extension' : scheme.value.startsWith('{category}') ? 'category' : 'capture_date',
+                      structure: scheme.value,
+                      descriptionEn: `Draft scheme: ${scheme.value}. Native preview applies ${scheme.value === 'Flat' ? 'a flat structure' : 'category folders'}.`,
+                      descriptionAr: `مخطط مسودة: ${scheme.value}. تطبق المعاينة الأصلية ${scheme.value === 'Flat' ? 'بنية مسطحة' : 'مجلدات الفئة'}.`,
+                    }));
+                  }}
                   className="w-full text-left px-2.5 py-1.5 rounded bg-[#091a33] hover:bg-[#122e57] text-xs text-slate-300 border border-[#142e56] transition-colors cursor-pointer flex items-center justify-between"
                 >
                   <span>{scheme.label}</span>
@@ -187,9 +196,17 @@ export function OrganizationRuleBuilder() {
               <span className="text-slate-300">C:\Users\Alex\Desktop\mountain-lake.jpg</span>
             </div>
             <div className="flex items-center justify-between text-cyan-300 font-bold">
-              <span>Calculated Output:</span>
+              <span>Illustrative target:</span>
               <span>D:\Organized\Images\2025\04\26\2025-04-26_mountain-lake.jpg</span>
             </div>
+          </div>
+          <div className="text-[10px] text-amber-300/90 flex items-start gap-1.5">
+            <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
+            <span>
+              {locale === 'en'
+                ? `Draft only. Native preview currently maps structure: ${groupingRule.structure === 'Flat' ? 'flat' : 'categorized'} and collision policy: ${namingRule.duplicateHandling === 'skip' ? 'skip' : 'review'}. Filename tokens and date hierarchy are not applied.`
+                : `مسودة فقط. تحدد المعاينة الأصلية البنية: ${groupingRule.structure === 'Flat' ? 'مسطحة' : 'فئوية'} وسياسة التعارض: ${namingRule.duplicateHandling === 'skip' ? 'تخطي' : 'مراجعة'}. لا تُطبق رموز الأسماء أو التسلسل الزمني.`}
+            </span>
           </div>
         </div>
       </div>

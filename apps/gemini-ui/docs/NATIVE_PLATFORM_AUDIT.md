@@ -19,7 +19,7 @@ connected.
 | `electron/main.cjs` | Existing, unconnected; loads the legacy root `dist` renderer | **Not reused as the Gemini entrypoint.** Repackaging Gemini with the root renderer would have been wrong. |
 | `electron/preload.cjs` | Existing, unconnected; exposes the root `knoux` + `knouxStudio` APIs | Left untouched. Gemini gets its own minimal preload. |
 | `electron/windows-providers.cjs` | Existing, read-only Windows CIM providers, no Gemini import | **Reused** by the new adapter for `system.summary` and `services.summary`. |
-| `electron/studio/*` (folder inventory, IPC, safety) | Existing, unconnected; broad write/plan surface | Only Electron's folder picker is exposed in Platform 00. Studio scanning/planning remains for Mission 03. |
+| `electron/studio/*` (folder inventory, categories, planner, safety, thumbnails) | Existing, unconnected; broad write/plan surface | Platform 00 did not expose it. Mission 03 now reuses the read-only engines through `electron/native/studio-bridge.cjs`; execution/undo remain blocked. See `docs/STUDIO_ORGANIZATION_AUDIT.md`. |
 | `electron/privileged-runner.cjs` | Existing, unconnected; elevation/mutation runner | **Not exposed.** Deferred to the sections that own privileged workflows. |
 | `electron/settings.cjs` | Existing, unconnected; root settings store | Not used by Gemini. A native settings/credential store belongs to Mission 14. |
 | `electron/automation.cjs` | Existing, unconnected | Not exposed; Mission 13. |
@@ -68,6 +68,7 @@ Source of truth: `shared/native-contract.json`; renderer types:
 | `services.summary` | `knoux:native:v1:services-summary` | read-only | available on Windows |
 | `folder.choose` | `knoux:native:v1:choose-folder` | user-initiated | implemented; interactive dialog not automated |
 | `window.control` | `knoux:window:v1:control` | user-initiated | minimize / maximize-restore / close |
+| Studio read-only set | `knoux:studio:v1:*` | read-only/user-initiated | Mission 03: sources, scan/cancel, query, thumbnails, plan preview, preview receipts, receive-only events. No execute/undo. |
 
 Every envelope is `{contractVersion, capability, requestId, status, source,
 observedAt, permission, warnings, data?|error?, provenance?}`. Status vocabulary:
@@ -136,7 +137,8 @@ do not invent incompatible envelopes.
 - service summary: **complete**, 271 services (summary only);
 - CSP meta present;
 - maximize + restore window-control toggle PASS;
-- screenshot written (273 KB), plus a **light** native-panel capture and an **Arabic RTL light** capture.
+- screenshot written (273 KB), plus a **light** native-panel capture and an **Arabic RTL light** capture;
+- Mission 03 Studio probes: list/query/thumbnails/plan/preview-history, measured banner, rendered plan review and persisted receipts, with three Studio screenshots.
 
 Receipt: `visual-evidence/platform-00/native-smoke-dev.json`
 Screenshots: `visual-evidence/platform-00/native-bridge-dev.png`, `native-bridge-dev-light.png`, `native-bridge-dev-ar-light.png`

@@ -83,6 +83,7 @@ export interface StudioFileItem {
   isDuplicateCandidate?: boolean;
   duplicateGroup?: string;
   hash?: string;
+  nativeFileId?: number;
   status?: 'pending' | 'organized' | 'conflict' | 'ignored';
 }
 
@@ -145,8 +146,9 @@ export interface HistoryJournalEntry {
   totalSizeFormatted: string;
   destinationPath: string;
   mode: OperationMode;
-  status: 'completed' | 'partially_reverted' | 'reverted' | 'failed';
+  status: 'completed' | 'partially_reverted' | 'reverted' | 'failed' | 'preview';
   canUndo: boolean;
+  previewOnly?: boolean;
   summaryEn: string;
   summaryAr: string;
 }

@@ -176,6 +176,146 @@ export interface FolderChoiceData {
   path: string | null;
 }
 
+export interface StudioCategoryCount {
+  key: string;
+  count: number;
+  bytes: number;
+}
+
+export interface StudioSource {
+  id: string;
+  path: string;
+  label: string;
+  addedAt: string;
+  status: 'ready' | 'needs_scan' | 'scanning' | 'offline' | 'partial' | 'error';
+  fileCount: number;
+  folderCount: number;
+  fileTypesCount: number;
+  totalBytes: number;
+  categories: StudioCategoryCount[];
+  lastScanned: string | null;
+  partial: boolean;
+  warnings: string[];
+}
+
+export interface StudioQueryFile {
+  id: number;
+  name: string;
+  relative: string;
+  category: string;
+  uiCategory: string;
+  size: number;
+  ext: string;
+  modifiedAt: string;
+  hasThumbnail: boolean;
+}
+
+export interface StudioQueryResult {
+  sourceId: string;
+  total: number;
+  bytes: number;
+  offset: number;
+  limit: number;
+  rows: StudioQueryFile[];
+  partial: boolean;
+  warnings: string[];
+}
+
+export interface StudioPlanFile {
+  index: number;
+  fileId: number;
+  name: string;
+  sourceRelative: string;
+  sourceRoot: string;
+  category: string;
+  size: number;
+  targetName: string;
+  targetPath: string | null;
+  targetRelative: string | null;
+  status: string;
+}
+
+export interface StudioPlanPreview {
+  planHash: string;
+  operation: string;
+  structure: string;
+  collisionPolicy: string;
+  destinationSummary: string | null;
+  files: StudioPlanFile[];
+  truncated: boolean;
+  categories: Array<{ category: string; files: number; bytes: number; folderName?: string; targetPath?: string | null }>;
+  collisions: Array<Record<string, unknown>>;
+  skipped: Array<Record<string, unknown>>;
+  warnings: string[];
+  totals: { files: number; bytes: number; categories: number; folderSteps: number; skipped: number; collisions: number };
+  createdAt: string;
+  expiresAt: string;
+  previewOnly: true;
+  execution: 'blocked_explicit_approval_required';
+}
+
+export interface StudioPreviewHistoryEntry {
+  id: string;
+  planHash: string;
+  createdAt: string;
+  operation: string;
+  files: number;
+  bytes: number;
+  categories: number;
+  sourceRoots: string[];
+  destinationSummary: string | null;
+  collisions: number;
+  skipped: number;
+  warnings: string[];
+  previewOnly: true;
+}
+
+export interface StudioProgressEvent {
+  type: 'scan-progress' | 'scan-complete' | 'scan-cancelled' | 'scan-failed';
+  sourceId: string;
+  at: string;
+  files?: number;
+  bytes?: number;
+  folders?: number;
+  message?: string;
+}
+
+export interface StudioShellApi {
+  contractVersion: number;
+  listSources: () => Promise<NativeEnvelope<StudioSource[]>>;
+  chooseSource: () => Promise<NativeEnvelope<StudioSource | null>>;
+  removeSource: (sourceId: string) => Promise<NativeEnvelope<{ removed: boolean }>>;
+  scanSource: (sourceId: string) => Promise<NativeEnvelope<StudioSource>>;
+  cancelScan: (sourceId: string) => Promise<NativeEnvelope<{ cancelled: boolean }>>;
+  query: (request: {
+    sourceId: string;
+    category?: string;
+    categories?: string[];
+    search?: string;
+    sort?: 'name' | 'size' | 'modified' | 'type';
+    desc?: boolean;
+    offset?: number;
+    limit?: number;
+  }) => Promise<NativeEnvelope<StudioQueryResult>>;
+  thumbnails: (sourceId: string, fileIds: number[]) => Promise<NativeEnvelope<Record<string, { thumbnail: string | null; reason?: string }>>>;
+  chooseDestination: () => Promise<NativeEnvelope<{ id: string; path: string } | null>>;
+  previewPlan: (request: {
+    sourceId: string;
+    fileIds?: number[];
+    category?: string;
+    categories?: string[];
+    all?: boolean;
+    operation: 'copy' | 'move' | 'virtual';
+    structure?: 'categorized' | 'flat';
+    categoryFolderNames?: Record<string, string>;
+    collisionPolicy?: 'skip' | 'rename' | 'review';
+    destinationId?: string;
+    relativePath?: string;
+  }) => Promise<NativeEnvelope<StudioPlanPreview>>;
+  previewHistory: () => Promise<NativeEnvelope<StudioPreviewHistoryEntry[]>>;
+  onEvent: (callback: (event: StudioProgressEvent) => void) => () => void;
+}
+
 export interface NativeShellApi {
   contractVersion: number;
   getStatus: () => Promise<NativeEnvelope<BridgeStatusData>>;

@@ -16,6 +16,7 @@ import {
 } from './parts';
 import { StudioModals } from './modals';
 import { StudioCommandCenter } from './StudioCommandCenter';
+import { NativeStudioBanner } from './NativeStudioBanner';
 
 // Workspaces for each of the 9 stages
 import { SourceGrantWorkspace } from './workspaces/SourceGrantWorkspace';
@@ -93,8 +94,9 @@ export function StudioPage({ onNavigate }: { onNavigate?: (section: string) => v
             {/* 01 — Cinematic Planet Header */}
             <CinematicHeader />
 
-            {/* 02 — Authorization Telemetry Strip */}
+            {/* 02 — Authorization Telemetry Strip + provenance boundary */}
             <TelemetryStrip />
+            <NativeStudioBanner />
 
             {/* 03 — Nine Horizontal Stages */}
             <HorizontalStagesBar />

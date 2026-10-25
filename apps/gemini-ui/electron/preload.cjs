@@ -18,6 +18,17 @@ const CHANNELS = Object.freeze({
   servicesSummary: 'knoux:native:v1:services-summary',
   chooseFolder: 'knoux:native:v1:choose-folder',
   windowControl: 'knoux:window:v1:control',
+  studioSources: 'knoux:studio:v1:sources',
+  studioSourceChoose: 'knoux:studio:v1:source-choose',
+  studioSourceRemove: 'knoux:studio:v1:source-remove',
+  studioInventoryScan: 'knoux:studio:v1:inventory-scan',
+  studioInventoryCancel: 'knoux:studio:v1:inventory-cancel',
+  studioInventoryQuery: 'knoux:studio:v1:inventory-query',
+  studioThumbnails: 'knoux:studio:v1:thumbnails',
+  studioDestinationChoose: 'knoux:studio:v1:destination-choose',
+  studioPlanPreview: 'knoux:studio:v1:plan-preview',
+  studioPreviewHistory: 'knoux:studio:v1:preview-history',
+  studioEvent: 'knoux:studio:v1:event',
 });
 const WINDOW_ACTIONS = Object.freeze(['minimize', 'maximize', 'close']);
 
@@ -39,6 +50,31 @@ contextBridge.exposeInMainWorld(
         });
       }
       return ipcRenderer.invoke(CHANNELS.windowControl, action);
+    },
+  })
+);
+
+/* Studio v1 uses a separate namespace so the platform shell and the Studio
+   domain stay independently auditable. All channels are fixed; there is no
+   generic invoke and no raw ipcRenderer exposure. */
+contextBridge.exposeInMainWorld(
+  'knouxStudioV1',
+  Object.freeze({
+    contractVersion: CONTRACT_VERSION,
+    listSources: () => ipcRenderer.invoke(CHANNELS.studioSources),
+    chooseSource: () => ipcRenderer.invoke(CHANNELS.studioSourceChoose),
+    removeSource: (sourceId) => ipcRenderer.invoke(CHANNELS.studioSourceRemove, { sourceId }),
+    scanSource: (sourceId) => ipcRenderer.invoke(CHANNELS.studioInventoryScan, { sourceId }),
+    cancelScan: (sourceId) => ipcRenderer.invoke(CHANNELS.studioInventoryCancel, { sourceId }),
+    query: (request) => ipcRenderer.invoke(CHANNELS.studioInventoryQuery, request),
+    thumbnails: (sourceId, fileIds) => ipcRenderer.invoke(CHANNELS.studioThumbnails, { sourceId, fileIds }),
+    chooseDestination: () => ipcRenderer.invoke(CHANNELS.studioDestinationChoose),
+    previewPlan: (request) => ipcRenderer.invoke(CHANNELS.studioPlanPreview, request),
+    previewHistory: () => ipcRenderer.invoke(CHANNELS.studioPreviewHistory),
+    onEvent: (callback) => {
+      const listener = (_event, payload) => callback(payload);
+      ipcRenderer.on(CHANNELS.studioEvent, listener);
+      return () => ipcRenderer.removeListener(CHANNELS.studioEvent, listener);
     },
   })
 );

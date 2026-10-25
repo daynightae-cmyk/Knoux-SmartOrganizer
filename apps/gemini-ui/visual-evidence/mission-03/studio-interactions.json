@@ -1,0 +1,135 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:3000/#/studio",
+  "viewport": [
+    1672,
+    941
+  ],
+  "mode": "fixture preview (native proven separately)",
+  "results": [
+    {
+      "name": "nine stage controls are rendered",
+      "pass": true,
+      "detail": {
+        "stageButtons": 9
+      }
+    },
+    {
+      "name": "all nine stages navigate and render content",
+      "pass": true,
+      "detail": [
+        {
+          "stage": 1,
+          "clicked": true,
+          "active": "Stage 1: Sources",
+          "contentVisible": true
+        },
+        {
+          "stage": 2,
+          "clicked": true,
+          "active": "Stage 2: Visual Library",
+          "contentVisible": true
+        },
+        {
+          "stage": 3,
+          "clicked": true,
+          "active": "Stage 3: Collections",
+          "contentVisible": true
+        },
+        {
+          "stage": 4,
+          "clicked": true,
+          "active": "Stage 4: Organization Builder",
+          "contentVisible": true
+        },
+        {
+          "stage": 5,
+          "clicked": true,
+          "active": "Stage 5: Destinations",
+          "contentVisible": true
+        },
+        {
+          "stage": 6,
+          "clicked": true,
+          "active": "Stage 6: Plan Review",
+          "contentVisible": true
+        },
+        {
+          "stage": 7,
+          "clicked": true,
+          "active": "Stage 7: Execution",
+          "contentVisible": true
+        },
+        {
+          "stage": 8,
+          "clicked": true,
+          "active": "Stage 8: History & Undo",
+          "contentVisible": true
+        },
+        {
+          "stage": 9,
+          "clicked": true,
+          "active": "Stage 9: Suggestions",
+          "contentVisible": true
+        }
+      ]
+    },
+    {
+      "name": "category selection filters the visual library",
+      "pass": true,
+      "detail": {
+        "videoClick": {
+          "clicked": true,
+          "text": "Video\n892 files\n120.3 GB"
+        },
+        "videoLibrary": true,
+        "emptyFixtureCategory": true
+      }
+    },
+    {
+      "name": "Select All changes the measured selection summary",
+      "pass": true,
+      "detail": {
+        "selectedCount": 12
+      }
+    },
+    {
+      "name": "Deselect All clears the selection summary",
+      "pass": true,
+      "detail": {
+        "deselectedCount": 0
+      }
+    },
+    {
+      "name": "sort control updates the library order state",
+      "pass": true,
+      "detail": {
+        "sortValue": "size_desc"
+      }
+    },
+    {
+      "name": "Studio language toggle produces Arabic RTL",
+      "pass": true,
+      "detail": {
+        "rtl": true,
+        "arabicHeading": true,
+        "toggle": true
+      }
+    },
+    {
+      "name": "footer plan CTA opens stage 6",
+      "pass": true,
+      "detail": {
+        "planStage": "Stage 6: Plan Review",
+        "planVisible": true
+      }
+    },
+    {
+      "name": "plan review states execution is blocked",
+      "pass": true,
+      "detail": {
+        "blockedCopy": true
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@
  * remain preview-only until their own missions land.
  */
 
-const { app, BrowserWindow, Menu, ipcMain, session } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, session, dialog, nativeImage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
@@ -22,6 +22,7 @@ const {
   chooseFolder,
   fixturesEnabled,
 } = require('./native/provider-bridge.cjs');
+const { StudioBridge } = require('./native/studio-bridge.cjs');
 const {
   ok,
   fail,
@@ -76,6 +77,7 @@ app.commandLine.appendSwitch('force-color-profile', 'srgb');
 
 let mainWindow = null;
 let ipcRegistered = false;
+let studioBridge = null;
 
 if (!isSmoke && !app.requestSingleInstanceLock()) {
   app.quit();
@@ -226,6 +228,74 @@ function registerIpc() {
     })
   );
 
+  const studioGuard = async (event, capability, permission, work) => {
+    try {
+      assertTrustedSender(event, { mainWindow, isDev, distRoot, devOrigin });
+      if (!studioBridge) {
+        throw Object.assign(new Error('The read-only Studio adapter is not initialized.'), { code: 'STUDIO_UNAVAILABLE' });
+      }
+      const data = await work();
+      return ok({
+        capability,
+        status: 'complete',
+        source: 'KNOuX Studio read-only adapter',
+        permission,
+        data,
+      });
+    } catch (error) {
+      const untrusted = error?.code === 'UNTRUSTED_SENDER';
+      return fail({
+        capability,
+        status: untrusted ? 'permission_denied' : error?.code === 'STUDIO_DESTINATION_REQUIRED' ? 'permission_denied' : 'failed',
+        source: 'KNOuX Studio read-only adapter',
+        permission: untrusted ? 'not-granted' : permission,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'STUDIO_FAILURE',
+          message: String(error?.message || 'Studio request failed.').replace(/\s+/g, ' ').slice(0, 300),
+          retryable: false,
+        },
+      });
+    }
+  };
+  const studioArg = (args) => {
+    if (args.length !== 1 || !args[0] || typeof args[0] !== 'object' || Array.isArray(args[0])) {
+      throw Object.assign(new Error('A single structured Studio request is required.'), { code: 'STUDIO_INPUT_INVALID' });
+    }
+    return args[0];
+  };
+
+  ipcMain.handle(contract.channels.studioSources, (event) =>
+    studioGuard(event, 'studio.sources', 'read-only', () => studioBridge.listSources())
+  );
+  ipcMain.handle(contract.channels.studioSourceChoose, (event) =>
+    studioGuard(event, 'studio.source.choose', 'user-initiated', () => studioBridge.chooseSource())
+  );
+  ipcMain.handle(contract.channels.studioSourceRemove, (event, ...args) =>
+    studioGuard(event, 'studio.source.remove', 'user-initiated', () => studioBridge.removeSource(studioArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.studioInventoryScan, (event, ...args) =>
+    studioGuard(event, 'studio.inventory.scan', 'read-only', () => studioBridge.scanSource(studioArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.studioInventoryCancel, (event, ...args) =>
+    studioGuard(event, 'studio.inventory.cancel', 'user-initiated', () => studioBridge.cancelScan(studioArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.studioInventoryQuery, (event, ...args) =>
+    studioGuard(event, 'studio.inventory.query', 'read-only', () => studioBridge.query(studioArg(args)))
+  );
+  ipcMain.handle(contract.channels.studioThumbnails, (event, ...args) => {
+    const request = studioArg(args);
+    return studioGuard(event, 'studio.thumbnails', 'read-only', () => studioBridge.thumbnails(request.sourceId, request.fileIds));
+  });
+  ipcMain.handle(contract.channels.studioDestinationChoose, (event) =>
+    studioGuard(event, 'studio.destination.choose', 'user-initiated', () => studioBridge.chooseDestination())
+  );
+  ipcMain.handle(contract.channels.studioPlanPreview, (event, ...args) =>
+    studioGuard(event, 'studio.plan.preview', 'read-only', () => studioBridge.previewPlan(studioArg(args)))
+  );
+  ipcMain.handle(contract.channels.studioPreviewHistory, (event) =>
+    studioGuard(event, 'studio.preview.history', 'read-only', () => studioBridge.previewHistory())
+  );
+
   ipcMain.handle(contract.channels.windowControl, (event, ...args) =>
     guard(event, 'window.control', args, async (callArgs) => {
       if (callArgs.length !== 1) {
@@ -360,17 +430,31 @@ async function runSmoke(win) {
         const status = api ? await api.getStatus() : null;
         const system = api ? await api.getSystemSummary() : null;
         const services = api ? await api.getServicesSummary() : null;
+        const studioApi = window.knouxStudioV1;
+        let studio = null;
+        if (studioApi) {
+          const sources = await studioApi.listSources();
+          const sourceId = sources?.data?.[0]?.id || null;
+          const query = sourceId ? await studioApi.query({ sourceId, limit: 20 }) : null;
+          const previewIds = (query?.data?.rows || []).filter((row) => row.hasThumbnail).slice(0, 4).map((row) => row.id);
+          const thumbs = sourceId && previewIds.length ? await studioApi.thumbnails(sourceId, previewIds) : null;
+          const plan = sourceId ? await studioApi.previewPlan({ sourceId, all: true, operation: 'virtual', structure: 'categorized', collisionPolicy: 'review' }) : null;
+          const history = await studioApi.previewHistory();
+          studio = { bridgePresent: true, sources, query, thumbs, plan, history };
+        }
         return {
           href: location.href,
           readyState: document.readyState,
           rootChildren: document.querySelector('#root')?.childElementCount || 0,
           bridgePresent: Boolean(api),
+          studioBridgePresent: Boolean(studioApi),
           contractVersion: api?.contractVersion ?? null,
           nodeRequireType: typeof window.require,
           nodeProcessType: typeof window.process,
           status,
           system,
           services,
+          studio,
           cspMeta: document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') || null
         };
       })()`,
@@ -457,6 +541,95 @@ async function runSmoke(win) {
         await fsp.writeFile(arShotPath, arImage.toPNG());
         receipt.arabicScreenshot = arShotPath;
         receipt.arabicScreenshotBytes = (await fsp.stat(arShotPath)).size;
+
+        // Real measured Studio evidence: the controlled smoke source was
+        // indexed before this window loaded. Navigate to the Studio route,
+        // wait for the measured banner, then capture the library.
+        await win.webContents.executeJavaScript(
+          `(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); location.hash = 'studio'; return true; })()`,
+          true
+        );
+        const studioDeadline = Date.now() + 15000;
+        let studioReady = false;
+        while (Date.now() < studioDeadline) {
+          await sleep(500);
+          studioReady = await win.webContents.executeJavaScript(
+            `(() => {
+               const panel = document.querySelector('[data-testid="studio-native-banner"]');
+               const text = document.body.innerText || '';
+               return Boolean(panel) && (text.includes('Native measured index') || text.includes('فهرس أصلي مقيس'));
+             })()`,
+            true
+          );
+          if (studioReady) break;
+        }
+        await sleep(1200);
+        const studioShotPath = smokeShotPath.replace(/native-bridge/i, 'studio-measured');
+        const studioImage = await win.webContents.capturePage();
+        await fsp.writeFile(studioShotPath, studioImage.toPNG());
+        receipt.studioScreenshot = studioShotPath;
+        receipt.studioScreenshotBytes = (await fsp.stat(studioShotPath)).size;
+        receipt.studioUiReady = studioReady;
+
+        // Stage 6 proves the measured plan reaches the rendered review surface,
+        // not just the IPC probe, and that execution remains explicitly blocked.
+        await win.webContents.executeJavaScript(
+          `(() => {
+             const stage = document.querySelector('button[title="Stage 6: Plan Review"]');
+             if (stage) stage.click();
+             return Boolean(stage);
+           })()`,
+          true
+        );
+        const planDeadline = Date.now() + 20000;
+        let studioPlanReady = false;
+        while (Date.now() < planDeadline) {
+          await sleep(500);
+          studioPlanReady = await win.webContents.executeJavaScript(
+            `(() => {
+               const text = document.body.innerText || '';
+               return text.includes('MEASURED PREVIEW') &&
+                 text.includes('Planned target') &&
+                 text.includes('Execution is blocked');
+             })()`,
+            true
+          );
+          if (studioPlanReady) break;
+        }
+        await sleep(800);
+        const planShotPath = smokeShotPath.replace(/native-bridge/i, 'studio-plan');
+        const planImage = await win.webContents.capturePage();
+        await fsp.writeFile(planShotPath, planImage.toPNG());
+        receipt.studioPlanScreenshot = planShotPath;
+        receipt.studioPlanScreenshotBytes = (await fsp.stat(planShotPath)).size;
+        receipt.studioPlanUiReady = studioPlanReady;
+
+        // Stage 8 must show persisted preview receipts, not a fixture journal.
+        await win.webContents.executeJavaScript(
+          `document.querySelector('button[title="Stage 8: History & Undo"]')?.click()`,
+          true
+        );
+        const historyDeadline = Date.now() + 12000;
+        let studioHistoryReady = false;
+        while (Date.now() < historyDeadline) {
+          await sleep(400);
+          studioHistoryReady = await win.webContents.executeJavaScript(
+            `(() => {
+               const text = document.body.innerText || '';
+               return text.includes('PREVIEW RECEIPTS') && text.includes('No undo') &&
+                 !text.includes('Fixture journal only');
+             })()`,
+            true
+          );
+          if (studioHistoryReady) break;
+        }
+        await sleep(700);
+        const historyShotPath = smokeShotPath.replace(/native-bridge/i, 'studio-history');
+        const historyImage = await win.webContents.capturePage();
+        await fsp.writeFile(historyShotPath, historyImage.toPNG());
+        receipt.studioHistoryScreenshot = historyShotPath;
+        receipt.studioHistoryScreenshotBytes = (await fsp.stat(historyShotPath)).size;
+        receipt.studioHistoryUiReady = studioHistoryReady;
       } catch (error) {
         receipt.screenshotError = redactError(error);
       }
@@ -492,13 +665,33 @@ async function runSmoke(win) {
       renderer.system?.provenance?.mode === 'measured' &&
       ['complete', 'partial'].includes(renderer.services?.status) &&
       Number.isFinite(renderer.services?.data?.total);
+    const studioData = renderer.studio;
+    const studioOk = Boolean(
+      studioData?.bridgePresent &&
+      studioData?.sources?.data?.length >= 1 &&
+      studioData.sources.data[0].fileCount >= 4 &&
+      studioData?.query?.status === 'complete' &&
+      studioData.query.data?.total >= 4 &&
+      studioData?.plan?.status === 'complete' &&
+      studioData.plan.data?.previewOnly === true &&
+      studioData.plan.data?.execution === 'blocked_explicit_approval_required' &&
+      studioData.plan.data?.totals?.files >= 4 &&
+      Array.isArray(studioData?.history?.data) &&
+      studioData.history.data.length >= 1
+    );
     const screenshotOk = !smokeShotPath || (
       receipt.screenshotBytes > 20000 &&
       receipt.lightScreenshotBytes > 20000 &&
-      receipt.arabicScreenshotBytes > 20000
+      receipt.arabicScreenshotBytes > 20000 &&
+      receipt.studioScreenshotBytes > 20000 &&
+      receipt.studioUiReady === true &&
+      receipt.studioPlanScreenshotBytes > 20000 &&
+      receipt.studioPlanUiReady === true &&
+      receipt.studioHistoryScreenshotBytes > 20000 &&
+      receipt.studioHistoryUiReady === true
     );
-    receipt.checks = { securityOk, bridgeOk, providerOk, screenshotOk, windowControlOk };
-    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && screenshotOk && windowControlOk);
+    receipt.checks = { securityOk, bridgeOk, providerOk, studioOk, screenshotOk, windowControlOk };
+    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && studioOk && screenshotOk && windowControlOk);
     receipt.finishedAt = new Date().toISOString();
     trace(`smoke complete ok=${receipt.ok} checks=${JSON.stringify(receipt.checks)}`);
     await fsp.mkdir(path.dirname(smokeReceiptPath), { recursive: true });
@@ -518,19 +711,66 @@ async function runSmoke(win) {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  trace('whenReady entered');
   Menu.setApplicationMenu(null);
+  trace('menu applied');
   if (isDev) {
     console.info('[gemini-shell] development mode; CSP headers are enforced in packaged builds.');
   } else {
     applyPackagedCsp(session.defaultSession);
   }
+
+  trace('constructing studio bridge');
+  studioBridge = new StudioBridge({
+    userDataPath: app.getPath('userData'),
+    nativeImage,
+    isPackaged: app.isPackaged,
+    env: process.env,
+    chooseFolder: async ({ title, buttonLabel }) => {
+      const result = await dialog.showOpenDialog(mainWindow || undefined, {
+        title,
+        buttonLabel,
+        properties: ['openDirectory', 'dontAddToRecent'],
+      });
+      return result.canceled ? null : (result.filePaths?.[0] || null);
+    },
+    emit: (payload) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(contract.channels.studioEvent, payload);
+      }
+    },
+  });
+  try {
+    await studioBridge.init();
+    trace('studio bridge initialized');
+    const smokeStudioRoot = argValue('--knoux-studio-smoke-root');
+    if (smokeStudioRoot && isSmoke && smokeUserData) {
+      await studioBridge.addSmokeSource(smokeStudioRoot);
+      trace(`studio smoke source indexed: ${smokeStudioRoot}`);
+    }
+  } catch (error) {
+    trace(`studio bridge init failed: ${error?.message || error}`);
+    console.error('[gemini-shell] Studio bridge unavailable:', error?.message || error);
+  }
+  trace('registering ipc');
   registerIpc();
+  trace('creating window');
   createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((error) => {
+  // A startup rejection before createWindow would otherwise leave a headless
+  // Electron process running until the smoke runner times out.
+  trace(`startup failed: ${error?.stack || error?.message || error}`);
+  console.error('[gemini-shell] startup failed:', error);
+  if (isSmoke) app.exit(1);
+});
+
+app.on('before-quit', () => {
+  void studioBridge?.dispose();
 });
 
 app.on('window-all-closed', () => {

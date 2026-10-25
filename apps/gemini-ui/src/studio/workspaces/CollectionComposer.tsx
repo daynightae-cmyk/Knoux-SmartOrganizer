@@ -18,7 +18,7 @@ import { useStudio } from '../context';
 import { StudioCollection } from '../types';
 
 export function CollectionComposer() {
-  const { collections, setActiveStageId, locale } = useStudio();
+  const { collections, setActiveStageId, native, locale } = useStudio();
   const [collectionList, setCollectionList] = useState<StudioCollection[]>(collections);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [selectedRuleTag, setSelectedRuleTag] = useState('tag: custom');
@@ -29,8 +29,8 @@ export function CollectionComposer() {
     const newCol: StudioCollection = {
       id: `col-${Date.now()}`,
       name: newCollectionName.trim(),
-      fileCount: Math.floor(Math.random() * 200) + 15,
-      totalSizeFormatted: `${(Math.random() * 8 + 1).toFixed(1)} GB`,
+      fileCount: native.mode === 'measured' ? 0 : Math.floor(Math.random() * 200) + 15,
+      totalSizeFormatted: native.mode === 'measured' ? 'Not measured' : `${(Math.random() * 8 + 1).toFixed(1)} GB`,
       color: '#3b82f6',
       ruleTag: selectedRuleTag,
       createdDate: new Date().toISOString().split('T')[0],
@@ -144,7 +144,7 @@ export function CollectionComposer() {
                   onClick={() => setActiveStageId(2)}
                   className="px-2.5 py-1 rounded bg-[#0c1f3b] hover:bg-[#153463] text-cyan-300 text-[11px] border border-[#1b3f70] transition-colors cursor-pointer"
                 >
-                  {locale === 'en' ? 'View Files' : 'عرض الملفات'}
+                  {locale === 'en' ? 'Open Library' : 'فتح المكتبة'}
                 </button>
                 <button
                   onClick={() => handleDelete(col.id)}

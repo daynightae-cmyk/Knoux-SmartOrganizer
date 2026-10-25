@@ -23,7 +23,27 @@ const evidenceDir = path.join(appRoot, 'visual-evidence', 'platform-00');
 const receiptPath = path.join(evidenceDir, packaged ? 'native-smoke-packaged.json' : 'native-smoke-dev.json');
 const shotPath = path.join(evidenceDir, packaged ? 'native-bridge-packaged.png' : 'native-bridge-dev.png');
 const summaryPath = path.join(evidenceDir, packaged ? 'native-smoke-summary-packaged.json' : 'native-smoke-summary-dev.json');
-const profilePath = path.join(os.tmpdir(), `knoux-gemini-smoke-${process.pid}-${Date.now()}`);
+// Keep controlled smoke data inside the gitignored dependency cache so the
+// committed screenshots/receipts never expose the Windows user profile.
+const profilePath = path.join(appRoot, 'node_modules', '.cache', `knoux-gemini-smoke-${process.pid}-${Date.now()}`);
+const homeDir = os.homedir();
+const tempDir = os.tmpdir();
+function redactDeep(value) {
+  if (typeof value === 'string') {
+    return value
+      .split(homeDir).join('<home>')
+      .split(tempDir).join('<temp>')
+      // Also catch 8.3 short profile paths and forward-slash file URLs.
+      .replace(/([A-Za-z]:[\\/]Users[\\/])[^\\/"']+/g, '$1<user>');
+  }
+  if (Array.isArray(value)) return value.map(redactDeep);
+  if (value && typeof value === 'object') {
+    const next = {};
+    for (const [key, entry] of Object.entries(value)) next[key] = redactDeep(entry);
+    return next;
+  }
+  return value;
+}
 
 function fail(message) {
   console.error(`[native-smoke] ${message}`);
@@ -46,10 +66,27 @@ function resolvePackagedExe() {
 async function main() {
   await fsp.mkdir(evidenceDir, { recursive: true });
   await fsp.mkdir(profilePath, { recursive: true });
+  const studioSource = path.join(profilePath, 'studio-source');
+  await fsp.mkdir(path.join(studioSource, 'images'), { recursive: true });
+  await fsp.mkdir(path.join(studioSource, 'nested'), { recursive: true });
+  await fsp.writeFile(path.join(studioSource, 'notes.txt'), 'KNOuX controlled smoke fixture\n', 'utf8');
+  await fsp.writeFile(path.join(studioSource, 'table.csv'), 'name,value\na,1\n', 'utf8');
+  await fsp.writeFile(path.join(studioSource, 'app.ts'), 'export const fixture = true;\n', 'utf8');
+  await fsp.writeFile(path.join(studioSource, 'nested', 'readme.md'), '# controlled fixture\n', 'utf8');
+  const imageCandidates = [
+    'image_091f4380.png',
+    'image_0ab1aa96.png',
+    'image_2294bf8c.png',
+  ];
+  for (const image of imageCandidates) {
+    const from = path.join(appRoot, 'public', 'assets', 'aistudio', image);
+    if (fs.existsSync(from)) await fsp.copyFile(from, path.join(studioSource, 'images', image));
+  }
   const args = [
     `--knoux-native-smoke=${receiptPath}`,
     `--knoux-native-smoke-shot=${shotPath}`,
     `--knoux-user-data=${profilePath}`,
+    `--knoux-studio-smoke-root=${studioSource}`,
   ];
   let command;
   let commandArgs;
@@ -94,7 +131,9 @@ async function main() {
 
   let receipt = null;
   try {
-    receipt = JSON.parse(await fsp.readFile(receiptPath, 'utf8'));
+    receipt = redactDeep(JSON.parse(await fsp.readFile(receiptPath, 'utf8')));
+    // The committed receipt must not contain the machine user profile.
+    await fsp.writeFile(receiptPath, JSON.stringify(receipt, null, 2), 'utf8');
   } catch (error) {
     fail(`Smoke receipt was not written (${error.message}).\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`);
   }
@@ -113,19 +152,26 @@ async function main() {
     shotBytes,
     lightShotPath: shotPath.replace(/\.png$/i, '-light.png'),
     arabicShotPath: shotPath.replace(/\.png$/i, '-ar-light.png'),
+    studioShotPath: shotPath.replace(/native-bridge/i, 'studio-measured'),
+    studioPlanShotPath: shotPath.replace(/native-bridge/i, 'studio-plan'),
+    studioHistoryShotPath: shotPath.replace(/native-bridge/i, 'studio-history'),
     lightShotBytes: receipt?.lightScreenshotBytes || 0,
     arabicShotBytes: receipt?.arabicScreenshotBytes || 0,
+    studioShotBytes: receipt?.studioScreenshotBytes || 0,
+    studioPlanShotBytes: receipt?.studioPlanScreenshotBytes || 0,
+    studioHistoryShotBytes: receipt?.studioHistoryScreenshotBytes || 0,
     receiptOk: receipt?.ok === true,
     checks: receipt?.checks || null,
     stdoutTail: stdout.slice(-2000),
     stderrTail: stderr.slice(-2000),
   };
-  await fsp.writeFile(summaryPath, JSON.stringify(summary, null, 2), 'utf8');
+  const safeSummary = redactDeep(summary);
+  await fsp.writeFile(summaryPath, JSON.stringify(safeSummary, null, 2), 'utf8');
 
   await fsp.rm(profilePath, { recursive: true, force: true }).catch(() => {});
 
-  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000 && summary.lightShotBytes > 20000 && summary.arabicShotBytes > 20000, ...summary }, null, 2));
-  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000 || summary.lightShotBytes <= 20000 || summary.arabicShotBytes <= 20000) {
+  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000 && summary.lightShotBytes > 20000 && summary.arabicShotBytes > 20000 && summary.studioPlanShotBytes > 20000 && summary.studioHistoryShotBytes > 20000, ...safeSummary }, null, 2));
+  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000 || summary.lightShotBytes <= 20000 || summary.arabicShotBytes <= 20000 || summary.studioShotBytes <= 20000 || summary.studioPlanShotBytes <= 20000 || summary.studioHistoryShotBytes <= 20000) {
     console.error('[native-smoke] FAILED — inspect native-smoke-dev.json and native-bridge-dev.png');
     process.exit(1);
   }

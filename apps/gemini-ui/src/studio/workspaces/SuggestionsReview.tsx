@@ -15,7 +15,7 @@ import {
 import { useStudio } from '../context';
 
 export function SuggestionsReview() {
-  const { suggestions, dismissSuggestion, setActiveStageId, locale } = useStudio();
+  const { suggestions, dismissSuggestion, setActiveStageId, native, locale } = useStudio();
 
   return (
     <div className="flex-1 px-6 py-2 overflow-y-auto studio-scrollbar select-none">
@@ -32,8 +32,8 @@ export function SuggestionsReview() {
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-xl">
               {locale === 'en'
-                ? 'Explainable heuristic suggestions synthesized from indexed file schemas. Approve to load into Organization Builder or dismiss.'
-                : 'مقترحات ذكية مستنتجة من هياكل وتواريخ ملفاتك المفهرسة. يمكنك اعتماد المقترح أو تجاهله بنقرة واحدة.'}
+                ? 'Category-derived suggestions from the measured index. They are not AI analysis and do not claim reclaimable space; review a read-only plan before any approved execution.'
+                : 'مقترحات مشتقة من الفئات المقيسة. ليست تحليل ذكاء اصطناعي ولا تدعي مساحة قابلة للاستعادة؛ راجع خطة للقراءة فقط قبل أي تنفيذ معتمد.'}
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export function SuggestionsReview() {
                         {locale === 'en' ? sug.titleEn : sug.titleAr}
                       </h3>
                       <span className="px-1.5 py-0.5 rounded bg-cyan-950/80 text-[9px] font-mono font-bold text-cyan-300 border border-cyan-600/40">
-                        {sug.confidenceScore}% Confidence
+                        {native.mode === 'measured' ? (locale === 'en' ? 'Rule-based' : 'قاعدة مقيسة') : `${sug.confidenceScore}% ${locale === 'en' ? 'fixture confidence' : 'ثقة تجريبية'}`}
                       </span>
                     </div>
 
@@ -114,7 +114,7 @@ export function SuggestionsReview() {
                     className="px-3.5 py-1.5 rounded-lg bg-[#2476ff] hover:bg-[#3282ff] text-white text-xs font-semibold border border-cyan-400/50 shadow-[0_0_12px_rgba(36,118,255,0.4)] flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>{locale === 'en' ? 'Apply to Builder' : 'تطبيق على المنشئ'}</span>
+                    <span>{locale === 'en' ? 'Open Rule Builder' : 'فتح منشئ القواعد'}</span>
                   </button>
                 </div>
               </div>

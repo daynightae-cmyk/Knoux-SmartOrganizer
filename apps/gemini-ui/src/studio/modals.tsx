@@ -22,6 +22,9 @@ export function StudioModals() {
     activeModal,
     closeModal,
     addAuthorizedSource,
+    addNativeSource,
+    chooseNativeDestination,
+    native,
     destinationPath,
     setDestinationPath,
     conflicts,
@@ -76,6 +79,11 @@ export function StudioModals() {
             </button>
             <button
               onClick={() => {
+                if (native.available) {
+                  void addNativeSource();
+                  closeModal();
+                  return;
+                }
                 if (newPath.trim()) {
                   addAuthorizedSource(newPath.trim());
                   closeModal();
@@ -83,7 +91,7 @@ export function StudioModals() {
               }}
               className="px-4 py-1.5 rounded-lg bg-[#2476ff] hover:bg-[#3282ff] text-white text-xs font-semibold"
             >
-              Grant & Index
+              {native.available ? (locale === 'en' ? 'Browse native folder...' : 'اختيار مجلد أصلي...') : 'Grant & Index (fixture)'}
             </button>
           </div>
         </div>
@@ -123,12 +131,17 @@ export function StudioModals() {
             </button>
             <button
               onClick={() => {
+                if (native.available) {
+                  void chooseNativeDestination();
+                  closeModal();
+                  return;
+                }
                 setDestinationPath(tempDest);
                 closeModal();
               }}
               className="px-4 py-1.5 rounded-lg bg-[#2476ff] hover:bg-[#3282ff] text-white text-xs font-semibold"
             >
-              Save Destination
+              {native.available ? (locale === 'en' ? 'Choose native folder...' : 'اختيار مجلد أصلي...') : 'Save fixture destination'}
             </button>
           </div>
         </div>

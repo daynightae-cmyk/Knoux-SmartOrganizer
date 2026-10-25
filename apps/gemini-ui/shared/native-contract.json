@@ -6,7 +6,18 @@
     "systemSummary": "knoux:native:v1:system-summary",
     "servicesSummary": "knoux:native:v1:services-summary",
     "chooseFolder": "knoux:native:v1:choose-folder",
-    "windowControl": "knoux:window:v1:control"
+    "windowControl": "knoux:window:v1:control",
+    "studioSources": "knoux:studio:v1:sources",
+    "studioSourceChoose": "knoux:studio:v1:source-choose",
+    "studioSourceRemove": "knoux:studio:v1:source-remove",
+    "studioInventoryScan": "knoux:studio:v1:inventory-scan",
+    "studioInventoryCancel": "knoux:studio:v1:inventory-cancel",
+    "studioInventoryQuery": "knoux:studio:v1:inventory-query",
+    "studioThumbnails": "knoux:studio:v1:thumbnails",
+    "studioDestinationChoose": "knoux:studio:v1:destination-choose",
+    "studioPlanPreview": "knoux:studio:v1:plan-preview",
+    "studioPreviewHistory": "knoux:studio:v1:preview-history",
+    "studioEvent": "knoux:studio:v1:event"
   },
   "capabilities": {
     "bridge.status": {
@@ -32,7 +43,71 @@
       "title": "Choose a folder",
       "mode": "user-initiated",
       "channel": "knoux:native:v1:choose-folder"
+    },
+    "studio.sources": {
+      "id": "studio.sources",
+      "title": "Studio authorized sources",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:sources"
+    },
+    "studio.source.choose": {
+      "id": "studio.source.choose",
+      "title": "Choose and authorize a source folder",
+      "mode": "user-initiated",
+      "channel": "knoux:studio:v1:source-choose"
+    },
+    "studio.source.remove": {
+      "id": "studio.source.remove",
+      "title": "Revoke a source grant",
+      "mode": "user-initiated",
+      "channel": "knoux:studio:v1:source-remove"
+    },
+    "studio.inventory.scan": {
+      "id": "studio.inventory.scan",
+      "title": "Read-only source inventory",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:inventory-scan"
+    },
+    "studio.inventory.cancel": {
+      "id": "studio.inventory.cancel",
+      "title": "Cancel an inventory scan",
+      "mode": "user-initiated",
+      "channel": "knoux:studio:v1:inventory-cancel"
+    },
+    "studio.inventory.query": {
+      "id": "studio.inventory.query",
+      "title": "Query measured inventory",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:inventory-query"
+    },
+    "studio.thumbnails": {
+      "id": "studio.thumbnails",
+      "title": "Bounded native thumbnails",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:thumbnails"
+    },
+    "studio.destination.choose": {
+      "id": "studio.destination.choose",
+      "title": "Choose an output destination",
+      "mode": "user-initiated",
+      "channel": "knoux:studio:v1:destination-choose"
+    },
+    "studio.plan.preview": {
+      "id": "studio.plan.preview",
+      "title": "Immutable organization plan preview",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:plan-preview"
+    },
+    "studio.preview.history": {
+      "id": "studio.preview.history",
+      "title": "Plan preview receipts",
+      "mode": "read-only",
+      "channel": "knoux:studio:v1:preview-history"
     }
   },
-  "windowActions": ["minimize", "maximize", "close"]
+  "windowActions": [
+    "minimize",
+    "maximize",
+    "close"
+  ]
 }

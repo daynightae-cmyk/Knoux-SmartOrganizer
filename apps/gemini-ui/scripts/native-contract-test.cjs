@@ -31,7 +31,12 @@ for (const channel of Object.values(contract.channels)) {
 assert(preload.includes("exposeInMainWorld(\n  'knouxShell'") || preload.includes("exposeInMainWorld"), 'preload exposes the bridge');
 assert(!preload.includes('exposeInMainWorld(\'knouxNode\''), 'no second raw bridge');
 assert(!preload.includes('ipcRenderer.send('), 'preload must not expose send');
-assert(!preload.includes('ipcRenderer.on('), 'platform v1 does not expose event streams');
+assert(contract.channels.studioEvent === 'knoux:studio:v1:event', 'studio event channel is fixed');
+const eventSubscriptions = preload.match(/ipcRenderer\.on\(/g) || [];
+assert(eventSubscriptions.length === 1 && preload.includes('ipcRenderer.on(CHANNELS.studioEvent'), 'only the fixed Studio event channel is subscribed');
+const shellBlock = preload.slice(preload.indexOf("'knouxShell'"), preload.indexOf("'knouxStudioV1'"));
+assert(!shellBlock.includes('onEvent') && !shellBlock.includes('ipcRenderer.on'), 'platform v1 exposes no event stream');
+assert(!preload.includes('ipcRenderer.invoke(CHANNELS.studioEvent'), 'studio events are receive-only');
 assert(!/require\(['"](?:node:)?(fs|child_process|path|os)['"]\)/.test(preload), 'preload has no Node filesystem/process module');
 assert(main.includes('contextIsolation: true'), 'main enables contextIsolation');
 assert(main.includes('sandbox: true'), 'main enables sandbox');

@@ -38,7 +38,10 @@ export function AuthorizedSourcesPanel() {
     inventory,
     openModal,
     refreshSources,
+    scanActiveSource,
+    addNativeSource,
     removeAuthorizedSource,
+    native,
     locale,
   } = useStudio();
 
@@ -135,30 +138,37 @@ export function AuthorizedSourcesPanel() {
         {/* Buttons: + Add Folder & Refresh Source */}
         <div className="pt-2 border-t border-[#0f2545] space-y-1.5">
           <button
-            onClick={() => openModal('add_folder')}
-            className="w-full py-1.5 rounded-lg bg-[#0d223f] hover:bg-[#143563] text-cyan-300 border border-[#2476ff]/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+            onClick={() => (native.available ? void addNativeSource() : openModal('add_folder'))}
+            disabled={native.scanning}
+            className="w-full py-1.5 rounded-lg bg-[#0d223f] hover:bg-[#143563] disabled:opacity-50 text-cyan-300 border border-[#2476ff]/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{locale === 'en' ? 'Add Folder' : 'إضافة مجلد'}</span>
+            <span>{locale === 'en' ? (native.available ? 'Add native folder' : 'Add Folder (fixture)') : native.available ? 'إضافة مجلد أصلي' : 'إضافة مجلد (تجريبي)'}</span>
           </button>
 
           <button
-            onClick={refreshSources}
-            className="w-full py-1.5 rounded-lg bg-[#081528] hover:bg-[#0c1f3b] text-slate-400 hover:text-slate-200 border border-[#132c52] text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            onClick={() => (native.available ? void scanActiveSource() : refreshSources())}
+            disabled={native.scanning}
+            className="w-full py-1.5 rounded-lg bg-[#081528] hover:bg-[#0c1f3b] disabled:opacity-50 text-slate-400 hover:text-slate-200 border border-[#132c52] text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
           >
-            <RefreshCw className="w-3 h-3 text-slate-500" />
-            <span>{locale === 'en' ? 'Refresh Source' : 'تحديث المصدر'}</span>
+            <RefreshCw className={`w-3 h-3 text-slate-500 ${native.scanning ? 'animate-spin' : ''}`} />
+            <span>{locale === 'en' ? 'Re-scan measured source' : 'إعادة فحص المصدر المقيس'}</span>
           </button>
         </div>
       </div>
 
       {/* Inventory Summary sub-card */}
       <div className="studio-glass-panel rounded-xl p-3 border border-[#132c52]">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#0f2545]">
-          <Database className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-xs font-bold text-white tracking-wide">
-            {locale === 'en' ? 'Inventory Summary' : 'ملخص المخزون'}
-          </h3>
+        <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#0f2545]">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs font-bold text-white tracking-wide">
+              {locale === 'en' ? 'Inventory Summary' : 'ملخص المخزون'}
+            </h3>
+          </div>
+          <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-mono font-bold border ${native.mode === 'measured' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40' : 'bg-amber-950/60 text-amber-300 border-amber-500/40'}`}>
+            {native.mode === 'measured' ? (locale === 'en' ? 'MEASURED' : 'مقيس') : (locale === 'en' ? 'FIXTURE' : 'تجريبي')}
+          </span>
         </div>
 
         <div className="pt-2.5 space-y-2 text-xs">
@@ -209,10 +219,15 @@ export function CenterCategoriesAndGallery() {
     setViewMode,
     sortOrder,
     setSortOrder,
+    native,
     locale,
   } = useStudio();
 
   const selectedCategory = categories.find((c) => c.key === selectedCategoryKey) || categories[0];
+  // Fixture samples exist only for the image category. Do not present the
+  // image fixture under another category label; native rows are already
+  // filtered by the measured query.
+  const galleryFiles = native.mode === 'measured' ? files : files.filter((file) => file.category === selectedCategoryKey);
 
   return (
     <div className="flex-1 flex flex-col gap-3 min-w-0 select-none">
@@ -353,9 +368,27 @@ export function CenterCategoriesAndGallery() {
 
         {/* Gallery Content: 6-column grid */}
         <div className="pt-3 flex-1 overflow-y-auto studio-scrollbar">
-          {viewMode === 'grid' ? (
+          {galleryFiles.length === 0 ? (
+            <div className="h-full min-h-[160px] flex flex-col items-center justify-center gap-2 text-center border border-dashed border-[#1a3d6d] rounded-xl p-5">
+              <FileText className="w-7 h-7 text-slate-500" />
+              <div className="text-xs font-semibold text-slate-300">
+                {native.mode === 'measured'
+                  ? locale === 'en'
+                    ? 'No indexed files in this category.'
+                    : 'لا توجد ملفات مفهرسة في هذه الفئة.'
+                  : locale === 'en'
+                  ? 'Fixture gallery is empty. Add a native folder in Electron for measured files.'
+                  : 'معرض البيانات التجريبية فارغ. أضف مجلدًا أصليًا في Electron لملفات مقيسة.'}
+              </div>
+              <div className="text-[10px] text-slate-500">
+                {locale === 'en'
+                  ? 'Reading metadata only — nothing was changed.'
+                  : 'قراءة بيانات وصفية فقط — لم يتغير أي شيء.'}
+              </div>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-6 gap-2.5">
-              {files.map((file) => {
+              {galleryFiles.map((file) => {
                 const isChecked = selectedFileIds.has(file.id);
 
                 return (
@@ -421,7 +454,7 @@ export function CenterCategoriesAndGallery() {
           ) : (
             /* List view */
             <div className="space-y-1">
-              {files.map((file) => {
+              {galleryFiles.map((file) => {
                 const isChecked = selectedFileIds.has(file.id);
                 return (
                   <div
@@ -465,6 +498,11 @@ export function CenterCategoriesAndGallery() {
               })}
             </div>
           )}
+          {galleryFiles.length >= 200 && (
+            <div className="pt-2 text-[10px] text-slate-500 font-mono">
+              {locale === 'en' ? 'Showing the first 200 measured files in this category.' : 'يتم عرض أول 200 ملف مقيس في هذه الفئة.'}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -484,8 +522,18 @@ export function OrganizationInspectorPanel() {
     operationMode,
     setOperationMode,
     openModal,
+    chooseNativeDestination,
+    native,
+    conflicts,
     locale,
   } = useStudio();
+
+  const nativeDestination = native.destination?.path || null;
+  const effectiveDestination = native.mode === 'measured' ? nativeDestination : destinationPath;
+  const conflictCount =
+    native.mode === 'measured'
+      ? native.plan?.totals.collisions ?? 0
+      : conflicts.reduce((sum, conflict) => sum + conflict.affectedCount, 0);
 
   const selectedCategory = categories.find((c) => c.key === selectedCategoryKey) || categories[0];
 
@@ -527,14 +575,16 @@ export function OrganizationInspectorPanel() {
                 <span>{locale === 'en' ? 'Destination Proposal' : 'الوجهة المقترحة'}</span>
               </div>
               <button
-                onClick={() => openModal('change_destination')}
+                onClick={() => (native.available ? void chooseNativeDestination() : openModal('change_destination'))}
                 className="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-medium cursor-pointer"
               >
-                {locale === 'en' ? 'Change...' : 'تغيير...'}
+                {locale === 'en' ? (native.available ? 'Choose native...' : 'Change...') : 'تغيير...'}
               </button>
             </div>
-            <div className="font-mono text-xs text-slate-200 bg-[#050e1a] p-1.5 rounded border border-[#0d213d] truncate" title={destinationPath}>
-              {destinationPath}
+            <div className="font-mono text-xs text-slate-200 bg-[#050e1a] p-1.5 rounded border border-[#0d213d] truncate" title={effectiveDestination || undefined}>
+              {native.mode === 'measured'
+                ? effectiveDestination || (locale === 'en' ? 'Not authorized - choose a native destination.' : 'غير مصرح - اختر وجهة أصلية.')
+                : effectiveDestination}
             </div>
           </div>
 
@@ -553,8 +603,10 @@ export function OrganizationInspectorPanel() {
               </button>
             </div>
             <div className="text-[11px] text-slate-300 leading-snug">
-              <div>Keep original name</div>
-              <div className="text-slate-500 text-[10px]">Add date if duplicate exists (YYYY-MM-DD)</div>
+              <div>{namingRule.name}</div>
+              <div className="text-slate-500 text-[10px] whitespace-pre-line">
+                {locale === 'en' ? namingRule.descriptionEn : namingRule.descriptionAr}
+              </div>
             </div>
           </div>
 
@@ -573,8 +625,15 @@ export function OrganizationInspectorPanel() {
               </button>
             </div>
             <div className="text-[11px] text-slate-300 leading-snug">
-              <div>Group by: Capture Date</div>
-              <div className="text-slate-500 text-[10px] font-mono">Structure: YYYY \ MM \ DD</div>
+              <div>{locale === 'en' ? 'Requested:' : 'المطلوب:'} {groupingRule.groupBy.replace(/_/g, ' ')}</div>
+              <div className="text-slate-500 text-[10px] font-mono">{groupingRule.structure}</div>
+              {native.mode === 'measured' && (
+                <div className="text-amber-300/80 text-[10px] mt-1">
+                  {locale === 'en'
+                    ? 'Native preview currently groups by category; date structures are not applied.'
+                    : 'المعاينة الأصلية تجمّع حسب الفئة حاليًا؛ بنية التاريخ غير مطبقة.'}
+                </div>
+              )}
             </div>
           </div>
 
@@ -618,7 +677,7 @@ export function OrganizationInspectorPanel() {
                   onChange={() => setOperationMode('virtual')}
                   className="accent-[#2476ff]"
                 />
-                <span>{locale === 'en' ? 'Create virtual organization (shortcuts)' : 'تنظيم افتراضي (اختصارات)'}</span>
+                <span>{locale === 'en' ? 'Virtual grouping plan (no files written)' : 'خطة تجميع افتراضية (لا تُكتب ملفات)'}</span>
               </label>
             </div>
           </div>
@@ -633,10 +692,16 @@ export function OrganizationInspectorPanel() {
                     {locale === 'en' ? 'Potential Conflicts' : 'تعارضات محتملة'}
                   </div>
                   <div className="text-[10px] text-amber-200/80 mt-0.5">
-                    12 files may have duplicate names
+                    {conflictCount} {locale === 'en' ? 'collision(s) in the current preview' : 'تعارض في المعاينة الحالية'}
                   </div>
                   <div className="text-[10px] text-slate-400">
-                    3 folders already exist at destination
+                    {native.mode === 'measured'
+                      ? locale === 'en'
+                        ? 'Measured from the immutable plan; nothing was written.'
+                        : 'مقيسة من الخطة غير القابلة للتعديل؛ لم يُكتب شيء.'
+                      : locale === 'en'
+                      ? 'Fixture estimate - not measured.'
+                      : 'تقدير تجريبي - غير مقيس.'}
                   </div>
                 </div>
               </div>
@@ -657,13 +722,17 @@ export function OrganizationInspectorPanel() {
               <span>{locale === 'en' ? 'Permissions' : 'الصلاحيات'}</span>
             </div>
             <div className="space-y-1 text-[11px]">
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Destination is writable</span>
+              <div className={`flex items-center gap-1.5 ${native.destination ? 'text-slate-300' : 'text-amber-300'}`}>
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                <span>{native.destination ? (locale === 'en' ? 'Destination authorized and writable-checked' : 'الوجهة مصرح بها وتم فحص الكتابة') : (locale === 'en' ? 'No native destination authorized' : 'لا توجد وجهة أصلية مصرح بها')}</span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-300">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>No elevation required</span>
+                <span>{locale === 'en' ? 'No elevation requested' : 'لا رفع صلاحيات'}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-300">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{locale === 'en' ? 'Execution is blocked: explicit approval required' : 'التنفيذ محظور: موافقة صريحة مطلوبة'}</span>
               </div>
             </div>
           </div>
@@ -677,15 +746,15 @@ export function OrganizationInspectorPanel() {
             <div className="space-y-1 text-[11px]">
               <div className="flex items-center gap-1.5 text-slate-300">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Original files will remain unchanged</span>
+                <span>{locale === 'en' ? 'Read-only index and plan preview' : 'فهرس ومعاينة خطة للقراءة فقط'}</span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-300">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>You can review and modify the plan</span>
+                <span>{locale === 'en' ? 'No file write capability is exposed' : 'لا قدرة كتابة على الملفات مكشوفة'}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Full undo available after execution</span>
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{native.mode === 'measured' ? (locale === 'en' ? 'Undo/execute require a separately approved capability' : 'التراجع/التنفيذ يتطلبان قدرة معتمدة منفصلة') : (locale === 'en' ? 'Fixture only - no execute/undo backend' : 'تجريبي فقط - لا خلفية تنفيذ/تراجع')}</span>
               </div>
             </div>
           </div>

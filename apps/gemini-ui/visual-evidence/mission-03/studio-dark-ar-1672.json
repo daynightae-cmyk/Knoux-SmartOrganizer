@@ -1,0 +1,71 @@
+{
+  "url": "http://127.0.0.1:3000/#/studio",
+  "width": 1672,
+  "height": 941,
+  "locale": "ar",
+  "theme": "dark",
+  "audit": {
+    "viewport": [
+      1672,
+      941
+    ],
+    "lang": "ar",
+    "dir": "rtl",
+    "theme": "(none)",
+    "docScroll": [
+      1672,
+      941
+    ],
+    "bodyScroll": [
+      1672,
+      941
+    ],
+    "bodyOverflow": "hidden",
+    "htmlOverflow": "visible",
+    "documentScrolls": false,
+    "horizontalScrolls": false,
+    "interactiveCount": 56,
+    "coveredCount": 0,
+    "covered": [],
+    "escaping": [],
+    "scrollers": [
+      {
+        "cls": "pt-3 flex-1 overflow-y-auto studio-scrollbar",
+        "clientH": 131,
+        "scrollH": 245
+      },
+      {
+        "cls": "studio-glass-panel rounded-xl p-3 border border-[#132c52] flex-1 flex ",
+        "clientH": 583,
+        "scrollH": 814
+      }
+    ],
+    "critical": {
+      "aside": [
+        1448,
+        40,
+        224,
+        901
+      ],
+      "main": [
+        0,
+        40,
+        1448,
+        901
+      ],
+      "footer": [
+        0,
+        893,
+        1448,
+        48
+      ],
+      "[class*=\"titlebar\"]": [
+        0,
+        0,
+        1672,
+        40
+      ]
+    },
+    "title": "KNOuX SmartOrganizer - Smart Organization Studio"
+  }
+}
