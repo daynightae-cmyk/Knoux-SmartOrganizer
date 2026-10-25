@@ -1,0 +1,19 @@
+/**
+ * KNOuX SmartOrganizer — Studio Command Center Styles
+ */
+
+.command-center-overlay {
+  background: rgba(3, 8, 20, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+.command-center-drawer {
+  background: linear-gradient(180deg, #07152b 0%, #050d1d 100%);
+  border: 1px solid #1a3c6d;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(36, 118, 255, 0.25);
+}
+
+.badge-counter {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.02em;
+}

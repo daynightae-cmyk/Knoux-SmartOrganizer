@@ -1,0 +1,1283 @@
+/**
+ * KNOuX SmartOrganizer — REF-00 Home Command Center Scoped Stylesheet
+ * Reference resolution: 1672x941 native desktop
+ */
+
+/* Scope strictly to Home page */
+.knx-home-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: radial-gradient(120% 80% at 75% 0%, #0d1b30 0%, #080f1e 40%, #040811 100%);
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Light theme overrides */
+html[data-theme="light"] .knx-home-root {
+  background: radial-gradient(120% 80% at 75% 0%, #e0edff 0%, #eef4fc 40%, #f4f7fb 100%);
+  color: #1e293b;
+}
+
+/* RTL Support */
+[dir="rtl"] .knx-home-root {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Hero Section with Cinematic Earth Horizon (REF-00 Art Direction) */
+.knx-home-hero {
+  position: relative;
+  border-radius: 12px;
+  background: #030713;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  min-height: 105px;
+  max-height: 120px;
+  flex-shrink: 0;
+}
+
+html[data-theme="light"] .knx-home-hero {
+  background: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 10px 25px -10px rgba(59, 130, 246, 0.18), inset 0 1px 0 #ffffff;
+}
+
+/* Earth Horizon Scene Container */
+.knx-earth-horizon-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.knx-earth-horizon-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* RTL mode for Earth Horizon: mirrors the earth limb horizontally */
+.knx-earth-rtl {
+  transform: scaleX(-1);
+}
+
+/* Starfield subtle optical twinkle */
+@keyframes knx-stars-shimmer {
+  0% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.78;
+  }
+}
+
+.knx-starfield {
+  animation: knx-stars-shimmer 7s ease-in-out infinite alternate;
+}
+
+/* Nocturnal city lights scintillation */
+@keyframes knx-city-pulse {
+  0% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.84;
+  }
+}
+
+.knx-city-lights {
+  animation: knx-city-pulse 4.5s ease-in-out infinite alternate;
+}
+
+/* Legacy fallback classes preserved for safety */
+.knx-hero-planet-rim {
+  position: absolute;
+  right: -80px;
+  bottom: -150px;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1e3a8a 0%, #0f172a 70%, transparent 100%);
+  box-shadow: 
+    0 -15px 45px rgba(56, 189, 248, 0.45),
+    0 -5px 15px rgba(96, 165, 250, 0.6),
+    inset 0 10px 35px rgba(125, 211, 252, 0.5);
+  pointer-events: none;
+  opacity: 0.88;
+}
+
+[dir="rtl"] .knx-hero-planet-rim {
+  right: auto;
+  left: -80px;
+}
+
+.knx-hero-stars {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.knx-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 650px;
+}
+
+.knx-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.knx-hero-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+html[data-theme="light"] .knx-hero-title {
+  color: #0f172a;
+}
+
+.knx-hero-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 16px 0;
+  line-height: 1.45;
+}
+
+html[data-theme="light"] .knx-hero-subtitle {
+  color: #475569;
+}
+
+/* Master Command Search Trigger */
+.knx-master-search-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 580px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #cbd5e1;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.knx-master-search-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.25);
+  color: #ffffff;
+}
+
+html[data-theme="light"] .knx-master-search-btn {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #475569;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+html[data-theme="light"] .knx-master-search-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.knx-search-shortcut-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+[dir="rtl"] .knx-search-shortcut-badge {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.knx-hero-pills {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+[dir="rtl"] .knx-hero-pills {
+  align-items: flex-start;
+}
+
+.knx-hero-mantra {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #7dd3fc;
+  letter-spacing: 0.3px;
+  background: rgba(8, 145, 178, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  padding: 4px 12px;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+/* The decorative right/left mantra is dropped on compact desktops, where it
+   would otherwise be squeezed against the mirrored hero edge in RTL. */
+@media (max-width: 1400px) {
+  .knx-hero-tagline {
+    display: none !important;
+  }
+}
+
+/* Region B: 6 Compact KPI Cards */
+.knx-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1400px) {
+  .knx-kpis-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .knx-kpis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.knx-kpi-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.knx-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--kpi-accent, #38bdf8);
+  opacity: 0.65;
+}
+
+.knx-kpi-card:hover {
+  transform: translateY(-2px);
+  background: rgba(24, 34, 58, 0.85);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="light"] .knx-kpi-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="light"] .knx-kpi-card:hover {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+}
+
+.knx-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.knx-kpi-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--kpi-accent, #38bdf8);
+}
+
+.knx-kpi-sparkline {
+  width: 52px;
+  height: 22px;
+}
+
+.knx-kpi-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+html[data-theme="light"] .knx-kpi-title {
+  color: #64748b;
+}
+
+.knx-kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+html[data-theme="light"] .knx-kpi-value {
+  color: #0f172a;
+}
+
+.knx-kpi-subtext {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .knx-kpi-subtext {
+  color: #64748b;
+}
+
+/* Two-column Main Dashboard Area (Fixed Viewport Discipline) */
+.knx-home-layout {
+  display: grid;
+  grid-template-columns: 65% calc(35% - 10px);
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .knx-home-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.knx-main-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.knx-main-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.knx-lower-split {
+  display: grid;
+  grid-template-columns: 52% calc(48% - 8px);
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Region C: Today's Command Deck (4x2 Tiles) */
+.knx-deck-panel {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+html[data-theme="light"] .knx-deck-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.knx-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.knx-panel-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.knx-panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+html[data-theme="light"] .knx-panel-title {
+  color: #0f172a;
+}
+
+.knx-panel-subtitle {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.knx-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 11px;
+}
+
+@media (max-width: 1100px) {
+  .knx-deck-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.knx-deck-tile {
+  background: rgba(18, 28, 48, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+[dir="rtl"] .knx-deck-tile {
+  text-align: right;
+}
+
+.knx-deck-tile:hover {
+  transform: translateY(-2px);
+  background: rgba(28, 44, 72, 0.85);
+  border-color: var(--tile-border, rgba(56, 189, 248, 0.4));
+  box-shadow: 0 6px 18px var(--tile-shadow, rgba(14, 165, 233, 0.2));
+}
+
+html[data-theme="light"] .knx-deck-tile {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] .knx-deck-tile:hover {
+  background: #ffffff;
+  border-color: var(--tile-border, #38bdf8);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.knx-tile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.knx-tile-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tile-bg, rgba(14, 165, 233, 0.15));
+  color: var(--tile-color, #38bdf8);
+  border: 1px solid var(--tile-border, rgba(56, 189, 248, 0.3));
+}
+
+.knx-tile-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.knx-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.knx-tile-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="light"] .knx-tile-title {
+  color: #0f172a;
+}
+
+.knx-tile-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .knx-tile-subtitle {
+  color: #64748b;
+}
+
+.knx-tile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #64748b;
+  margin-top: auto;
+}
+
+.knx-deck-tile:hover .knx-tile-footer {
+  color: var(--tile-color, #38bdf8);
+}
+
+/* Region D: KNOuX Insight Card */
+.knx-insight-card {
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(20, 15, 45, 0.85) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12);
+}
+
+html[data-theme="light"] .knx-insight-card {
+  background: linear-gradient(135deg, rgba(243, 232, 255, 0.9) 0%, rgba(250, 245, 255, 0.95) 100%);
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.08);
+}
+
+.knx-insight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.knx-insight-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 10px 0 6px 0;
+  line-height: 1.35;
+}
+
+html[data-theme="light"] .knx-insight-title {
+  color: #1e1b4b;
+}
+
+.knx-insight-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+html[data-theme="light"] .knx-insight-desc {
+  color: #475569;
+}
+
+.knx-insight-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.knx-btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.knx-btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+}
+
+.knx-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.knx-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+html[data-theme="light"] .knx-btn-secondary {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #334155;
+}
+
+/* Region E: Recent Activity & Recommendations */
+.knx-activity-panel {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .knx-activity-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.knx-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.knx-activity-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="light"] .knx-activity-row {
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .knx-activity-row:hover {
+  background: #f1f5f9;
+}
+
+.knx-act-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.knx-act-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.knx-act-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .knx-act-title {
+  color: #0f172a;
+}
+
+.knx-act-desc {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.knx-act-meta {
+  font-size: 10.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Region F: System Overview & Lower Split Panels */
+.knx-overview-panel {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.knx-storage-quick-card {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .knx-overview-panel,
+html[data-theme="light"] .knx-storage-quick-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px;
+  border-radius: 8px;
+}
+
+html[data-theme="light"] .knx-tabs {
+  background: #e2e8f0;
+}
+
+.knx-tab-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94a3b8;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.knx-tab-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="light"] .knx-tab-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.knx-overview-content {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .knx-overview-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.knx-gauge-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.knx-gauge-center {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.knx-gauge-score {
+  font-size: 26px;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.knx-gauge-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.knx-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.knx-chart-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.knx-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+[dir="rtl"] .knx-legend-dot {
+  margin-right: 0;
+  margin-left: 5px;
+}
+
+/* Region G: Quick Access */
+.knx-quick-panel {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+html[data-theme="light"] .knx-quick-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.knx-quick-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.knx-quick-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="light"] .knx-quick-item {
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .knx-quick-item:hover {
+  background: #f1f5f9;
+}
+
+.knx-file-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.knx-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.knx-file-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .knx-file-name {
+  color: #0f172a;
+}
+
+.knx-file-path {
+  font-size: 10.5px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Region H: Storage Snapshot (C:, D:, E:) */
+.knx-storage-snapshot {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 11px;
+}
+
+@media (max-width: 800px) {
+  .knx-storage-snapshot {
+    grid-template-columns: 1fr;
+  }
+}
+
+.knx-storage-vol-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.knx-storage-vol-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(25, 36, 62, 0.75);
+}
+
+html[data-theme="light"] .knx-storage-vol-card {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-vol-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.knx-vol-letter {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-theme="light"] .knx-vol-letter {
+  color: #0f172a;
+}
+
+.knx-vol-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .knx-vol-bar-bg {
+  background: #e2e8f0;
+}
+
+.knx-vol-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--vol-fill, #3b82f6);
+}
+
+.knx-vol-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Region I: Pending Safe Actions */
+.knx-pending-panel {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+html[data-theme="light"] .knx-pending-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-pending-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+html[data-theme="light"] .knx-pending-item {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.knx-pending-checkbox {
+  margin-top: 3px;
+  cursor: pointer;
+  accent-color: #0284c7;
+  width: 15px;
+  height: 15px;
+}
+
+.knx-pending-content {
+  flex: 1;
+}
+
+.knx-pending-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+html[data-theme="light"] .knx-pending-title {
+  color: #0f172a;
+}
+
+.knx-pending-scope {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0 6px 0;
+}
+
+.knx-preview-btn {
+  font-size: 11px;
+  color: #38bdf8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.knx-preview-btn:hover {
+  color: #7dd3fc;
+}
+
+.knx-safe-footer-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Modals & Overlays */
+.knx-modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.knx-modal-card {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 580px;
+  width: 100%;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #f1f5f9;
+}
+
+html[data-theme="light"] .knx-modal-card {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Scrollbars for Sidebar and Main Workspace */
+.knx-sidebar-scrollbar::-webkit-scrollbar,
+.knx-workspace-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.knx-sidebar-scrollbar::-webkit-scrollbar-track,
+.knx-workspace-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.knx-sidebar-scrollbar::-webkit-scrollbar-thumb,
+.knx-workspace-scroll::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 4px;
+}
+
+.knx-sidebar-scrollbar::-webkit-scrollbar-thumb:hover,
+.knx-workspace-scroll::-webkit-scrollbar-thumb:hover,
+.knx-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.45);
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 4px;
+}
+

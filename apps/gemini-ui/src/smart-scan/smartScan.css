@@ -1,0 +1,231 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * 
+ * KNOuX SmartOrganizer — Smart Scan Desktop Viewport Stylesheet
+ * Enforces zero page-level viewport scrolling and precision desktop layouts
+ */
+
+/* Desktop Workspace Container — Fixed Viewport */
+.smart-scan-viewport {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #040b18;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbar for internal overflow areas */
+.knx-custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(4, 11, 24, 0.6);
+  border-radius: 4px;
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #112d54;
+  border-radius: 4px;
+}
+
+.knx-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Glow & Ambient Background Effects */
+.knx-planetary-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(38, 198, 218, 0.15) 0%, rgba(37, 99, 235, 0.08) 45%, transparent 70%);
+}
+
+.knx-glass-card {
+  background: rgba(7, 19, 41, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid #11294a;
+}
+
+.knx-glass-card-active {
+  background: rgba(13, 37, 75, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}
+
+/* ==========================================================================
+   Desktop density: keep the hero, KPIs, ten scan services, the findings
+   table and the review inspector inside one bounded workspace. The table
+   scrolls internally and keeps its row rhythm readable.
+   ========================================================================== */
+.scan-results-panel,
+.scan-results-panel > div {
+  min-height: 0;
+}
+
+.scan-results-table table td,
+.scan-results-table table th {
+  padding: 6px 7px;
+}
+
+@media (max-height: 960px) {
+  .scan-main {
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .scan-hero {
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+
+  .scan-hero h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .scan-hero-copy {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .scan-hero-tagline {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .scan-metric-card {
+    padding: 7px 9px !important;
+    border-radius: 10px !important;
+  }
+
+  .scan-metric-card .text-xl {
+    font-size: 1rem !important;
+  }
+
+  .scan-services {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+
+  .scan-services-copy {
+    display: none;
+  }
+
+  .scan-services .grid {
+    gap: 6px !important;
+  }
+
+  .scan-service-card {
+    padding: 5px 7px !important;
+  }
+
+  .scan-service-sub {
+    display: none;
+  }
+
+  .scan-service-card .w-8 {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .scan-results-panel {
+    padding: 10px !important;
+  }
+
+  .scan-results-head {
+    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+    gap: 6px !important;
+  }
+
+  .scan-results-head > div:last-child {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .scan-results-head > div:last-child button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .scan-results-head h3 {
+    font-size: 12px !important;
+  }
+
+  .scan-results-head p {
+    font-size: 10px !important;
+  }
+
+  .scan-row-desc {
+    display: none;
+  }
+
+  .scan-results-table table td,
+  .scan-results-table table th {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  .scan-results-table table tbody tr {
+    height: 30px;
+  }
+
+  .scan-results-table table td,
+  .scan-results-table table th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+}
+
+@media (max-height: 820px) {
+  .scan-hero-tagline {
+    display: none;
+  }
+
+  .scan-hero-copy {
+    display: none;
+  }
+
+  .scan-metrics {
+    gap: 6px !important;
+  }
+
+  .scan-metric-card {
+    padding: 5px 8px !important;
+  }
+
+  .scan-metric-card .text-xl {
+    font-size: 0.95rem !important;
+  }
+}
+
+@media (max-width: 1499px) {
+  .scan-results-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 1279px) {
+  .scan-main {
+    overflow-y: auto !important;
+  }
+}
+
+/* Table Hover & Selection */
+.knx-table-row {
+  transition: background-color 0.15s ease;
+}
+
+.knx-table-row:hover {
+  background-color: rgba(12, 32, 63, 0.8);
+}
+
+.knx-table-row-selected {
+  background-color: rgba(13, 37, 75, 0.9) !important;
+  border-left: 3px solid #38bdf8;
+}

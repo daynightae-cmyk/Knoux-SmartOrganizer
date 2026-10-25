@@ -1,0 +1,18 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Local visual-capture debug artifacts — curated evidence lives in visual-evidence/closure-20261025/final
+visual-evidence/closure-20261025/audit/
+screenshot_*.png
+test_screenshot.png
+visual-evidence/closure-20261025/baseline-*
+visual-evidence/closure-20261025/before-*/
+visual-evidence/closure-20261025/after-*/
+
+release/

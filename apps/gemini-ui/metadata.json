@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix KNOuX SmartOrganizer - Smart Organization Studio",
+  "description": "Smart Organization Studio for KNOuX: From scattered files to intelligent order with 9 operational stages, visual library, rule builder, and telemetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

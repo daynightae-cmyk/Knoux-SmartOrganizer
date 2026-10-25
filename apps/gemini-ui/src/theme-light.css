@@ -1,0 +1,822 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * KNOuX SmartOrganizer — Light Workstation palette bridge
+ *
+ * The original screens were authored with deep-navy utility surfaces. A full
+ * semantic-token migration is scheduled for Phase B; until then this file maps
+ * the finite navy palette used across the renderer onto a legible daylight
+ * palette. It is deliberately scoped to html[data-theme="light"], never filters
+ * or inverts colours, and preserves vivid action colours and cinematic artwork.
+ */
+
+html[data-theme='light'] {
+  --knx-day-bg: #eef3f9;
+  --knx-day-surface: #ffffff;
+  --knx-day-surface-2: #f6f9fd;
+  --knx-day-surface-3: #e8eff8;
+  --knx-day-line: #d6e0ed;
+  --knx-day-line-strong: #b9c9dd;
+  --knx-day-ink: #0b1220;
+  --knx-day-ink-2: #1e293b;
+  --knx-day-ink-3: #334155;
+  --knx-day-muted: #475569;
+  --knx-day-muted-2: #64748b;
+  --knx-day-cyan: #0369a1;
+  --knx-day-emerald: #047857;
+  --knx-day-amber: #b45309;
+  --knx-day-rose: #be123c;
+  --knx-day-purple: #6d28d9;
+  --knx-day-blue: #1d4ed8;
+  background-color: var(--knx-day-bg);
+  color: var(--knx-day-ink);
+}
+
+html[data-theme='light'] body {
+  background: var(--knx-day-bg);
+  color: var(--knx-day-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Page canvases and shared chrome
+   -------------------------------------------------------------------------- */
+html[data-theme='light'] .startup-viewport,
+html[data-theme='light'] .system-viewport,
+html[data-theme='light'] .smart-scan-viewport,
+html[data-theme='light'] .knx-home-root,
+html[data-theme='light'] .automation-viewport,
+html[data-theme='light'] .repair-viewport,
+html[data-theme='light'] .services-viewport,
+html[data-theme='light'] .cleanup-viewport,
+html[data-theme='light'] .storage-viewport,
+html[data-theme='light'] [class*='w-screen'][class*='h-screen'] {
+  background-color: var(--knx-day-bg) !important;
+  background-image: none !important;
+  color: var(--knx-day-ink) !important;
+}
+
+html[data-theme='light'] .smart-scan-viewport,
+html[data-theme='light'] .system-viewport,
+html[data-theme='light'] .startup-viewport {
+  background-image:
+    radial-gradient(ellipse 60% 30% at 80% 0%, rgba(14, 165, 233, 0.1), transparent 65%),
+    radial-gradient(ellipse 40% 25% at 15% 8%, rgba(99, 102, 241, 0.08), transparent 60%) !important;
+}
+
+/* Sidebar + titlebar */
+html[data-theme='light'] aside,
+html[data-theme='light'] header {
+  background-color: #ffffff !important;
+  color: var(--knx-day-ink) !important;
+  border-color: var(--knx-day-line) !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] aside .bg-\[\#050e1f\],
+html[data-theme='light'] aside .bg-\[\#040b18\],
+html[data-theme='light'] aside .bg-\[\#040915\] {
+  background-color: #ffffff !important;
+}
+
+/* Search field / inputs in chrome */
+html[data-theme='light'] [class*='rounded-full'][class*='bg-[#081329]'],
+html[data-theme='light'] [class*='bg-[#081329]'],
+html[data-theme='light'] [class*='bg-[#0a1a38]'],
+html[data-theme='light'] [class*='bg-[#0a1d3f]'],
+html[data-theme='light'] [class*='bg-[#0b1b36]'] {
+  background-color: var(--knx-day-surface-2) !important;
+  border-color: var(--knx-day-line) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Navy surfaces → daylight surfaces
+   -------------------------------------------------------------------------- */
+html[data-theme='light'] [class*='bg-[#050e1f]'],
+html[data-theme='light'] [class*='bg-[#040a16]'],
+html[data-theme='light'] [class*='bg-[#040b18]'],
+html[data-theme='light'] [class*='bg-[#040a14]'],
+html[data-theme='light'] [class*='bg-[#040915]'],
+html[data-theme='light'] [class*='bg-[#050a15]'],
+html[data-theme='light'] [class*='bg-[#050c1b]'],
+html[data-theme='light'] [class*='bg-[#030710]'],
+html[data-theme='light'] [class*='bg-[#030814]'],
+html[data-theme='light'] [class*='bg-[#040c1d]'],
+html[data-theme='light'] [class*='bg-[#050e1a]'],
+html[data-theme='light'] [class*='bg-[#060b17]'],
+html[data-theme='light'] [class*='bg-[#061124]'],
+html[data-theme='light'] [class*='bg-[#061226]'],
+html[data-theme='light'] [class*='bg-[#06142a]'],
+html[data-theme='light'] [class*='bg-[#06152b]'],
+html[data-theme='light'] [class*='bg-[#061329]'],
+html[data-theme='light'] [class*='bg-[#050d1d]'],
+html[data-theme='light'] [class*='bg-[#0a182d]'] {
+  background-color: var(--knx-day-bg) !important;
+}
+
+html[data-theme='light'] [class*='bg-[#071329]'],
+html[data-theme='light'] [class*='bg-[#07152b]'],
+html[data-theme='light'] [class*='bg-[#071328]'],
+html[data-theme='light'] [class*='bg-[#07162d]'],
+html[data-theme='light'] [class*='bg-[#071731]'],
+html[data-theme='light'] [class*='bg-[#081024]'],
+html[data-theme='light'] [class*='bg-[#081226]'],
+html[data-theme='light'] [class*='bg-[#081329]'],
+html[data-theme='light'] [class*='bg-[#08152c]'],
+html[data-theme='light'] [class*='bg-[#08152e]'],
+html[data-theme='light'] [class*='bg-[#081528]'],
+html[data-theme='light'] [class*='bg-[#08162d]'],
+html[data-theme='light'] [class*='bg-[#08172c]'],
+html[data-theme='light'] [class*='bg-[#08172e]'],
+html[data-theme='light'] [class*='bg-[#081733]'],
+html[data-theme='light'] [class*='bg-[#08182f]'],
+html[data-theme='light'] [class*='bg-[#081a2d]'],
+html[data-theme='light'] [class*='bg-[#091224]'],
+html[data-theme='light'] [class*='bg-[#091838]'],
+html[data-theme='light'] [class*='bg-[#091833]'],
+html[data-theme='light'] [class*='bg-[#091a33]'],
+html[data-theme='light'] [class*='bg-[#091a38]'],
+html[data-theme='light'] [class*='bg-[#091b3b]'],
+html[data-theme='light'] [class*='bg-[#0a1a36]'],
+html[data-theme='light'] [class*='bg-[#0a1b38]'],
+html[data-theme='light'] [class*='bg-[#0a1c3d]'],
+html[data-theme='light'] [class*='bg-[#0b1b36]'],
+html[data-theme='light'] [class*='bg-[#0b1e3c]'],
+html[data-theme='light'] [class*='bg-[#0b1f3d]'],
+html[data-theme='light'] [class*='bg-[#0c1f38]'],
+html[data-theme='light'] [class*='bg-[#0c1f3c]'],
+html[data-theme='light'] [class*='bg-[#0c1f3d]'],
+html[data-theme='light'] [class*='bg-[#0c1f40]'],
+html[data-theme='light'] [class*='bg-[#0c203f]'],
+html[data-theme='light'] [class*='bg-[#0d213e]'],
+html[data-theme='light'] [class*='bg-[#0d213d]'],
+html[data-theme='light'] [class*='bg-[#0d254b]'],
+html[data-theme='light'] [class*='bg-[#0e223d]'],
+html[data-theme='light'] [class*='bg-[#0e244d]'],
+html[data-theme='light'] [class*='bg-[#0e2850]'],
+html[data-theme='light'] [class*='bg-[#0e213d]'],
+html[data-theme='light'] [class*='bg-[#0e2347]'],
+html[data-theme='light'] [class*='bg-[#0e2547]'],
+html[data-theme='light'] [class*='bg-[#0f2444]'],
+html[data-theme='light'] [class*='bg-[#0f2545]'],
+html[data-theme='light'] [class*='bg-[#0f274a]'],
+html[data-theme='light'] [class*='bg-[#0f2a52]'],
+html[data-theme='light'] [class*='bg-[#102a4e]'],
+html[data-theme='light'] [class*='bg-[#11284a]'],
+html[data-theme='light'] [class*='bg-[#11294a]'],
+html[data-theme='light'] [class*='bg-[#112d54]'],
+html[data-theme='light'] [class*='bg-[#12284c]'],
+html[data-theme='light'] [class*='bg-[#12294a]'],
+html[data-theme='light'] [class*='bg-[#122b4e]'],
+html[data-theme='light'] [class*='bg-[#122b54]'],
+html[data-theme='light'] [class*='bg-[#122c50]'],
+html[data-theme='light'] [class*='bg-[#122e54]'],
+html[data-theme='light'] [class*='bg-[#122e57]'],
+html[data-theme='light'] [class*='bg-[#132c4f]'],
+html[data-theme='light'] [class*='bg-[#132c52]'],
+html[data-theme='light'] [class*='bg-[#133059]'],
+html[data-theme='light'] [class*='bg-[#142e54]'],
+html[data-theme='light'] [class*='bg-[#143058]'],
+html[data-theme='light'] [class*='bg-[#163158]'],
+html[data-theme='light'] [class*='bg-[#17325c]'],
+html[data-theme='light'] [class*='bg-[#173866]'],
+html[data-theme='light'] [class*='bg-[#1b3f70]'],
+html[data-theme='light'] [class*='bg-[#1d427b]'],
+html[data-theme='light'] [class*='bg-[#04171d]'],
+html[data-theme='light'] [class*='bg-[#0f0e26]'],
+html[data-theme='light'] [class*='bg-[#181305]'],
+html[data-theme='light'] [class*='bg-[#191008]'],
+html[data-theme='light'] [class*='bg-[#160824]'],
+html[data-theme='light'] [class*='bg-[#041624]'],
+html[data-theme='light'] [class*='bg-[#1c0812]'],
+html[data-theme='light'] [class*='bg-[#081e3d]'],
+html[data-theme='light'] [class*='bg-[#08152b]'],
+html[data-theme='light'] [class*='bg-[#091830]'],
+html[data-theme='light'] [class*='bg-[#071426]'],
+html[data-theme='light'] [class*='bg-[#0b1b33]'],
+html[data-theme='light'] [class*='bg-[#10243e]'],
+html[data-theme='light'] [class*='bg-[#07162c]'],
+html[data-theme='light'] [class*='bg-[#0b1329]'],
+html[data-theme='light'] [class*='bg-[#0d213d]'],
+html[data-theme='light'] [class*='bg-[#050d1a]'],
+html[data-theme='light'] [class*='bg-[#09192f]'],
+html[data-theme='light'] [class*='bg-[#0a182e]'],
+html[data-theme='light'] [class*='bg-[#0d223f]'],
+html[data-theme='light'] [class*='bg-[#0e2447]'],
+html[data-theme='light'] [class*='bg-[#143563]'],
+html[data-theme='light'] [class*='bg-[#163663]'],
+html[data-theme='light'] [class*='bg-[#163a70]'],
+html[data-theme='light'] [class*='bg-[#122e5a]'],
+html[data-theme='light'] [class*='bg-[#0a162c]'],
+html[data-theme='light'] [class*='bg-[#0b1a33]'],
+html[data-theme='light'] [class*='bg-[#040a17]'],
+html[data-theme='light'] [class*='bg-[#040b19]'],
+html[data-theme='light'] [class*='bg-[#040c1a]'],
+html[data-theme='light'] [class*='bg-[#050e20]'],
+html[data-theme='light'] [class*='bg-[#061224]'],
+html[data-theme='light'] [class*='bg-[#061427]'],
+html[data-theme='light'] [class*='bg-[#070e1c]'],
+html[data-theme='light'] [class*='bg-[#071429]'],
+html[data-theme='light'] [class*='bg-[#08162b]'],
+html[data-theme='light'] [class*='bg-[#08162e]'],
+html[data-theme='light'] [class*='bg-[#081730]'],
+html[data-theme='light'] [class*='bg-[#091a3a]'],
+html[data-theme='light'] [class*='bg-[#0d172c]'],
+html[data-theme='light'] [class*='bg-[#0d2450]'],
+html[data-theme='light'] [class*='bg-[#0d254c]'],
+html[data-theme='light'] [class*='bg-[#0e1d3d]'],
+html[data-theme='light'] [class*='bg-[#102952]'],
+html[data-theme='light'] [class*='bg-[#050b18]'],
+html[data-theme='light'] [class*='bg-[#070f1f]'],
+html[data-theme='light'] [class*='bg-[#091326]'],
+html[data-theme='light'] [class*='bg-[#091c3d]'],
+html[data-theme='light'] [class*='bg-[#0b1730]'],
+html[data-theme='light'] [class*='bg-[#030a16]'],
+html[data-theme='light'] [class*='bg-[#050e1d]'],
+html[data-theme='light'] [class*='bg-[#071529]'],
+html[data-theme='light'] [class*='bg-[#130d17]'],
+html[data-theme='light'] [class*='bg-[#150e24]'],
+html[data-theme='light'] [class*='bg-[#0c203f]'],
+html[data-theme='light'] [class*='bg-[#0a1628]'],
+html[data-theme='light'] [class*='bg-[#0a1b33]'],
+html[data-theme='light'] [class*='bg-[#0b1930]'],
+html[data-theme='light'] [class*='bg-[#0c1a30]'],
+html[data-theme='light'] [class*='bg-[#0d1b2f]'] {
+  background-color: var(--knx-day-surface) !important;
+}
+
+/* Tinted action chips that were authored as very dark colour washes. */
+html[data-theme='light'] [class*='bg-[#181308]'] {
+  background-color: #fef3c7 !important;
+}
+html[data-theme='light'] [class*='bg-[#0a233f]'],
+html[data-theme='light'] [class*='bg-[#0e274d]'] {
+  background-color: #e0f2fe !important;
+}
+html[data-theme='light'] [class*='bg-[#0a2318]'] {
+  background-color: #dcfce7 !important;
+}
+html[data-theme='light'] [class*='bg-[#140d18]'] {
+  background-color: #ffe4e6 !important;
+}
+html[data-theme='light'] [class*='bg-[#1e1338]'] {
+  background-color: #ede9fe !important;
+}
+html[data-theme='light'] [class*='bg-[#1F2937]'] {
+  background-color: #e2e8f0 !important;
+}
+
+/* Distribution rails and progress tracks must remain visible on white. */
+html[data-theme='light'] .files-distribution-bar,
+html[data-theme='light'] .storage-track,
+html[data-theme='light'] [class*='bg-[#050f24]'],
+html[data-theme='light'] [class*='bg-[#050f22]'] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Inset / secondary panels */
+html[data-theme='light'] [class*='bg-[#0b1d36]'],
+html[data-theme='light'] [class*='bg-[#0b1e3c]'],
+html[data-theme='light'] [class*='bg-[#0c1f3d]'],
+html[data-theme='light'] [class*='bg-[#0f2545]'],
+html[data-theme='light'] [class*='bg-[#0f2a52]'],
+html[data-theme='light'] [class*='bg-[#122b50]'],
+html[data-theme='light'] [class*='bg-[#132e54]'],
+html[data-theme='light'] [class*='bg-[#16345e]'],
+html[data-theme='light'] [class*='bg-[#17335f]'],
+html[data-theme='light'] [class*='bg-[#1a1215]'],
+html[data-theme='light'] [class*='bg-[#1a3860]'],
+html[data-theme='light'] [class*='bg-[#1b3f70]'] {
+  background-color: var(--knx-day-surface-2) !important;
+}
+
+/* Standard Tailwind dark neutrals */
+html[data-theme='light'] [class~='bg-slate-950'],
+html[data-theme='light'] [class~='bg-slate-900'],
+html[data-theme='light'] [class~='bg-slate-800'] {
+  background-color: var(--knx-day-surface-3) !important;
+}
+
+html[data-theme='light'] [class~='bg-slate-700'] {
+  background-color: #dbe3ee !important;
+}
+
+html[data-theme='light'] [class~='bg-slate-800/80'],
+html[data-theme='light'] [class~='bg-slate-800/60'],
+html[data-theme='light'] [class~='bg-slate-800/40'],
+html[data-theme='light'] [class~='bg-slate-900/60'],
+html[data-theme='light'] [class~='bg-slate-900/80'],
+html[data-theme='light'] [class~='bg-slate-950/60'],
+html[data-theme='light'] [class~='bg-slate-950/80'] {
+  background-color: rgba(226, 232, 240, 0.72) !important;
+}
+
+/* Dark semantic tints used for badges and safety notices */
+html[data-theme='light'] [class*='bg-cyan-950'] {
+  background-color: #e0f2fe !important;
+}
+html[data-theme='light'] [class*='bg-emerald-950'],
+html[data-theme='light'] [class*='bg-emerald-900'] {
+  background-color: #dcfce7 !important;
+}
+html[data-theme='light'] [class*='bg-amber-950'],
+html[data-theme='light'] [class*='bg-amber-900'] {
+  background-color: #fef3c7 !important;
+}
+html[data-theme='light'] [class*='bg-rose-950'],
+html[data-theme='light'] [class*='bg-rose-900'] {
+  background-color: #ffe4e6 !important;
+}
+html[data-theme='light'] [class*='bg-red-950'],
+html[data-theme='light'] [class*='bg-red-900'] {
+  background-color: #fee2e2 !important;
+}
+html[data-theme='light'] [class*='bg-purple-950'],
+html[data-theme='light'] [class*='bg-purple-900'] {
+  background-color: #ede9fe !important;
+}
+html[data-theme='light'] [class*='bg-blue-950'],
+html[data-theme='light'] [class*='bg-blue-900'] {
+  background-color: #dbeafe !important;
+}
+html[data-theme='light'] [class*='bg-indigo-950'],
+html[data-theme='light'] [class*='bg-indigo-900'] {
+  background-color: #e0e7ff !important;
+}
+html[data-theme='light'] [class*='bg-teal-950'],
+html[data-theme='light'] [class*='bg-teal-900'] {
+  background-color: #ccfbf1 !important;
+}
+
+/* Navy gradients become daylight gradients. Vivid 400-600 action gradients
+   stay saturated and are exempted below. */
+html[data-theme='light'] [class*='from-[#']:not([class*='from-[#1d4ed8]']):not([class*='from-[#1e40af]']):not([class*='from-[#2476ff]']):not([class*='from-[#2563eb]']):not([class*='from-[#3582ff]']):not([class*='from-[#844dff]']):not([class*='from-[#173e80]']) {
+  background-image: linear-gradient(120deg, #f7fbff 0%, #e8f2fd 52%, #eef3f9 100%) !important;
+}
+
+html[data-theme='light'] [class*='bg-gradient-to-r'][class*='from-purple-9'],
+html[data-theme='light'] [class*='bg-gradient-to-r'][class*='from-purple-8'],
+html[data-theme='light'] [class*='bg-gradient-to-r'][class*='from-indigo-9'],
+html[data-theme='light'] [class*='bg-gradient-to-r'][class*='from-cyan-9'] {
+  background-image: linear-gradient(120deg, #eef2ff, #e0f2fe) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Text and borders
+   -------------------------------------------------------------------------- */
+html[data-theme='light'] [class~='text-white'] {
+  color: var(--knx-day-ink) !important;
+}
+html[data-theme='light'] [class~='text-slate-100'] {
+  color: var(--knx-day-ink) !important;
+}
+html[data-theme='light'] [class~='text-slate-200'] {
+  color: var(--knx-day-ink-2) !important;
+}
+html[data-theme='light'] [class~='text-slate-300'] {
+  color: var(--knx-day-ink-3) !important;
+}
+html[data-theme='light'] [class~='text-slate-400'] {
+  color: var(--knx-day-muted) !important;
+}
+html[data-theme='light'] [class~='text-slate-500'] {
+  color: var(--knx-day-muted-2) !important;
+}
+html[data-theme='light'] [class~='text-slate-600'] {
+  color: #64748b !important;
+}
+
+/* Opacity-modified ink variants used in hero copy and captions. */
+html[data-theme='light'] [class~='text-slate-300/90'],
+html[data-theme='light'] [class~='text-slate-300/80'] {
+  color: var(--knx-day-ink-3) !important;
+}
+html[data-theme='light'] [class~='text-slate-400/80'],
+html[data-theme='light'] [class~='text-slate-400/90'] {
+  color: var(--knx-day-muted) !important;
+}
+html[data-theme='light'] [class~='text-cyan-300/90'],
+html[data-theme='light'] [class~='text-cyan-300/80'] {
+  color: var(--knx-day-cyan) !important;
+}
+html[data-theme='light'] [class~='text-blue-300/80'] {
+  color: var(--knx-day-blue) !important;
+}
+html[data-theme='light'] [class~='text-rose-300/80'] {
+  color: var(--knx-day-rose) !important;
+}
+html[data-theme='light'] [class~='text-amber-200/80'],
+html[data-theme='light'] [class~='text-amber-200/90'],
+html[data-theme='light'] [class~='text-amber-300/90'],
+html[data-theme='light'] [class~='text-amber-400/90'] {
+  color: var(--knx-day-amber) !important;
+}
+html[data-theme='light'] [class~='text-white/90'],
+html[data-theme='light'] [class~='text-white/80'] {
+  color: var(--knx-day-ink) !important;
+}
+html[data-theme='light'] [class~='text-cyan-200'],
+html[data-theme='light'] [class~='text-cyan-300'],
+html[data-theme='light'] [class~='text-cyan-400'] {
+  color: var(--knx-day-cyan) !important;
+}
+html[data-theme='light'] [class~='text-emerald-200'],
+html[data-theme='light'] [class~='text-emerald-300'],
+html[data-theme='light'] [class~='text-emerald-400'] {
+  color: var(--knx-day-emerald) !important;
+}
+html[data-theme='light'] [class~='text-amber-200'],
+html[data-theme='light'] [class~='text-amber-300'],
+html[data-theme='light'] [class~='text-amber-400'] {
+  color: var(--knx-day-amber) !important;
+}
+html[data-theme='light'] [class~='text-rose-200'],
+html[data-theme='light'] [class~='text-rose-300'],
+html[data-theme='light'] [class~='text-rose-400'],
+html[data-theme='light'] [class~='text-red-200'],
+html[data-theme='light'] [class~='text-red-300'],
+html[data-theme='light'] [class~='text-red-400'] {
+  color: var(--knx-day-rose) !important;
+}
+html[data-theme='light'] [class~='text-purple-200'],
+html[data-theme='light'] [class~='text-purple-300'],
+html[data-theme='light'] [class~='text-purple-400'],
+html[data-theme='light'] [class~='text-violet-300'],
+html[data-theme='light'] [class~='text-violet-400'] {
+  color: var(--knx-day-purple) !important;
+}
+html[data-theme='light'] [class~='text-blue-200'],
+html[data-theme='light'] [class~='text-blue-300'],
+html[data-theme='light'] [class~='text-blue-400'] {
+  color: var(--knx-day-blue) !important;
+}
+html[data-theme='light'] [class~='text-teal-300'],
+html[data-theme='light'] [class~='text-teal-400'] {
+  color: #0f766e !important;
+}
+html[data-theme='light'] [class~='text-indigo-300'],
+html[data-theme='light'] [class~='text-indigo-400'] {
+  color: #4338ca !important;
+}
+html[data-theme='light'] [class~='text-sky-400'] {
+  color: #0369a1 !important;
+}
+html[data-theme='light'] [class~='text-pink-300'],
+html[data-theme='light'] [class~='text-pink-400'] {
+  color: #be185d !important;
+}
+html[data-theme='light'] [class*='placeholder-slate-400']::placeholder,
+html[data-theme='light'] [class*='placeholder-slate-500']::placeholder {
+  color: #7c8ba1 !important;
+}
+
+/* Hover states that would otherwise turn white on light surfaces */
+html[data-theme='light'] [class*='hover:text-white']:hover,
+html[data-theme='light'] [class*='hover:text-slate-100']:hover {
+  color: var(--knx-day-ink) !important;
+}
+
+/* Solid action surfaces keep white label text and original vivid identity.
+   Exact class tokens avoid matching translucent badge washes such as
+   bg-cyan-500/15, which must keep dark icon/text ink on daylight. */
+html[data-theme='light'] [class~='bg-blue-600'],
+html[data-theme='light'] [class~='bg-blue-500'],
+html[data-theme='light'] [class~='bg-cyan-600'],
+html[data-theme='light'] [class~='bg-cyan-500'],
+html[data-theme='light'] [class~='bg-emerald-600'],
+html[data-theme='light'] [class~='bg-emerald-500'],
+html[data-theme='light'] [class~='bg-rose-600'],
+html[data-theme='light'] [class~='bg-rose-500'],
+html[data-theme='light'] [class~='bg-red-600'],
+html[data-theme='light'] [class~='bg-purple-600'],
+html[data-theme='light'] [class~='bg-purple-500'],
+html[data-theme='light'] [class~='bg-indigo-600'],
+html[data-theme='light'] [class~='bg-amber-500'],
+html[data-theme='light'] [class~='bg-[#2476ff]'],
+html[data-theme='light'] [class~='bg-[#1b4cb3]'],
+html[data-theme='light'] [class~='bg-[#3282ff]'],
+html[data-theme='light'] [class~='from-cyan-400'],
+html[data-theme='light'] [class~='from-cyan-500'],
+html[data-theme='light'] [class~='from-blue-600'],
+html[data-theme='light'] [class~='from-purple-500'],
+html[data-theme='light'] [class~='from-purple-600'],
+html[data-theme='light'] [class~='from-emerald-500'],
+html[data-theme='light'] [class~='from-rose-500'],
+html[data-theme='light'] [class~='from-[#173e80]'],
+html[data-theme='light'] [class~='from-[#1d4ed8]'],
+html[data-theme='light'] [class~='from-[#1e40af]'],
+html[data-theme='light'] [class~='from-[#2476ff]'],
+html[data-theme='light'] [class~='from-[#2563eb]'],
+html[data-theme='light'] [class~='from-[#3582ff]'] {
+  color: #ffffff !important;
+}
+html[data-theme='light'] [class~='bg-blue-600'] [class~='text-white'],
+html[data-theme='light'] [class~='bg-cyan-500'] [class~='text-white'],
+html[data-theme='light'] [class~='bg-emerald-600'] [class~='text-white'],
+html[data-theme='light'] [class~='bg-purple-600'] [class~='text-white'],
+html[data-theme='light'] [class~='bg-rose-600'] [class~='text-white'],
+html[data-theme='light'] [class*='from-[#1d4ed8]'] [class~='text-white'],
+html[data-theme='light'] [class*='from-[#1e40af]'] [class~='text-white'] {
+  color: #ffffff !important;
+}
+
+/* Gradient display headings (bg-clip-text) need a dark-to-accent ramp. */
+html[data-theme='light'] [class*='bg-clip-text'] {
+  background-image: linear-gradient(90deg, #0b1220 0%, #0b4a6f 45%, #0369a1 100%) !important;
+}
+
+/* Borders */
+html[data-theme='light'] [class~='border-slate-800'],
+html[data-theme='light'] [class~='border-slate-700'],
+html[data-theme='light'] [class~='border-slate-600'],
+html[data-theme='light'] [class~='border-slate-800/80'],
+html[data-theme='light'] [class~='border-slate-800/90'],
+html[data-theme='light'] [class~='border-slate-800/60'],
+html[data-theme='light'] [class~='border-slate-700/80'],
+html[data-theme='light'] [class~='border-slate-700/60'] {
+  border-color: var(--knx-day-line) !important;
+}
+
+html[data-theme='light'] [class*='border-[#132c52]'],
+html[data-theme='light'] [class*='border-[#142e56]'],
+html[data-theme='light'] [class*='border-[#0f2444]'],
+html[data-theme='light'] [class*='border-[#173766]'],
+html[data-theme='light'] [class*='border-[#0e223d]'],
+html[data-theme='light'] [class*='border-[#0f2545]'],
+html[data-theme='light'] [class*='border-[#143058]'],
+html[data-theme='light'] [class*='border-[#071329]'],
+html[data-theme='light'] [class*='border-[#133059]'],
+html[data-theme='light'] [class*='border-[#173866]'],
+html[data-theme='light'] [class*='border-[#11294a]'],
+html[data-theme='light'] [class*='border-[#1d427b]'],
+html[data-theme='light'] [class*='border-[#0d213d]'],
+html[data-theme='light'] [class*='border-[#0f274a]'],
+html[data-theme='light'] [class*='border-[#1d3f6e]'],
+html[data-theme='light'] [class*='border-[#132c4f]'],
+html[data-theme='light'] [class*='border-[#11284a]'],
+html[data-theme='light'] [class*='border-[#0d2342]'],
+html[data-theme='light'] [class*='border-[#12294a]'],
+html[data-theme='light'] [class*='border-[#122e54]'],
+html[data-theme='light'] [class*='border-[#122b50]'],
+html[data-theme='light'] [class*='border-[#152e50]'],
+html[data-theme='light'] [class*='border-[#15325e]'],
+html[data-theme='light'] [class*='border-[#0e2547]'],
+html[data-theme='light'] [class*='border-[#0b1d36]'],
+html[data-theme='light'] [class*='border-[#112747]'],
+html[data-theme='light'] [class*='border-[#17345f]'],
+html[data-theme='light'] [class*='border-[#183661]'],
+html[data-theme='light'] [class*='border-[#15325d]'],
+html[data-theme='light'] [class*='border-[#0f2442]'],
+html[data-theme='light'] [class*='border-[#122c54]'],
+html[data-theme='light'] [class*='border-[#0f2445]'],
+html[data-theme='light'] [class*='border-[#132c4f]'],
+html[data-theme='light'] [class*='border-[#102a4e]'],
+html[data-theme='light'] [class*='border-[#0b1e3c]'],
+html[data-theme='light'] [class*='border-[#0c1f3b]'] {
+  border-color: var(--knx-day-line) !important;
+}
+
+/* Keep accent borders but darken them for daylight contrast. */
+html[data-theme='light'] [class*='border-cyan-400'],
+html[data-theme='light'] [class*='border-cyan-500'],
+html[data-theme='light'] [class*='border-[#26c6ff]'] {
+  border-color: rgba(3, 105, 161, 0.45) !important;
+}
+html[data-theme='light'] [class*='border-emerald-500'],
+html[data-theme='light'] [class*='border-emerald-800'],
+html[data-theme='light'] [class*='border-emerald-700'] {
+  border-color: rgba(4, 120, 87, 0.35) !important;
+}
+html[data-theme='light'] [class*='border-rose-500'],
+html[data-theme='light'] [class*='border-rose-700'],
+html[data-theme='light'] [class*='border-rose-800'] {
+  border-color: rgba(190, 18, 60, 0.35) !important;
+}
+html[data-theme='light'] [class*='border-amber-500'],
+html[data-theme='light'] [class*='border-amber-700'],
+html[data-theme='light'] [class*='border-amber-800'] {
+  border-color: rgba(180, 83, 9, 0.4) !important;
+}
+html[data-theme='light'] [class*='border-purple-500'],
+html[data-theme='light'] [class*='border-purple-800'] {
+  border-color: rgba(109, 40, 217, 0.32) !important;
+}
+
+/* Dividers */
+html[data-theme='light'] [class*='divide-slate-800'] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--knx-day-line) !important;
+}
+html[data-theme='light'] [class*='divide-[#0c1f3b]'] > :not([hidden]) ~ :not([hidden]),
+html[data-theme='light'] [class*='divide-[#0c1d38]'] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Tables, scrollers and chart marks
+   -------------------------------------------------------------------------- */
+html[data-theme='light'] table thead {
+  background-color: #f1f5fb !important;
+  color: var(--knx-day-muted) !important;
+}
+html[data-theme='light'] table tbody tr:hover {
+  background-color: #f1f6fd !important;
+}
+
+html[data-theme='light'] [class*='knx-table-row-selected'] {
+  background-color: #e0f2fe !important;
+}
+html[data-theme='light'] [class*='startup-custom-scrollbar']::-webkit-scrollbar-track,
+html[data-theme='light'] [class*='knx-custom-scrollbar']::-webkit-scrollbar-track,
+html[data-theme='light'] [class*='system-custom-scrollbar']::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+html[data-theme='light'] [class*='startup-custom-scrollbar']::-webkit-scrollbar-thumb,
+html[data-theme='light'] [class*='knx-custom-scrollbar']::-webkit-scrollbar-thumb,
+html[data-theme='light'] [class*='system-custom-scrollbar']::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+}
+
+/* Inline SVG marks: keep wave charts and gauges legible on white cards. */
+html[data-theme='light'] svg [stroke='#26c6ff'],
+html[data-theme='light'] svg [stroke='#22d3ee'],
+html[data-theme='light'] svg [stroke='#38bdf8'],
+html[data-theme='light'] svg [stroke='#3b82f6'],
+html[data-theme='light'] svg [stroke='#60a5fa'] {
+  stroke: #0369a1;
+}
+html[data-theme='light'] svg [stroke='#a855f7'],
+html[data-theme='light'] svg [stroke='#8b5cf6'] {
+  stroke: #6d28d9;
+}
+html[data-theme='light'] svg [stroke='#10b981'],
+html[data-theme='light'] svg [stroke='#34d399'] {
+  stroke: #047857;
+}
+html[data-theme='light'] svg [stroke='#e2e8f0'],
+html[data-theme='light'] svg [stroke='#64748b'] {
+  stroke: #94a3b8;
+}
+html[data-theme='light'] svg circle[stroke='#0e2347'],
+html[data-theme='light'] svg circle[stroke='#11284a'] {
+  stroke: #dbe5f2;
+}
+
+/* --------------------------------------------------------------------------
+   Custom component surfaces that are not utility-coloured
+   -------------------------------------------------------------------------- */
+html[data-theme='light'] .studio-glass-panel {
+  background-color: #ffffff !important;
+  border-color: var(--knx-day-line) !important;
+  box-shadow: 0 8px 24px -18px rgba(15, 23, 42, 0.45);
+}
+
+html[data-theme='light'] .repair-card-active {
+  background: #e6f4ff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35), 0 8px 20px -16px rgba(2, 132, 199, 0.5) !important;
+}
+
+html[data-theme='light'] .app-card-surface {
+  background: #ffffff !important;
+  border-color: var(--knx-day-line) !important;
+  box-shadow: 0 8px 22px -20px rgba(15, 23, 42, 0.45);
+}
+
+html[data-theme='light'] .volume-bay {
+  background: #ffffff !important;
+  border-color: var(--knx-day-line) !important;
+  box-shadow: 0 8px 22px -20px rgba(15, 23, 42, 0.4);
+}
+
+html[data-theme='light'] .volume-bay-selected {
+  background: linear-gradient(135deg, #f3f8ff 0%, #e8f2fd 100%) !important;
+  border-color: #7db7e8 !important;
+}
+
+/* Saturated nested tiles keep white labels. */
+html[data-theme='light'] [class~='bg-purple-800/90'],
+html[data-theme='light'] [class~='bg-purple-800/90'] * {
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] .studio-glass-panel-subtle {
+  background-color: var(--knx-day-surface-2) !important;
+  border-color: var(--knx-day-line) !important;
+}
+
+html[data-theme='light'] .studio-scrollbar::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+html[data-theme='light'] .flow-canvas-grid {
+  background-color: #eef3f9 !important;
+  background-image: radial-gradient(rgba(71, 85, 105, 0.22) 1px, transparent 1px) !important;
+}
+
+html[data-theme='light'] .flow-node-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f2f6fc 100%) !important;
+  box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.45), inset 0 1px 0 #ffffff !important;
+}
+
+html[data-theme='light'] .flow-node-card:hover {
+  box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.55), inset 0 1px 0 #ffffff !important;
+}
+
+/* Console previews intentionally stay dark (they represent terminal output). */
+html[data-theme='light'] .terminal-code-box,
+html[data-theme='light'] pre.terminal-code-box {
+  background-color: #0b1a2e !important;
+  border-color: #1e3a5f !important;
+  color: #dbe5f2 !important;
+}
+
+html[data-theme='light'] .terminal-code-box .text-cyan-300,
+html[data-theme='light'] .terminal-code-box .text-cyan-200,
+html[data-theme='light'] .terminal-code-box .text-slate-300,
+html[data-theme='light'] .terminal-code-box .text-slate-400,
+html[data-theme='light'] .terminal-code-box .text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme='light'] .terminal-code-box .text-emerald-300,
+html[data-theme='light'] .terminal-code-box .text-emerald-400 {
+  color: #6ee7b7 !important;
+}
+
+/* Path chips and photo backdrops should be light, not black plates. */
+html[data-theme='light'] [class~='bg-black/50'],
+html[data-theme='light'] [class~='bg-black/60'] {
+  background-color: var(--knx-day-surface-2) !important;
+}
+
+/* Size/status chips that sit directly over photographs stay dark with light
+   text so they remain readable regardless of the underlying pixels. */
+html[data-theme='light'] [class~='bg-black/70'],
+html[data-theme='light'] [class~='bg-black/80'] {
+  background-color: rgba(11, 18, 32, 0.78) !important;
+  color: #f8fafc !important;
+}
+html[data-theme='light'] [class~='bg-black/70'] *,
+html[data-theme='light'] [class~='bg-black/80'] * {
+  color: #f8fafc !important;
+}
+
+/* Treemap cells are saturated artwork; their labels stay white with a soft
+   shadow so they remain legible over both bright and deep fills. */
+html[data-theme='light'] .treemap-container {
+  background: #dfe8f3 !important;
+}
+
+html[data-theme='light'] .treemap-tile,
+html[data-theme='light'] .treemap-tile [class],
+html[data-theme='light'] .storage-treemap,
+html[data-theme='light'] .storage-treemap [class] {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.5);
+}
+
+html[data-theme='light'] .storage-treemap .text-purple-200,
+html[data-theme='light'] .storage-treemap .text-purple-300,
+html[data-theme='light'] .storage-treemap .text-emerald-200,
+html[data-theme='light'] .storage-treemap .text-emerald-300,
+html[data-theme='light'] .storage-treemap .text-blue-200,
+html[data-theme='light'] .storage-treemap .text-amber-200,
+html[data-theme='light'] .storage-treemap .text-amber-300 {
+  color: #ffffff !important;
+}
+
+/* Home hero: retain the cinematic Earth artwork as a soft daylight horizon
+   instead of a black plate behind dark ink. */
+html[data-theme='light'] .knx-home-hero {
+  background: #f2f8ff !important;
+}
+
+html[data-theme='light'] .knx-earth-horizon-container {
+  opacity: 0.5 !important;
+}
+
+html[data-theme='light'] .knx-earth-horizon-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(247, 251, 255, 0.92) 0%, rgba(238, 246, 255, 0.66) 100%);
+  pointer-events: none;
+}
+
+html[data-theme='light'] .knx-deck-panel {
+  background: #ffffff !important;
+  border-color: var(--knx-day-line) !important;
+}
+
+/* Cinematic artwork and raster previews keep their original pixels. */
+html[data-theme='light'] img,
+html[data-theme='light'] canvas,
+html[data-theme='light'] video {
+  filter: none !important;
+}
+
+/* Focus visibility on daylight surfaces. */
+html[data-theme='light'] :focus-visible {
+  outline-color: #0369a1;
+}

@@ -1,0 +1,222 @@
+{
+  "at": "2026-10-25T14:07:29.495Z",
+  "viewport": [
+    1366,
+    768
+  ],
+  "passed": 22,
+  "failed": 0,
+  "results": [
+    {
+      "name": "startup.servicesTab exposes 12 domain services",
+      "pass": true,
+      "detail": {
+        "selected": "true",
+        "cards": 12,
+        "telemetryChip": true
+      }
+    },
+    {
+      "name": "startup.service card opens a closable domain workspace",
+      "pass": true,
+      "detail": {
+        "open": true,
+        "hasSafety": true,
+        "closable": true
+      }
+    },
+    {
+      "name": "startup.service workspace closes back to the register",
+      "pass": true,
+      "detail": {
+        "stillOpen": false
+      }
+    },
+    {
+      "name": "startup.registerTab returns to bound register",
+      "pass": true,
+      "detail": {
+        "selected": "true",
+        "rows": 14
+      }
+    },
+    {
+      "name": "startup.expanded telemetry clears table and action bar",
+      "pass": true,
+      "detail": {
+        "panel": [
+          502,
+          712
+        ],
+        "actions": [
+          712,
+          768
+        ],
+        "main": [
+          40,
+          501
+        ],
+        "overlapActions": false,
+        "footerStartsAtMainBottom": true
+      }
+    },
+    {
+      "name": "theme.toggle switches entire shell to light",
+      "pass": true,
+      "detail": {
+        "theme": "light",
+        "stored": "light"
+      }
+    },
+    {
+      "name": "theme.persists across route change",
+      "pass": true,
+      "detail": {
+        "hash": "#system",
+        "theme": "light",
+        "title": "LivePulse"
+      }
+    },
+    {
+      "name": "locale.toggle sets RTL + lang=ar and keeps light theme",
+      "pass": true,
+      "detail": {
+        "dir": "rtl",
+        "lang": "ar",
+        "stored": "ar",
+        "theme": "light"
+      }
+    },
+    {
+      "name": "locale+theme survive reload",
+      "pass": true,
+      "detail": {
+        "dir": "rtl",
+        "lang": "ar",
+        "theme": "light",
+        "hash": "#system"
+      }
+    },
+    {
+      "name": "locale+theme return to English/dark",
+      "pass": true,
+      "detail": {
+        "dir": "ltr",
+        "theme": null
+      }
+    },
+    {
+      "name": "home Ctrl+K opens searchable command palette",
+      "pass": true,
+      "detail": {
+        "open": true,
+        "focused": true,
+        "placeholder": "Type a workspace, service, or tool name..."
+      }
+    },
+    {
+      "name": "home Escape closes command palette",
+      "pass": true,
+      "detail": {
+        "paletteOpen": false
+      }
+    },
+    {
+      "name": "shell section finder filters sections",
+      "pass": true,
+      "detail": {
+        "open": true,
+        "options": 1,
+        "text": "JUMP TO SECTION\nStartup\n/startup\n↑ ↓ select · Enter open · Esc close\nSection navigator"
+      }
+    },
+    {
+      "name": "shell finder Enter navigates to selected section",
+      "pass": true,
+      "detail": {
+        "hash": "#startup"
+      }
+    },
+    {
+      "name": "assistant opens in a reserved overlay",
+      "pass": true,
+      "detail": {
+        "open": true,
+        "hasTitle": true,
+        "panelRect": [
+          88,
+          648
+        ]
+      }
+    },
+    {
+      "name": "assistant Escape closes overlay",
+      "pass": true,
+      "detail": {
+        "open": false
+      }
+    },
+    {
+      "name": "smartScan category filter is interactive",
+      "pass": true,
+      "detail": {
+        "active": true,
+        "rows": 2
+      }
+    },
+    {
+      "name": "smartScan service opens domain workspace",
+      "pass": true,
+      "detail": {
+        "clicked": true,
+        "hasWorkspace": true,
+        "close": true
+      }
+    },
+    {
+      "name": "smartScan service workspace closes",
+      "pass": true,
+      "detail": {
+        "stillOpen": false
+      }
+    },
+    {
+      "name": "cleanup ledger keeps a working horizontal scroller",
+      "pass": true,
+      "detail": {
+        "clientWidth": 693,
+        "scrollWidth": 820,
+        "before": 0,
+        "after": 127,
+        "hasScroller": true
+      }
+    },
+    {
+      "name": "repair watermark stays inside its hero band",
+      "pass": true,
+      "detail": {
+        "visible": true,
+        "mark": [
+          1203,
+          65,
+          1321,
+          107
+        ],
+        "hero": [
+          1203,
+          65,
+          1321,
+          107
+        ],
+        "insideHero": true
+      }
+    },
+    {
+      "name": "services row selection updates the dossier",
+      "pass": true,
+      "detail": {
+        "dossier": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* ==========================================================================
+   KNOuX REF-09: Service Commander & Windows Services Console Styles
+   ========================================================================== */
+
+.services-viewport {
+  background-color: #040a16;
+  background-image:
+    radial-gradient(ellipse 70% 35% at 80% 8%, rgba(139, 92, 246, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 20% 12%, rgba(56, 189, 248, 0.1), transparent 50%),
+    linear-gradient(to bottom, #050e20, #030814);
+  color: #f1f5f9;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Hero Circuitry & Traces Graphic */
+.services-circuit-watermark {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  bottom: 10px;
+  pointer-events: none;
+  opacity: 0.2;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-transform: uppercase;
+}
+
+/* Service Row Selected Glow */
+.service-row-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.28) 0%, rgba(147, 51, 234, 0.18) 100%) !important;
+  border-left: 3px solid #a855f7 !important;
+  box-shadow: inset 0 0 16px rgba(168, 85, 247, 0.15) !important;
+}
+
+/* Dependency Graph Nodes */
+.dep-node {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.dep-node-selected {
+  background: rgba(88, 28, 135, 0.5);
+  border: 1.5px solid #c084fc;
+  color: #f3e8ff;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4), inset 0 0 8px rgba(192, 132, 252, 0.2);
+}
+
+.dep-node-dependency {
+  background: rgba(30, 58, 138, 0.4);
+  border: 1px solid #60a5fa;
+  color: #dbeafe;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.25);
+}
+
+.dep-node-dependent {
+  background: rgba(131, 24, 67, 0.4);
+  border: 1px solid #f472b6;
+  color: #fce7f3;
+  box-shadow: 0 0 10px rgba(244, 114, 182, 0.25);
+}
+
+/* Dependency connector line */
+.dep-connector-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, #60a5fa, #c084fc);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   COMPACT MODE — short desktop viewports (e.g. 1366x768)
+   The inspector column must keep its primary decision controls (Start / Stop /
+   Restart / Review Change) inside the viewport, so the dependency graph and
+   the operation preview compress instead of overflowing the screen.
+   ========================================================================== */
+/* The fourth operation button carries a long label that must never wrap the
+   action row, so it shrinks with the viewport instead. */
+.services-compact-btn {
+  font-size: clamp(9px, 0.62vw, 10.5px);
+  white-space: nowrap;
+}
+
+@media (max-height: 880px) {
+  .dep-node {
+    padding: 3px 12px;
+    font-size: 10.5px;
+  }
+
+  .dep-node-selected {
+    font-size: 11px;
+    padding: 3px 14px;
+  }
+}
+
+@media (max-height: 800px) {
+  .dep-node {
+    padding: 2px 10px;
+    font-size: 10px;
+  }
+
+  .dep-node-selected {
+    font-size: 10.5px;
+    padding: 2px 12px;
+  }
+}
+
+/* The activity ledger sits flush against the viewport bottom, so the trailing
+   rows are folded away on shorter screens instead of overflowing the frame. */
+@media (max-height: 880px) {
+  .services-activity-row-4,
+  .services-activity-row-5 {
+    display: none;
+  }
+}
+
+/* Custom scrollbar for dense registers */
+.services-custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.services-custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+.services-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 3px;
+}
+.services-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+/* Arabic RTL support */
+[dir="rtl"] .service-row-active {
+  border-left: none !important;
+  border-right: 3px solid #a855f7 !important;
+}

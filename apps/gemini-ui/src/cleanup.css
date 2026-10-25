@@ -1,0 +1,101 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* ==========================================================================
+   KNOuX REF-05: Clean Room — Precision Laboratory Styles
+   ========================================================================== */
+
+.cleanup-viewport {
+  background-color: #040b18;
+  background-image:
+    radial-gradient(ellipse 70% 40% at 75% 10%, rgba(139, 92, 246, 0.15), transparent 60%),
+    radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.1), transparent 50%),
+    linear-gradient(to bottom, #050f24, #030814);
+  color: #f1f5f9;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Futuristic laboratory scanning ring element in hero */
+.cleanup-hero-ring {
+  position: absolute;
+  top: -20px;
+  right: 15%;
+  width: 320px;
+  height: 180px;
+  border-radius: 50%;
+  border: 1px dashed rgba(168, 85, 247, 0.25);
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.12), inset 0 0 30px rgba(56, 189, 248, 0.08);
+  pointer-events: none;
+  transform: rotate(-12deg);
+}
+
+/* Category breakdown segment styles */
+.breakdown-segment {
+  height: 100%;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.breakdown-segment:hover {
+  opacity: 0.9;
+  filter: brightness(1.2);
+}
+
+/* 8-Step Vertical Sequence Line */
+.vertical-sequence-line {
+  position: absolute;
+  top: 14px;
+  bottom: 20px;
+  left: 13px;
+  width: 2px;
+  background: linear-gradient(to bottom, #8b5cf6, #3b82f6 50%, #334155 80%, #1e293b);
+  z-index: 0;
+}
+
+/* Scrollbars */
+.cleanup-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.cleanup-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 4px;
+}
+
+.cleanup-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 4px;
+}
+
+.cleanup-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.9);
+}
+
+/* RTL Support */
+[dir="rtl"] .cleanup-viewport {
+  direction: rtl;
+  font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+}
+
+[dir="rtl"] .vertical-sequence-line {
+  left: auto;
+  right: 13px;
+}
+
+/* Compact desktop: the safety verdict and inspect action must stay visible.
+   The source label duplicates the path already shown in the name column. */
+@media (max-width: 1499px) {
+  .cleanup-col-source,
+  .cleanup-col-age {
+    display: none;
+  }
+}
