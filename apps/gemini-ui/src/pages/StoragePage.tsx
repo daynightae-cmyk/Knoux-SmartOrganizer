@@ -70,9 +70,8 @@ interface StoragePageProps {
 }
 
 export function StoragePage({ onNavigateSection }: StoragePageProps) {
-  const { navigateTo, isActive } = useNavigation();
+  const { navigateTo, isActive, isArabic, toggleLocale } = useNavigation();
   // State
-  const [isArabic, setIsArabic] = useState(false);
   const [selectedVolumeId, setSelectedVolumeId] = useState<string>('vol-c');
   const [activeTab, setActiveTab] = useState<'treemap' | 'large' | 'types' | 'age' | 'folders'>('treemap');
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,7 +95,7 @@ export function StoragePage({ onNavigateSection }: StoragePageProps) {
         onSearchChange={setSearchQuery}
         searchPlaceholder={isArabic ? 'البحث عن مجلدات، ملفات، أو وحدات تخزين...' : 'Search folders, files, or volumes... (Ctrl+K)'}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Body Shell: Sidebar + Content Canvas */}
@@ -785,6 +784,14 @@ export function StoragePage({ onNavigateSection }: StoragePageProps) {
           </button>
         </div>
       </footer>
+
+      {activeServiceModal && (
+        <StorageWorkspaces
+          serviceKey={activeServiceModal}
+          onClose={() => setActiveServiceModal(null)}
+          isArabic={isArabic}
+        />
+      )}
 
     </div>
   );

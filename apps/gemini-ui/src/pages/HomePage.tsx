@@ -31,8 +31,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onNavigateSection,
   onNavigate,
 }) => {
-  const { currentSection, navigateTo: contextNavigateTo, isActive } = useNavigation();
-  const [locale, setLocale] = useState<'en' | 'ar'>('en');
+  const { currentSection, navigateTo: contextNavigateTo, isActive, locale, isArabic, toggleLocale, setLocale } = useNavigation();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [paletteSearch, setPaletteSearch] = useState('');
@@ -66,10 +65,16 @@ export const HomePage: React.FC<HomePageProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Sync theme with HTML data-theme attribute
+  // Sync theme with the HTML data-theme attribute. Only the Home command centre
+  // ships a light stylesheet today, so the attribute is cleared on unmount to
+  // avoid stranding a light flag on screens that have no light tokens yet.
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.setAttribute('data-page', 'home');
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.removeAttribute('data-page');
+    };
   }, [theme]);
 
   const isAr = locale === 'ar';
@@ -113,7 +118,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         searchQuery={headerSearch}
         onSearchChange={setHeaderSearch}
         isArabic={isAr}
-        onToggleArabic={() => setLocale(isAr ? 'en' : 'ar')}
+        onToggleArabic={toggleLocale}
         onOpenNotifications={() => setIsNotificationsOpen((prev) => !prev)}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />

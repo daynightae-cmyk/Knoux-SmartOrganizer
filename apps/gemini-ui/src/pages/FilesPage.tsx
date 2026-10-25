@@ -69,7 +69,7 @@ interface FilesPageProps {
 }
 
 export function FilesPage({ onNavigateSection }: FilesPageProps) {
-  const { navigateTo, isActive } = useNavigation();
+  const { navigateTo, isActive, locale, isArabic, toggleLocale, setLocale } = useNavigation();
   const [files, setFiles] = useState<FileResultItem[]>(FILES_INSTANT_FIND_FIXTURE);
   const [selectedFile, setSelectedFile] = useState<FileResultItem>(FILES_INSTANT_FIND_FIXTURE[1]); // Aurora_Norway.jpg active
   const [checkedFileIds, setCheckedFileIds] = useState<Set<string>>(new Set(['file-2'])); // file-2 checked in screenshot
@@ -80,7 +80,6 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
   const [sortBy, setSortBy] = useState<'date_desc' | 'name_asc' | 'size_desc'>('date_desc');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [activeServiceModal, setActiveServiceModal] = useState<FilesServiceKey | null>(null);
-  const [locale, setLocale] = useState<'en' | 'ar'>('en');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -173,7 +172,7 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
         onSearchChange={setSearchQuery}
         searchPlaceholder={locale === 'ar' ? 'ابحث في الملفات أو المجلدات أو المحتوى... (Ctrl+K)' : 'Search files, folders, content, or type a command... (Ctrl+K)'}
         isArabic={locale === 'ar'}
-        onToggleArabic={() => setLocale(locale === 'en' ? 'ar' : 'en')}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Body Layout */}
@@ -779,6 +778,14 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
           </footer>
         </main>
       </div>
+
+      {activeServiceModal && (
+        <FileWorkspacesModal
+          serviceKey={activeServiceModal}
+          onClose={() => setActiveServiceModal(null)}
+          locale={locale}
+        />
+      )}
 
     </div>
   );

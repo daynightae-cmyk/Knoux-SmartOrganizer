@@ -105,25 +105,26 @@ export function StudioPage({ onNavigate }: { onNavigate?: (section: string) => v
             {renderActiveWorkspace()}
           </div>
 
-          {/* 08 — Sticky Footer */}
-          <StickyFooter />
+          {/* 08 — Sticky Footer (hosts the DPI preview switch in its center slot) */}
+          <StickyFooter
+            dpiControl={
+              <div className="hidden md:flex items-center gap-1 bg-[#091a33]/90 border border-[#173663] px-1.5 py-0.5 rounded text-[10px] text-slate-400">
+                <span>DPI:</span>
+                {(['100%', '125%', '150%'] as const).map((scale) => (
+                  <button
+                    key={scale}
+                    onClick={() => setDpiScale(scale)}
+                    className={`px-1 py-0.5 rounded cursor-pointer ${
+                      dpiScale === scale ? 'bg-[#2476ff] text-white font-bold' : 'hover:text-white'
+                    }`}
+                  >
+                    {scale}
+                  </button>
+                ))}
+              </div>
+            }
+          />
         </main>
-      </div>
-
-      {/* Floating DPI scale switch for test evaluation */}
-      <div className="absolute bottom-2 left-60 z-30 hidden md:flex items-center gap-1 bg-[#091a33]/90 border border-[#173663] px-1.5 py-0.5 rounded text-[10px] text-slate-400">
-        <span>DPI:</span>
-        {(['100%', '125%', '150%'] as const).map((scale) => (
-          <button
-            key={scale}
-            onClick={() => setDpiScale(scale)}
-            className={`px-1 py-0.5 rounded cursor-pointer ${
-              dpiScale === scale ? 'bg-[#2476ff] text-white font-bold' : 'hover:text-white'
-            }`}
-          >
-            {scale}
-          </button>
-        ))}
       </div>
     </div>
   );

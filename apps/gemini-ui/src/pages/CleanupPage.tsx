@@ -63,9 +63,8 @@ interface CleanupPageProps {
 }
 
 export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
-  const { navigateTo, isActive } = useNavigation();
+  const { navigateTo, isActive, isArabic, toggleLocale } = useNavigation();
   // State
-  const [isArabic, setIsArabic] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>('cand-1');
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set(['cand-1', 'cand-2', 'cand-3'])); // 3 selected
@@ -124,7 +123,7 @@ export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
         onSearchChange={setSearchQuery}
         searchPlaceholder={isArabic ? 'البحث عن ملفات، تطبيقات، أو خيارات التنظيف...' : 'Search files, apps, or cleanup options... (Ctrl+K)'}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Body Shell: Sidebar + Content Canvas */}
@@ -352,9 +351,10 @@ export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
                   </div>
                 </div>
 
-                {/* Candidates Table Ledger */}
-                <div className="rounded-xl border border-slate-700/70 overflow-hidden bg-[#050f22] mt-3">
-                  <table className="w-full text-left text-xs">
+                {/* Candidates Table Ledger — scrolls horizontally inside its own
+                    tile at compact desktop widths so no Inspect control is cut off. */}
+                <div className="rounded-xl border border-slate-700/70 overflow-x-auto bg-[#050f22] mt-3 knx-custom-scrollbar">
+                  <table className="w-full min-w-[820px] text-left text-xs">
                     <thead className="bg-[#0b1c3a] text-slate-400 text-[10px] font-mono uppercase tracking-wider">
                       <tr>
                         <th className="px-3 py-2.5 w-8">
@@ -721,6 +721,14 @@ export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
           </button>
         </div>
       </footer>
+
+      {activeServiceModal && (
+        <CleanupWorkspaces
+          serviceKey={activeServiceModal}
+          onClose={() => setActiveServiceModal(null)}
+          isArabic={isArabic}
+        />
+      )}
 
     </div>
   );

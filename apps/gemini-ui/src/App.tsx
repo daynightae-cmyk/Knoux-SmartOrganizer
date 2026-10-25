@@ -41,15 +41,19 @@ import './home-command-center.css';
 export type { AppSection };
 
 function AppContent() {
-  const { currentSection, navigateTo, isActive } = useNavigation();
+  const { currentSection, navigateTo, isActive, locale, isArabic, setLocale, toggleLocale } = useNavigation();
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  const [locale, setLocale] = useState<'en' | 'ar'>('en');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('knoux_ai_api_key');
-    if (!savedKey) {
-      setIsApiKeyModalOpen(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('setup_key') === 'true') {
+        setIsApiKeyModalOpen(true);
+      }
+      const handleOpen = () => setIsApiKeyModalOpen(true);
+      window.addEventListener('knoux:open-api-key-modal', handleOpen);
+      return () => window.removeEventListener('knoux:open-api-key-modal', handleOpen);
     }
   }, []);
 
@@ -59,7 +63,7 @@ function AppContent() {
     setIsApiKeyModalOpen(false);
   };
 
-  const isAr = locale === 'ar';
+  const isAr = isArabic;
 
   const sectionTitles: Record<string, { en: string; ar: string }> = {
     home: { en: 'Home', ar: 'الرئيسية' },

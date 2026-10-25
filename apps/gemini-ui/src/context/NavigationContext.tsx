@@ -7,7 +7,7 @@
  * breadcrumbs, history, and accurate highlight detection for all sidebars and top bars.
  */
 
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 
 export type AppSection =
   | 'home'
@@ -57,7 +57,18 @@ export function tryNormalizeSection(raw: string | undefined | null): AppSection 
 
   // Exact canonical matches
   if (s === 'home') return 'home';
-  if (s === 'smart_scan' || s === 'smart-scan' || s === 'scan') return 'smart_scan';
+  if (
+    s === 'smart_scan' ||
+    s === 'smart-scan' ||
+    s === 'smartscan' ||
+    s === 'scan' ||
+    s.includes('smart_scan') ||
+    s.includes('smartscan') ||
+    s.includes('quick_scan') ||
+    s.includes('deep_scan')
+  ) {
+    return 'smart_scan';
+  }
   if (s === 'studio') return 'studio';
   if (s === 'applications' || s === 'apps') return 'applications';
   if (s === 'files') return 'files';
@@ -69,10 +80,25 @@ export function tryNormalizeSection(raw: string | undefined | null): AppSection 
   if (s === 'services') return 'services';
   if (s === 'automation') return 'automation';
   if (s === 'settings' || s === 'config') return 'settings';
-  if (s === 'workspace' || s.includes('google') || s.includes('sheet') || s.includes('gmail') || s.includes('calendar') || s.includes('drive') || s.includes('tasks') || s.includes('chat') || s.includes('classroom') || s.includes('slides') || s.includes('forms') || s.includes('contacts')) return 'workspace';
+  if (
+    s === 'workspace' ||
+    s.includes('google') ||
+    s.includes('sheet') ||
+    s.includes('gmail') ||
+    s.includes('calendar') ||
+    s.includes('drive') ||
+    s.includes('tasks') ||
+    s.includes('chat') ||
+    s.includes('classroom') ||
+    s.includes('slides') ||
+    s.includes('forms') ||
+    s.includes('contacts')
+  ) {
+    return 'workspace';
+  }
 
   // Explicit non-section targets that should never match home or any workspace
-  if (s === 'settings' || s === 'config' || s === 'help' || s === 'about' || s === 'license') {
+  if (s === 'help' || s === 'about' || s === 'license') {
     return null;
   }
 
@@ -126,6 +152,10 @@ export interface NavigationContextValue {
   history: AppSection[];
   goBack: () => void;
   sectionMeta: SectionMeta;
+  locale: 'en' | 'ar';
+  isArabic: boolean;
+  setLocale: (locale: 'en' | 'ar') => void;
+  toggleLocale: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null);
@@ -133,16 +163,80 @@ const NavigationContext = createContext<NavigationContextValue | null>(null);
 export interface NavigationProviderProps {
   children: ReactNode;
   initialSection?: string;
+  initialLocale?: 'en' | 'ar';
   onSectionChange?: (section: AppSection) => void;
+  onLocaleChange?: (locale: 'en' | 'ar') => void;
 }
 
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   children,
   initialSection = 'home',
+  initialLocale,
   onSectionChange,
+  onLocaleChange,
 }) => {
-  const [currentSection, setCurrentSection] = useState<AppSection>(() => normalizeSection(initialSection));
-  const [history, setHistory] = useState<AppSection[]>([normalizeSection(initialSection)]);
+  const [currentSection, setCurrentSection] = useState<AppSection>(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      const parsed = tryNormalizeSection(hash);
+      if (parsed) return parsed;
+    }
+    return normalizeSection(initialSection);
+  });
+
+  const [history, setHistory] = useState<AppSection[]>([currentSection]);
+
+  const [locale, setLocaleState] = useState<'en' | 'ar'>(() => {
+    if (initialLocale) return initialLocale;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('knoux_locale');
+      if (saved === 'ar' || saved === 'en') return saved;
+    }
+    return 'en';
+  });
+
+  const isArabic = locale === 'ar';
+
+  const setLocale = useCallback(
+    (newLocale: 'en' | 'ar') => {
+      setLocaleState(newLocale);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('knoux_locale', newLocale);
+        document.documentElement.setAttribute('dir', newLocale === 'ar' ? 'rtl' : 'ltr');
+        document.documentElement.setAttribute('lang', newLocale);
+      }
+      if (onLocaleChange) {
+        onLocaleChange(newLocale);
+      }
+    },
+    [onLocaleChange]
+  );
+
+  const toggleLocale = useCallback(() => {
+    setLocale(locale === 'ar' ? 'en' : 'ar');
+  }, [locale, setLocale]);
+
+  // Keep DOM dir and lang attributes synchronized on mount and change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', locale);
+    }
+  }, [locale, isArabic]);
+
+  // Listen to hash changes in browser
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      const parsed = tryNormalizeSection(hash);
+      if (parsed && parsed !== currentSection) {
+        setCurrentSection(parsed);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [currentSection]);
 
   const navigateTo = useCallback(
     (target: string) => {
@@ -151,6 +245,9 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
         if (prev === normalized) return prev;
         return normalized;
       });
+      if (typeof window !== 'undefined') {
+        window.location.hash = normalized;
+      }
       setHistory((prev) => {
         if (prev[prev.length - 1] === normalized) return prev;
         return [...prev, normalized];
@@ -166,11 +263,13 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     setHistory((prev) => {
       if (prev.length <= 1) {
         setCurrentSection('home');
+        if (typeof window !== 'undefined') window.location.hash = 'home';
         return ['home'];
       }
       const newHistory = prev.slice(0, -1);
       const previous = newHistory[newHistory.length - 1] || 'home';
       setCurrentSection(previous);
+      if (typeof window !== 'undefined') window.location.hash = previous;
       if (onSectionChange) onSectionChange(previous);
       return newHistory;
     });
@@ -198,8 +297,12 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
       history,
       goBack,
       sectionMeta,
+      locale,
+      isArabic,
+      setLocale,
+      toggleLocale,
     }),
-    [currentSection, navigateTo, isActive, history, goBack, sectionMeta]
+    [currentSection, navigateTo, isActive, history, goBack, sectionMeta, locale, isArabic, setLocale, toggleLocale]
   );
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;

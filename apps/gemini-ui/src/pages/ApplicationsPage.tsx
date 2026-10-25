@@ -59,12 +59,11 @@ interface ApplicationsPageProps {
 }
 
 export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
-  const { navigateTo, isActive } = useNavigation();
+  const { navigateTo, isActive, locale, isArabic, toggleLocale, setLocale } = useNavigation();
   const [apps, setApps] = useState<InstalledAppItem[]>(INSTALLED_APPLICATIONS_FIXTURE);
   const [selectedApp, setSelectedApp] = useState<InstalledAppItem>(INSTALLED_APPLICATIONS_FIXTURE[0]);
   const [checkedAppIds, setCheckedAppIds] = useState<Set<string>>(new Set(['app-edge']));
   const [activeServiceModal, setActiveServiceModal] = useState<DomainServiceKey | null>(null);
-  const [locale, setLocale] = useState<'en' | 'ar'>('en');
   const [activeActionNotification, setActiveActionNotification] = useState<string | null>(null);
 
   // Toggle single app selection
@@ -144,7 +143,7 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
         onNavigateHome={() => (onNavigateSection ? onNavigateSection('home') : navigateTo('home'))}
         searchPlaceholder={locale === 'ar' ? 'ابحث عن التطبيقات والناشرين... (Ctrl+K)' : 'Search apps, publishers, features... (Ctrl+K)'}
         isArabic={locale === 'ar'}
-        onToggleArabic={() => setLocale(locale === 'en' ? 'ar' : 'en')}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Body Shell */}
@@ -318,52 +317,10 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
             />
           </div>
 
-          {/* 4. Bottom 12 Domain Service Cards */}
-          <div className="px-6 py-2 bg-[#050e1d] border-t border-[#0e223d] shrink-0 select-none">
-            <div className="flex items-center justify-between pb-1 mb-1.5">
-              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                {locale === 'en' ? 'Application Management Services' : 'خدمات إدارة البرمجيات'}
-              </span>
-              <span className="text-[10px] text-slate-500">
-                {locale === 'en' ? 'Click card to open service workspace' : 'انقر على البطاقة لفتح مساحة العمل'}
-              </span>
-            </div>
-
-            {/* 2 rows × 6 cols matrix of 12 complete domain service cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-              {DOMAIN_SERVICES_META.map((service) => (
-                <button
-                  key={service.key}
-                  onClick={() => setActiveServiceModal(service.key)}
-                  className="p-2 rounded-lg bg-[#07152b] hover:bg-[#0c1f3c] border border-[#132c52] hover:border-[#1d427b] text-left transition-all cursor-pointer flex items-center gap-2 group"
-                >
-                  <div
-                    className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border"
-                    style={{
-                      backgroundColor: 'rgba(15, 33, 60, 0.6)',
-                      borderColor: 'rgba(36, 118, 255, 0.3)',
-                      color: service.color,
-                    }}
-                  >
-                    {renderServiceIcon(service.iconName, 'w-3.5 h-3.5')}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-bold text-slate-200 group-hover:text-cyan-300 truncate transition-colors">
-                      {locale === 'en' ? service.labelEn : service.labelAr}
-                    </div>
-                    <div className="text-[9px] text-slate-400 truncate">
-                      {locale === 'en' ? service.descEn : service.descAr}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 5. Conditional Bottom Staging & Batch Selection Tray */}
+          {/* 5. Conditional Batch Selection Bar — kept in the normal flow directly above the
+               service palette so it can never occlude the palette cards. */}
           {checkedAppIds.size > 0 && (
-            <div className="absolute bottom-16 left-6 right-6 z-30 p-2.5 rounded-xl bg-[#091a33]/95 border border-[#2476ff]/70 shadow-[0_0_25px_rgba(36,118,255,0.4)] backdrop-blur-md flex items-center justify-between text-xs animate-slide-up">
+            <div className="mx-6 mb-1.5 shrink-0 p-2.5 rounded-xl bg-[#091a33]/95 border border-[#2476ff]/70 shadow-[0_0_25px_rgba(36,118,255,0.4)] backdrop-blur-md flex items-center justify-between gap-3 text-xs animate-slide-up">
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-[#2476ff] text-white flex items-center justify-center font-bold text-xs">
                   {checkedAppIds.size}
@@ -406,8 +363,61 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
               </div>
             </div>
           )}
+
+{/* 4. Bottom 12 Domain Service Cards */}
+          <div className="px-6 py-2 bg-[#050e1d] border-t border-[#0e223d] shrink-0 select-none">
+            <div className="flex items-center justify-between pb-1 mb-1.5">
+              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                {locale === 'en' ? 'Application Management Services' : 'خدمات إدارة البرمجيات'}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                {locale === 'en' ? 'Click card to open service workspace' : 'انقر على البطاقة لفتح مساحة العمل'}
+              </span>
+            </div>
+
+            {/* 2 rows × 6 cols matrix of 12 complete domain service cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+              {DOMAIN_SERVICES_META.map((service) => (
+                <button
+                  key={service.key}
+                  onClick={() => setActiveServiceModal(service.key)}
+                  className="p-2 rounded-lg bg-[#07152b] hover:bg-[#0c1f3c] border border-[#132c52] hover:border-[#1d427b] text-left transition-all cursor-pointer flex items-center gap-2 group"
+                >
+                  <div
+                    className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border"
+                    style={{
+                      backgroundColor: 'rgba(15, 33, 60, 0.6)',
+                      borderColor: 'rgba(36, 118, 255, 0.3)',
+                      color: service.color,
+                    }}
+                  >
+                    {renderServiceIcon(service.iconName, 'w-3.5 h-3.5')}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-bold text-slate-200 group-hover:text-cyan-300 truncate transition-colors">
+                      {locale === 'en' ? service.labelEn : service.labelAr}
+                    </div>
+                    <div className="text-[9px] text-slate-400 truncate">
+                      {locale === 'en' ? service.descEn : service.descAr}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          
         </main>
       </div>
+
+      {activeServiceModal && (
+        <ServiceWorkspacesModal
+          serviceKey={activeServiceModal}
+          onClose={() => setActiveServiceModal(null)}
+          locale={locale}
+        />
+      )}
 
     </div>
   );

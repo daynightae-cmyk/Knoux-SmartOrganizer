@@ -15,11 +15,11 @@
     linear-gradient(to bottom, #050e20, #030814);
   color: #f1f5f9;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
   user-select: none;
 }
 
@@ -80,6 +80,37 @@
   align-items: center;
   gap: 16px;
   text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   Short-desktop compaction (1366x768 and similar). The desktop workspace
+   contract forbids body scrolling, so the Recovery Lab has to compress its
+   own chrome instead of pushing the operation preview out of frame.
+   -------------------------------------------------------------------------- */
+@media (max-height: 880px) {
+  .repair-hero-orb {
+    width: 46px;
+    height: 46px;
+  }
+  .repair-hero-orb::before {
+    inset: -5px;
+  }
+  .repair-hero-orb::after {
+    inset: -10px;
+  }
+  .repair-step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  .repair-step-title {
+    font-size: 10.5px;
+    margin-top: 2px;
+  }
+  .repair-step-subtitle {
+    font-size: 9px;
+    line-height: 1.2;
+  }
 }
 
 /* Card Selection Ambient Glow */

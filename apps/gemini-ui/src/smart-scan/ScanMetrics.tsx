@@ -16,7 +16,7 @@ export interface ScanMetricsProps {
 
 export const ScanMetrics: React.FC<ScanMetricsProps> = ({ metrics, isArabic = false }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 shrink-0">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 shrink-0">
       {metrics.map((m) => {
         const isCoverage = m.id === 'coverage';
         const isFiles = m.id === 'files';

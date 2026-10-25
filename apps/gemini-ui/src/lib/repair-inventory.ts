@@ -67,7 +67,7 @@ export interface RepairHistoryItem {
   timestamp: string;
   toolId: string;
   toolName: string;
-  result: 'Success' | 'No Corruption' | 'Repaired' | 'Failed' | 'Aborted' | 'Clean';
+  result: 'Success' | 'No Corruption' | 'Repaired' | 'Failed' | 'Aborted' | 'Clean' | 'Simulated';
   details: string;
   elevated: boolean;
   durationMs?: number;
@@ -82,8 +82,35 @@ export interface GuidedRepairStep {
   highlightColor?: 'blue' | 'gold' | 'default';
 }
 
-export const INITIAL_DIAGNOSTIC_STRIP: RepairDiagnosticStripItem[] = [
-  {
+/**
+ * Maps a repair tool's operational key onto the canonical service workspace id
+ * registered in the shared renderer registry (service-ui-renderers.ts).
+ * Without this map the workspace host would silently fall back to the generic
+ * "Ledger+Dossier" placeholder instead of the intended repair console.
+ */
+export const REPAIR_TOOL_WORKSPACE_MAP: Record<string, string> = {
+  'dism-checkhealth': 'repair-component-check',
+  'dism-scanhealth': 'repair-component-scan',
+  'dism-restorehealth': 'repair-component-restore',
+  'sfc-verifyonly': 'repair-files-verify',
+  'sfc-scannow': 'repair-files-repair',
+  'flush-dns': 'repair-dns-flush',
+  'reset-winsock': 'repair-winsock-reset',
+  'reset-tcpip': 'repair-tcpip-reset',
+  'repair-history': 'repair-history',
+  'windows-troubleshooters': 'repair-troubleshooters',
+  'restore-point-review': 'repair-restore-point',
+  'windows-update-repair': 'repair-update-repair',
+};
+
+/** Resolve the canonical workspace service id for a repair tool. */
+export function resolveRepairWorkspaceId(tool: RepairToolMeta | string | null | undefined): string {
+  if (!tool) return 'repair-component-check';
+  const key = typeof tool === 'string' ? tool : tool.serviceKey || tool.id;
+  return REPAIR_TOOL_WORKSPACE_MAP[key] || key;
+}
+
+export const INITIAL_DIAGNOSTIC_STRIP: RepairDiagnosticStripItem[] = [  {
     id: 'system-components',
     title: 'System Components',
     icon: 'cpu',

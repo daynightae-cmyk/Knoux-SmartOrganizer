@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Key, Shield, Sparkles, CheckCircle2, X, Lock, ExternalLink, Zap } from 'lucide-react';
+import { Key, Shield, Sparkles, CheckCircle2, X, Lock, ExternalLink, Zap, AlertTriangle, Info } from 'lucide-react';
 
 interface ApiKeySetupModalProps {
   isOpen: boolean;
@@ -26,25 +26,86 @@ export const ApiKeySetupModal: React.FC<ApiKeySetupModalProps> = ({
   const [provider, setProvider] = useState<'openrouter' | 'openai' | 'anthropic'>('openrouter');
   const [keyValue, setKeyValue] = useState('');
   const [isTesting, setIsTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'warning' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   if (!isOpen) return null;
 
+  const handleSkip = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('knoux_ai_modal_skipped', 'true');
+    }
+    onSkip();
+  };
+
   const handleTestAndSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keyValue.trim()) return;
+    const cleanKey = keyValue.trim();
+    if (!cleanKey) return;
 
     setIsTesting(true);
     setTestStatus('idle');
+    setStatusMessage('');
 
-    // Simulate key validation test
-    await new Promise((r) => setTimeout(r, 900));
+    // Format validation
+    let formatValid = false;
+    if (provider === 'openrouter') {
+      formatValid = cleanKey.startsWith('sk-or-') || cleanKey.length >= 24;
+    } else if (provider === 'openai') {
+      formatValid = cleanKey.startsWith('sk-') && cleanKey.length >= 24;
+    } else if (provider === 'anthropic') {
+      formatValid = cleanKey.startsWith('sk-ant-') || cleanKey.length >= 24;
+    }
+
+    if (!formatValid) {
+      setIsTesting(false);
+      setTestStatus('error');
+      setStatusMessage(
+        isAr
+          ? 'تنسيق المفتاح يبدو غير صالح للمزود المختار. يرجى التحقق من المفتاح.'
+          : `Key format appears unusual for ${provider}. Please verify prefix and token structure.`
+      );
+      return;
+    }
+
+    // Honest network verification probe
+    let verifiedLive = false;
+    try {
+      if (provider === 'openrouter') {
+        const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
+          headers: { Authorization: `Bearer ${cleanKey}` },
+        });
+        if (res.ok) {
+          verifiedLive = true;
+        }
+      }
+    } catch {
+      // Offline / CORS / blocked — not an error, we report transparently
+    }
+
     setIsTesting(false);
-    setTestStatus('success');
+    if (verifiedLive) {
+      setTestStatus('success');
+      setStatusMessage(
+        isAr
+          ? 'تم التحقق من المفتاح وتأكيد صلاحيته عبر الاتصال المباشر!'
+          : 'Key verified and confirmed active via provider API!'
+      );
+    } else {
+      setTestStatus('warning');
+      setStatusMessage(
+        isAr
+          ? 'تم حفظ المفتاح محلياً في المتصفح. سيتم التحقق الفعلي أثناء تنفيذ أول استعلام.'
+          : 'Key saved locally. Live endpoint verification will take place during first query.'
+      );
+    }
 
     setTimeout(() => {
-      onSave(keyValue.trim(), provider);
-    }, 600);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('knoux_ai_modal_skipped', 'true');
+      }
+      onSave(cleanKey, provider);
+    }, 1000);
   };
 
   return (
@@ -160,14 +221,36 @@ export const ApiKeySetupModal: React.FC<ApiKeySetupModalProps> = ({
           {testStatus === 'success' && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-semibold animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{isAr ? 'تم التحقق من المفتاح وتفعيل الخدمات بنجاح!' : 'Key verified and AI services initialized!'}</span>
+              <span>{statusMessage}</span>
             </div>
           )}
+
+          {testStatus === 'warning' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-950/80 border border-amber-500/50 text-amber-300 text-xs font-semibold animate-in fade-in">
+              <Info className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
+          {testStatus === 'error' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-300 text-xs font-semibold animate-in fade-in">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
+          {/* Security storage boundary note */}
+          <div className="text-[10px] text-slate-400 leading-normal bg-[#061021] p-2.5 rounded-lg border border-[#0d213d]">
+            <span className="text-cyan-400 font-bold">{isAr ? 'بيئة التخزين: ' : 'Storage Boundary: '}</span>
+            {isAr
+              ? 'يتم حفظ المفتاح محلياً في ذاكرة التخزين المؤقت للمتصفح. عند تشغيل المحرك المكتبي الأصلي، يتم الترحيل تلقائياً لمستودع تشفير Windows DPAPI.'
+              : 'Keys are stored locally in the browser runtime session. Native workstation execution bridges directly to Windows DPAPI encryption.'}
+          </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-[#0f2444]">
             <button
               type="button"
-              onClick={onSkip}
+              onClick={handleSkip}
               className="text-slate-400 hover:text-slate-200 text-xs font-medium cursor-pointer"
             >
               {isAr ? 'تخطي مؤقتاً (وضع غير متصل)' : 'Skip for now (Offline Mode)'}

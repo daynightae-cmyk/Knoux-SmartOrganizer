@@ -41,6 +41,17 @@ export interface LiveProcessInspectorProps {
   onStop?: () => void;
   isArabic?: boolean;
   className?: string;
+  /**
+   * Caps the panel height and lets the terminal stream scroll internally instead
+   * of letting the console grow without bound inside a docked slot.
+   */
+  bounded?: boolean;
+  /** Height ceiling applied when `bounded` is set. */
+  maxHeightClassName?: string;
+  /** Start collapsed into the compact telemetry chip. */
+  defaultMinimized?: boolean;
+  /** Stretch the collapsed chip across the full width of its reserved slot. */
+  fillWidth?: boolean;
 }
 
 export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
@@ -51,8 +62,12 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
   onStop,
   isArabic = false,
   className = '',
+  bounded = false,
+  maxHeightClassName = 'max-h-[240px]',
+  defaultMinimized = false,
+  fillWidth = false,
 }) => {
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(defaultMinimized);
   const [isPaused, setIsPaused] = useState(false);
   const [cpuLoad, setCpuLoad] = useState(14);
   const [ramUsage, setRamUsage] = useState(38);
@@ -94,21 +109,30 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
 
   if (isMinimized) {
     return (
-      <div className={`fixed bottom-3 right-4 z-40 bg-[#061329]/95 border border-cyan-400/50 rounded-xl px-3 py-2 shadow-[0_0_20px_rgba(38,198,218,0.4)] flex items-center gap-3 backdrop-blur-md text-xs select-none ${className}`}>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
-          <span className="font-bold text-white text-[11px] truncate max-w-[200px]">
+      <div
+        className={`bg-[#061329]/95 border border-cyan-400/50 rounded-xl px-3 py-2 shadow-[0_0_20px_rgba(38,198,218,0.4)] flex items-center gap-3 backdrop-blur-md text-xs select-none shrink-0 ${
+          fillWidth ? 'w-full justify-between' : ''
+        } ${className}`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981] shrink-0" />
+          <span className="px-1.5 py-0.2 rounded bg-cyan-400/20 text-cyan-300 font-mono text-[9px] font-bold border border-cyan-400/40 shrink-0">
+            {activeProcessCategory}
+          </span>
+          <span className="font-bold text-white text-[11px] truncate max-w-[220px]">
             {activeProcessName}
           </span>
         </div>
-        <div className="flex items-center gap-2 font-mono text-[10px] text-cyan-300">
+        <div className="flex items-center gap-3 font-mono text-[10px] text-cyan-300 shrink-0">
           <span>CPU: {cpuLoad}%</span>
           <span>RAM: {ramUsage}%</span>
+          <span className="text-emerald-400">0 Errors</span>
         </div>
         <button
           onClick={() => setIsMinimized(false)}
-          className="p-1 text-cyan-400 hover:text-white transition cursor-pointer"
+          className="p-1 text-cyan-400 hover:text-white transition cursor-pointer shrink-0"
           title="Restore Live Process Console"
+          aria-label="Restore Live Process Console"
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
@@ -117,7 +141,11 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
   }
 
   return (
-    <div className={`bg-[#051124]/95 border border-[#112d54] rounded-2xl p-3.5 shadow-[0_0_25px_rgba(4,11,24,0.8)] backdrop-blur-md select-none text-slate-100 transition-all ${className}`}>
+    <div
+      className={`bg-[#051124]/95 border border-[#112d54] rounded-2xl p-3.5 shadow-[0_0_25px_rgba(4,11,24,0.8)] backdrop-blur-md select-none text-slate-100 transition-all shrink-0 ${
+        bounded ? `flex flex-col min-h-0 ${maxHeightClassName}` : ''
+      } ${className}`}
+    >
       {/* Console Top Header */}
       <div className="flex items-center justify-between pb-2.5 border-b border-[#0e2547] mb-2.5">
         <div className="flex items-center gap-2.5">
@@ -152,7 +180,8 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 rounded-lg bg-[#0a1a36] hover:bg-[#12284c] border border-[#16335f] text-slate-300 hover:text-cyan-300 transition cursor-pointer"
-            title="Minimize to Floating Bar"
+            title="Minimize to status chip"
+            aria-label="Minimize to status chip"
           >
             <Minimize2 className="w-3.5 h-3.5" />
           </button>
@@ -160,7 +189,7 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
       </div>
 
       {/* Progress & Live Telemetry Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-2.5">
+      <div className={`grid grid-cols-1 md:grid-cols-12 gap-3 mb-2.5 ${bounded ? 'shrink-0' : ''}`}>
         {/* Progress Bar (5 Cols) */}
         <div className="md:col-span-5 bg-[#071731] border border-[#11284a] rounded-xl p-2.5 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] mb-1">
@@ -229,7 +258,11 @@ export const LiveProcessInspector: React.FC<LiveProcessInspectorProps> = ({
       </div>
 
       {/* Terminal Log Output Stream */}
-      <div className="bg-[#030914] border border-[#0b1d36] rounded-xl p-2.5 font-mono text-[10px] h-20 overflow-y-auto knx-custom-scrollbar flex flex-col gap-1">
+      <div
+        className={`bg-[#030914] border border-[#0b1d36] rounded-xl p-2.5 font-mono text-[10px] overflow-y-auto knx-custom-scrollbar flex flex-col gap-1 ${
+          bounded ? 'flex-1 min-h-0' : 'h-20'
+        }`}
+      >
         {logs.map((log) => (
           <div key={log.id} className="flex items-start gap-2 text-slate-300">
             <span className="text-slate-500 shrink-0">[{log.timestamp}]</span>

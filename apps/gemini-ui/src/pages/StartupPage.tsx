@@ -76,9 +76,8 @@ interface StartupPageProps {
 }
 
 export function StartupPage({ onNavigateSection }: StartupPageProps) {
-  const { navigateTo, isActive } = useNavigation();
-  // Locale & Appearance
-  const [isArabic, setIsArabic] = useState<boolean>(false);
+  const { navigateTo, isActive, isArabic, toggleLocale } = useNavigation();
+  // Appearance
   const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>('comfortable');
 
   // Search & Filtering
@@ -265,7 +264,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
         onSearchChange={setSearchQuery}
         searchPlaceholder={isArabic ? 'البحث عن برامج بدء التشغيل، مسارات السجل، أو المهام... (Ctrl+K)' : 'Search startup apps, registry hives, or tasks... (Ctrl+K)'}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Body Shell: Sidebar + Content Canvas */}
@@ -281,7 +280,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
         />
 
         {/* 3. Main Center Canvas */}
-        <main className="flex-1 flex flex-col overflow-y-auto startup-custom-scrollbar p-6 space-y-5">
+        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto startup-custom-scrollbar p-4 space-y-3">
           
           {/* Toast Notification */}
           {toastMessage && (
@@ -357,17 +356,17 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           </div>
 
           {/* 4-Metric Summary Ribbon */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {INITIAL_BOOT_METRICS.map((metric) => (
               <div
                 key={metric.id}
-                className={`p-4 rounded-xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all ${
                   metric.isAlert
                     ? 'bg-gradient-to-br from-[#1a1215] to-[#091833] border-rose-500/40 shadow-md shadow-rose-950/20'
                     : 'bg-[#081733] border-slate-800 hover:border-cyan-500/40'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-slate-400 font-medium">{metric.label}</span>
                   {metric.isAlert ? (
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
@@ -375,14 +374,14 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                     <span className="w-2 h-2 rounded-full bg-cyan-400" />
                   )}
                 </div>
-                <div className="text-2xl font-black font-mono text-white tracking-tight">
+                <div className="text-xl font-black font-mono text-white tracking-tight">
                   {metric.type === 'potential_savings' && stagedCount > 0 ? (
                     <span className="text-emerald-400">+{((totalStagedSavingsMs) / 1000).toFixed(1)}s</span>
                   ) : (
                     metric.value
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-1 flex items-center justify-between">
+                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
                   <span>{metric.subtext}</span>
                   {metric.isAlert && <span className="text-rose-400 font-mono text-[10px]">Action Advised</span>}
                 </div>
@@ -391,7 +390,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           </div>
 
           {/* Interactive Boot Stages Waterfall Breakdown Ribbon */}
-          <div className="p-4 rounded-xl bg-[#08152e] border border-slate-800 space-y-3">
+          <div className="p-3 rounded-xl bg-[#08152e] border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-cyan-400" />
@@ -421,8 +420,9 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
               ))}
             </div>
 
-            {/* Stages Legend */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+            {/* Stages Legend — collapses into the bar itself on short desktops so the
+                boot register stays above the fold. */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] [@media(max-height:820px)]:hidden">
               {BOOT_STAGES_BREAKDOWN.map((stg) => (
                 <div
                   key={stg.id}
@@ -438,7 +438,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           </div>
 
           {/* Filters, Search & Command Toolbar */}
-          <div className="p-4 rounded-xl bg-[#081733] border border-slate-800 space-y-3">
+          <div className="p-3 rounded-xl bg-[#081733] border border-slate-800 space-y-2.5">
             {/* Source Tabs */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -548,14 +548,16 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
             </div>
           </div>
 
-          {/* Main Content Composition: Split Table Register + Right Inspector */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+          {/* Main Content Composition: Split Table Register + Right Inspector
+              Both panes are bounded tiles with internal scrollers so the register
+              can never run under the staging footer and the dossier stays aligned. */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
             
             {/* Left/Center: Startup Items Table Register (8 Columns) */}
-            <div className="xl:col-span-8 bg-[#071329] border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col">
-              <div className="overflow-x-auto">
+            <div className="xl:col-span-8 bg-[#071329] border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col h-[clamp(220px,30vh,340px)] [@media(max-height:880px)]:h-[210px]">
+              <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto startup-custom-scrollbar">
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-[#0a1835] text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800 tracking-wider">
+                  <thead className="sticky top-0 z-10 bg-[#0a1835] text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800 tracking-wider">
                     <tr>
                       <th className="p-3 w-10 text-center">
                         <input
@@ -720,9 +722,10 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
               </div>
             </div>
 
-            {/* Right: Startup Item Dossier & Inspector (4 Columns) */}
-            <div className="xl:col-span-4 space-y-4">
-              <div className="p-5 rounded-2xl bg-[#071329] border border-cyan-500/30 shadow-xl space-y-4">
+            {/* Right: Startup Item Dossier & Inspector (4 Columns) — bounded tile,
+                internal scroller keeps it flush with the register tile. */}
+            <div className="xl:col-span-4 space-y-3 xl:h-[clamp(220px,30vh,340px)] [@media(max-height:880px)]:xl:h-[210px] xl:overflow-y-auto startup-custom-scrollbar xl:pr-1">
+              <div className="p-4 rounded-2xl bg-[#071329] border border-cyan-500/30 shadow-xl space-y-3">
                 
                 {/* Header Lockup */}
                 <div className="flex items-start justify-between border-b border-slate-800 pb-3">
@@ -890,16 +893,16 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
               <span className="text-xs text-slate-400 font-mono">12 specialized interactive modules ready</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
               {STARTUP_SERVICES_CATALOG.map((svc) => (
                 <div
                   key={svc.id}
                   onClick={() => setActiveWorkspaceKey(svc.serviceKey)}
-                  className="p-3.5 rounded-xl bg-[#08152e] border border-slate-800 hover:border-cyan-500/50 hover:bg-[#0a1c3d] cursor-pointer transition flex flex-col justify-between group shadow-sm"
+                  className="p-3 rounded-xl bg-[#08152e] border border-slate-800 hover:border-cyan-500/50 hover:bg-[#0a1c3d] cursor-pointer transition flex flex-col justify-between group shadow-sm"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
                         {svc.serviceKey === 'startup-overview' && <Activity className="w-4 h-4" />}
                         {svc.serviceKey === 'startup-disable' && <PowerOff className="w-4 h-4 text-purple-400" />}
                         {svc.serviceKey === 'startup-restore' && <RotateCcw className="w-4 h-4 text-emerald-400" />}
@@ -934,11 +937,30 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
             </div>
           </div>
 
+          {/* Docked Live Process & Telemetry Inspector — non-overlapping */}
+
         </main>
       </div>
 
       {/* 4. Sticky Action Dock Footer */}
-      <footer className="h-14 bg-[#061124] border-t border-slate-800/80 px-6 flex items-center justify-between z-30 shrink-0">
+      <footer className="shrink-0 bg-[#061124] border-t border-slate-800/80 z-30">
+        {/* Reserved telemetry slot — docked above the action bar so it can never
+            cover the program table, the selected-item dossier, or the staged decisions. */}
+        <div className="px-6 pt-2.5">
+          <LiveProcessInspector
+            activeProcessName={isArabic ? 'محرك مراقبة إقلاع ويندوز وتحليل السجلات الحية' : 'KNOuX Windows Boot Engine Telemetry Inspector'}
+            activeProcessCategory="BOOT_CONTROL"
+            progressPercent={100}
+            isExecuting={true}
+            isArabic={isArabic}
+            bounded
+            maxHeightClassName="max-h-[200px]"
+            defaultMinimized
+            fillWidth
+          />
+        </div>
+
+        <div className="h-14 px-6 flex items-center justify-between">
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-mono font-bold text-cyan-300">{checkedIds.size}</span>
@@ -994,16 +1016,17 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
             <span>Stage Selected Changes</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-          {/* Fixed Live Process Execution Inspector Console */}
-          <LiveProcessInspector
-            activeProcessName={isArabic ? 'محرك مراقبة إقلاع ويندوز وتحليل السجلات الحية' : 'KNOuX Windows Boot Engine Telemetry Inspector'}
-            activeProcessCategory="BOOT_CONTROL"
-            progressPercent={100}
-            isExecuting={true}
-            isArabic={isArabic}
-          />
+        </div>
         </div>
       </footer>
+
+      {activeWorkspaceKey && (
+        <StartupWorkspaces
+          serviceKey={activeWorkspaceKey}
+          onClose={() => setActiveWorkspaceKey(null)}
+          isArabic={isArabic}
+        />
+      )}
 
     </div>
   );

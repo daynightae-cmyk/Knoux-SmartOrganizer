@@ -24,6 +24,7 @@ import {
   ExternalLink,
   RefreshCw,
 } from 'lucide-react';
+import { KNOUX_ASSISTANT_TOGGLE_EVENT } from '../shell/KNOuXShellComponents';
 
 interface Message {
   id: string;
@@ -77,6 +78,27 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
       setProvider(savedProvider);
     }
   }, []);
+
+  // Shared-chrome launcher: the titlebar trigger dispatches this event so the
+  // assistant stays reachable from every route without a floating overlay.
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    window.addEventListener(KNOUX_ASSISTANT_TOGGLE_EVENT, handleToggle);
+    return () => window.removeEventListener(KNOUX_ASSISTANT_TOGGLE_EVENT, handleToggle);
+  }, []);
+
+  // Escape closes the panel, and focus returns to the launcher chrome.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen]);
 
   const handleSaveKey = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,23 +231,13 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
 
   return (
     <>
-      {/* Floating Trigger Button in Bottom Right */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 text-white flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.7)] border border-cyan-300/50 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
-          title="Open KNOuX AI Copilot"
-        >
-          <Sparkles className="w-5 h-5 text-white animate-pulse" />
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#050c1b]" />
-        </button>
-      )}
-
+      {/* The launcher lives in the shared titlebar chrome (a reserved slot) so the
+          assistant can never float over page content, table rows, or footer bars. */}
       {/* Chat Window Modal / Floating Panel */}
       {isOpen && (
         <div
           dir={isAr ? 'rtl' : 'ltr'}
-          className="fixed bottom-6 right-6 z-50 w-[380px] sm:w-[420px] h-[560px] bg-[#040a16] border border-[#1b3f70] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden text-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-300 font-sans"
+          className="fixed bottom-[4.75rem] end-6 z-50 w-[380px] sm:w-[420px] h-[min(560px,calc(100vh-8.5rem))] bg-[#040a16] border border-[#1b3f70] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden text-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-300 font-sans"
         >
           {/* Header Bar */}
           <div className="px-4 py-3 bg-[#061226] border-b border-[#0f2444] flex items-center justify-between shrink-0">

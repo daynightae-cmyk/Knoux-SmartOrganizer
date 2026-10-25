@@ -15,11 +15,11 @@
     linear-gradient(to bottom, #050e20, #030814);
   color: #f1f5f9;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
   user-select: none;
 }
 
@@ -87,6 +87,52 @@
   height: 2px;
   background: linear-gradient(90deg, #60a5fa, #c084fc);
   pointer-events: none;
+}
+
+/* ==========================================================================
+   COMPACT MODE — short desktop viewports (e.g. 1366x768)
+   The inspector column must keep its primary decision controls (Start / Stop /
+   Restart / Review Change) inside the viewport, so the dependency graph and
+   the operation preview compress instead of overflowing the screen.
+   ========================================================================== */
+/* The fourth operation button carries a long label that must never wrap the
+   action row, so it shrinks with the viewport instead. */
+.services-compact-btn {
+  font-size: clamp(9px, 0.62vw, 10.5px);
+  white-space: nowrap;
+}
+
+@media (max-height: 880px) {
+  .dep-node {
+    padding: 3px 12px;
+    font-size: 10.5px;
+  }
+
+  .dep-node-selected {
+    font-size: 11px;
+    padding: 3px 14px;
+  }
+}
+
+@media (max-height: 800px) {
+  .dep-node {
+    padding: 2px 10px;
+    font-size: 10px;
+  }
+
+  .dep-node-selected {
+    font-size: 10.5px;
+    padding: 2px 12px;
+  }
+}
+
+/* The activity ledger sits flush against the viewport bottom, so the trailing
+   rows are folded away on shorter screens instead of overflowing the frame. */
+@media (max-height: 880px) {
+  .services-activity-row-4,
+  .services-activity-row-5 {
+    display: none;
+  }
 }
 
 /* Custom scrollbar for dense registers */

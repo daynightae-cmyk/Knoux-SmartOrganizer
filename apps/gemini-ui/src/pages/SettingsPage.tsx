@@ -36,16 +36,18 @@ import {
   Lock,
   ChevronRight,
   Server,
+  Info,
 } from 'lucide-react';
 import { KNOuXTitleBar, KNOuXSidebar } from '../components/shell/KNOuXShellComponents';
 import { LiveProcessInspector } from '../components/common/LiveProcessInspector';
+import { useNavigation } from '../context/NavigationContext';
 
 export interface SettingsPageProps {
   onNavigateSection?: (section: string) => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection }) => {
-  const [isArabic, setIsArabic] = useState(false);
+  const { navigateTo, isArabic, toggleLocale, setLocale } = useNavigation();
   const [activeTab, setActiveTab] = useState<
     'engine' | 'ai_keys' | 'workspace' | 'guard' | 'appearance' | 'language' | 'backup'
   >('engine');
@@ -95,16 +97,47 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
     showToastMsg(isArabic ? 'تم حفظ مفتاح API بنجاح' : 'AI API Key saved successfully!');
   };
 
-  const handleTestConnection = () => {
+  const handleTestConnection = async () => {
+    if (!apiKey.trim()) {
+      showToastMsg(isArabic ? 'يرجى إدخال مفتاح API أولاً' : 'Please input an API key first.');
+      return;
+    }
     setTestStatus('testing');
-    setTimeout(() => {
+    const start = performance.now();
+    let isOk = false;
+    let latencyMs = 0;
+    try {
+      if (provider === 'openrouter') {
+        const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
+          headers: { Authorization: `Bearer ${apiKey.trim()}` },
+        });
+        latencyMs = Math.round(performance.now() - start);
+        isOk = res.ok;
+      }
+    } catch {
+      // Network blocked or offline
+    }
+
+    if (isOk) {
       setTestStatus('success');
-      showToastMsg(isArabic ? 'الاتصال بالمحرك نجح! زمن الاستجابة 142ms' : 'AI Service Ping Successful! Latency 142ms');
-    }, 1200);
+      showToastMsg(
+        isArabic
+          ? `نجح الاتصال بالمزود المباشر! زمن الاستجابة ${latencyMs}ms`
+          : `Live connection verified! Response latency ${latencyMs}ms`
+      );
+    } else {
+      setTestStatus('failed');
+      showToastMsg(
+        isArabic
+          ? 'تعذر التحقق عبر الإنترنت حالياً. تم حفظ المفتاح محلياً لجلسات العمل.'
+          : 'Online probe inconclusive. Key saved locally for Copilot sessions.'
+      );
+    }
   };
 
   const handleNavigate = (sec: string) => {
     if (onNavigateSection) onNavigateSection(sec);
+    else navigateTo(sec);
   };
 
   return (
@@ -115,7 +148,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
         sectionSubtitle={isArabic ? 'تكوين الأداء والخدمات والذكاء الاصطناعي' : 'Performance, Services & AI Tuning'}
         onNavigateHome={() => handleNavigate('home')}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={toggleLocale}
       />
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -126,8 +159,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
           isArabic={isArabic}
         />
 
-        {/* Main Body Canvas */}
-        <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-4 sm:p-5 gap-4 knx-custom-scrollbar">
+        {/* Main Body Canvas + Reserved Telemetry Dock */}
+        <div className="flex-1 flex flex-col min-h-0">
+        <main className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-4 sm:p-5 gap-4 knx-custom-scrollbar">
           
           {/* Toast Notification */}
           {toast && (
@@ -426,11 +460,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
                     <div key={idx} className="bg-[#091a38] border border-[#133059] rounded-xl p-3 flex flex-col justify-between shadow-sm">
                       <span className="font-bold text-xs text-white mb-2">{service}</span>
                       <div className="flex items-center justify-between text-[10px]">
-                        <span className="flex items-center gap-1 text-emerald-400 font-mono font-bold">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Authorized
+                        <span className="flex items-center gap-1 text-amber-300 font-mono font-semibold">
+                          <Info className="w-3 h-3 text-amber-400" />
+                          Sandbox Preview
                         </span>
-                        <span className="text-slate-400 font-mono">1P Scopes</span>
+                        <span className="text-slate-400 font-mono">OAuth Pending</span>
                       </div>
                     </div>
                   ))}
@@ -536,7 +570,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
-                      setIsArabic(false);
+                      setLocale('en');
                       showToastMsg('Interface set to English');
                     }}
                     className={`px-5 py-3 rounded-xl border font-bold text-xs cursor-pointer transition ${
@@ -547,7 +581,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
                   </button>
                   <button
                     onClick={() => {
-                      setIsArabic(true);
+                      setLocale('ar');
                       showToastMsg('تم تغيير الواجهة إلى العربية');
                     }}
                     className={`px-5 py-3 rounded-xl border font-bold text-xs cursor-pointer transition ${
@@ -590,15 +624,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
             )}
           </div>
 
-          {/* Fixed Live Process Execution Inspector Console */}
-          <LiveProcessInspector
-            activeProcessName={isArabic ? 'محرك مراقبة الإعدادات والأمان اللحظي' : 'KNOuX Live Settings & Security Sentinel Monitoring'}
-            activeProcessCategory="SETTINGS_ENGINE"
-            progressPercent={100}
-            isExecuting={true}
-            isArabic={isArabic}
-          />
         </main>
+
+          {/* Reserved telemetry dock — sits outside the scrolling canvas so the
+              console can never be pushed below the fold or paint over settings. */}
+          <footer className="shrink-0 bg-[#061124] border-t border-[#11294a] px-4 sm:px-5 py-2.5 z-30">
+            <LiveProcessInspector
+              activeProcessName={isArabic ? 'محرك مراقبة الإعدادات والأمان اللحظي' : 'KNOuX Live Settings & Security Sentinel Monitoring'}
+              activeProcessCategory="SETTINGS_ENGINE"
+              progressPercent={100}
+              isExecuting={true}
+              isArabic={isArabic}
+              bounded
+              maxHeightClassName="max-h-[220px]"
+              defaultMinimized
+              fillWidth
+            />
+          </footer>
+        </div>
       </div>
     </div>
   );

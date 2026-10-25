@@ -7,7 +7,8 @@
  */
 
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, Settings, X } from 'lucide-react';
+import { Sparkles, CheckCircle2, Settings, X, Info } from 'lucide-react';
+import { useNavigation } from '../context/NavigationContext';
 import { KNOuXTitleBar, KNOuXSidebar } from '../components/shell/KNOuXShellComponents';
 import { LiveProcessInspector } from '../components/common/LiveProcessInspector';
 import { SmartScanHero } from './SmartScanHero';
@@ -36,10 +37,18 @@ export interface SmartScanPageProps {
 }
 
 export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection }) => {
-  const [isArabic, setIsArabic] = useState(false);
+  const { navigateTo, isArabic: globalArabic, toggleLocale } = useNavigation();
+  const [localArabic, setLocalArabic] = useState<boolean | null>(null);
+  const isArabic = localArabic !== null ? localArabic : globalArabic;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [selectedResultId, setSelectedResultId] = useState<string>('temp_files');
   const [results, setResults] = useState<ScanResultItem[]>(SCAN_RESULTS_FIXTURE);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   // Active Service Workspace modal state
   const [activeServiceWorkspace, setActiveServiceWorkspace] = useState<ScanServiceMeta | null>(null);
@@ -127,9 +136,20 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
         sectionSubtitle={isArabic ? 'تحليل شامل وسريع للمنظومة' : 'Comprehensive System Diagnostics'}
         onNavigateHome={() => handleNavigate('home')}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={() => {
+          toggleLocale();
+          setLocalArabic(!isArabic);
+        }}
         onOpenSettings={() => handleNavigate('settings')}
       />
+
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="absolute top-12 right-6 z-50 px-4 py-2 rounded-xl bg-cyan-950/95 border border-cyan-400 text-cyan-200 text-xs shadow-2xl flex items-center gap-2 animate-fade-in backdrop-blur-md">
+          <Info className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Unified Sidebar */}
@@ -139,8 +159,11 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
           isArabic={isArabic}
         />
 
+        {/* Main Center Canvas + Fixed Bottom Dock */}
+        <div className="flex-1 flex flex-col min-h-0">
+
         {/* Main Center Canvas — Zero Page Scroll Layout */}
-        <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-3 sm:p-4 gap-3.5 knx-custom-scrollbar min-h-0">
+        <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-3 gap-3 knx-custom-scrollbar min-h-0">
           
           {/* A. Hero Banner */}
           <SmartScanHero isArabic={isArabic} />
@@ -158,7 +181,7 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
           />
 
           {/* D. Main Results + Findings Breakdown + Scan Review Inspector Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-1 gap-3 flex-1 min-h-[260px]">
             {/* Left Column (6 Cols): Main Scan Results Table */}
             <div className="lg:col-span-6 h-full min-h-0">
               <ScanResults
@@ -174,7 +197,7 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
             </div>
 
             {/* Center Column (3 Cols): Findings Breakdown & Recent Scans */}
-            <div className="lg:col-span-3 flex flex-col gap-3 h-full min-h-0">
+            <div className="lg:col-span-3 flex flex-col gap-3 h-full min-h-0 overflow-y-auto knx-custom-scrollbar pr-0.5">
               <FindingsBreakdown
                 categories={BREAKDOWN_CATEGORIES_FIXTURE}
                 totalReclaimableGB={48.6}
@@ -192,27 +215,40 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
               />
             </div>
           </div>
-
-          {/* E. Live Process Inspector Console */}
-          <LiveProcessInspector
-            activeProcessName={isArabic ? 'محرك الفحص الذكي المباشر بوضع المراقبة' : 'KNOuX Smart Scan Live Engine Telemetry'}
-            activeProcessCategory="SCAN_ENGINE"
-            progressPercent={100}
-            isExecuting={true}
-            isArabic={isArabic}
-          />
-
-          {/* F. Fixed Bottom Command Bar */}
-          <ScanCommandBar
-            selectedCount={totalSelectedCount}
-            totalSizeGB={totalSelectedSizeGB}
-            onReviewSelection={() => setActiveFilter('all')}
-            onExportReport={() => alert(isArabic ? 'تم تصدير تقرير الفحص بنجاح' : 'Scan Report Exported Successfully!')}
-            onCancel={() => handleNavigate('home')}
-            onRunSmartCleanup={handleRunSmartCleanup}
-            isArabic={isArabic}
-          />
         </main>
+
+          {/* Fixed Bottom Dock — telemetry console + primary command bar.
+              Kept outside the scrolling canvas so neither can ever paint over
+              the other or over the results grid. */}
+          <div className="shrink-0 flex flex-col gap-2 px-3 sm:px-4 pb-3 pt-2 bg-[#050e1f]/90 border-t border-[#11294a] backdrop-blur-md z-30">
+            {/* E. Live Process Inspector Console — collapsed to a telemetry chip by
+                default; expanding it grows the dock and shrinks the canvas. */}
+            <LiveProcessInspector
+              activeProcessName={isArabic ? 'محرك الفحص الذكي المباشر بوضع المراقبة' : 'KNOuX Smart Scan Live Engine Telemetry'}
+              activeProcessCategory="SCAN_ENGINE"
+              progressPercent={100}
+              isExecuting={true}
+              isArabic={isArabic}
+              bounded
+              maxHeightClassName="max-h-[240px]"
+              defaultMinimized
+              fillWidth
+            />
+
+            {/* F. Primary Command Bar */}
+            <ScanCommandBar
+              selectedCount={totalSelectedCount}
+              totalSizeGB={totalSelectedSizeGB}
+              onReviewSelection={() => setActiveFilter('all')}
+              onExportReport={() =>
+                showToast(isArabic ? 'تم تصدير ملخص تقرير الفحص بنجاح.' : 'Scan report preview summary exported successfully.')
+              }
+              onCancel={() => handleNavigate('home')}
+              onRunSmartCleanup={handleRunSmartCleanup}
+              isArabic={isArabic}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Service Workspace Modal */}

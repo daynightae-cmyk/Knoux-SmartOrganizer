@@ -38,7 +38,9 @@ export function ApplicationDossier({
   const [isPinned, setIsPinned] = useState(true);
 
   return (
-    <div className="w-80 xl:w-96 shrink-0 flex flex-col gap-2.5 select-none overflow-y-auto app-scrollbar">
+    <div className="w-80 xl:w-96 shrink-0 flex flex-col min-h-0 select-none">
+      {/* Scrollable dossier body — identity, history and operation preview. */}
+      <div className="flex-1 min-h-0 overflow-y-auto app-scrollbar flex flex-col gap-2.5">
       {/* Card 1: Application Dossier */}
       <div className="app-card-surface rounded-xl p-3.5 border border-[#132c52] space-y-3">
         {/* Header with Title and Pin */}
@@ -125,59 +127,8 @@ export function ApplicationDossier({
           </div>
         </div>
 
-        {/* Primary Action Buttons */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <button
-            onClick={() => onTriggerAction('Open')}
-            className="app-tactile-btn py-2 rounded-lg bg-gradient-to-r from-[#2476ff] to-[#1c5fdb] hover:from-[#3282ff] hover:to-[#226cf0] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(36,118,255,0.5)] border border-cyan-400/50 cursor-pointer"
-          >
-            <Play className="w-3.5 h-3.5 fill-white" />
-            <span>Open Application</span>
-          </button>
-
-          <button
-            onClick={() => onTriggerAction('Uninstall')}
-            className="app-tactile-btn py-2 rounded-lg bg-[#140d18] hover:bg-[#221329] text-red-300 hover:text-red-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-red-500/50 cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-red-400" />
-            <span>Uninstall Review</span>
-          </button>
-        </div>
-
-        {/* Secondary Action Grid (4 buttons) */}
-        <div className="grid grid-cols-4 gap-1.5">
-          <button
-            onClick={() => onTriggerAction('Repair')}
-            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
-          >
-            <Wrench className="w-3 h-3 text-amber-400" />
-            <span>Repair</span>
-          </button>
-
-          <button
-            onClick={() => onTriggerAction('Modify')}
-            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
-          >
-            <Shuffle className="w-3 h-3 text-purple-400" />
-            <span>Modify</span>
-          </button>
-
-          <button
-            onClick={() => onTriggerAction('Update')}
-            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
-          >
-            <RotateCw className="w-3 h-3 text-cyan-400" />
-            <span>Update Check</span>
-          </button>
-
-          <button
-            onClick={() => onTriggerAction('Reveal')}
-            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
-          >
-            <FolderOpen className="w-3 h-3 text-slate-400" />
-            <span>Reveal Location</span>
-          </button>
-        </div>
+        {/* Primary & secondary maintenance actions live in the pinned action
+            deck below the scrollable body so they are never clipped away. */}
 
         {/* Recent Verified History */}
         <div className="pt-2 border-t border-[#0f2545] space-y-1.5">
@@ -277,6 +228,65 @@ export function ApplicationDossier({
               <div className="text-purple-300">[10:24:01] Engine integration pending...</div>
             </div>
           </div>
+        </div>
+      </div>
+      </div>
+
+      {/* Pinned Action Deck — always visible inside the dossier column at every
+          supported viewport, never clipped by the scrollable body above. */}
+      <div className="shrink-0 mt-2.5 app-card-surface rounded-xl p-3 border border-[#132c52] space-y-2 shadow-[0_-4px_18px_rgba(3,10,25,0.6)]">
+        {/* Primary Action Buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => onTriggerAction('Open')}
+            className="app-tactile-btn py-2 rounded-lg bg-gradient-to-r from-[#2476ff] to-[#1c5fdb] hover:from-[#3282ff] hover:to-[#226cf0] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(36,118,255,0.5)] border border-cyan-400/50 cursor-pointer"
+          >
+            <Play className="w-3.5 h-3.5 fill-white" />
+            <span>Open Application</span>
+          </button>
+
+          <button
+            onClick={() => onTriggerAction('Uninstall')}
+            className="app-tactile-btn py-2 rounded-lg bg-[#140d18] hover:bg-[#221329] text-red-300 hover:text-red-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-red-500/50 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+            <span>Uninstall Review</span>
+          </button>
+        </div>
+
+        {/* Secondary Action Grid (4 buttons) */}
+        <div className="grid grid-cols-4 gap-1.5">
+          <button
+            onClick={() => onTriggerAction('Repair')}
+            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <Wrench className="w-3 h-3 text-amber-400 shrink-0" />
+            <span className="truncate">Repair</span>
+          </button>
+
+          <button
+            onClick={() => onTriggerAction('Modify')}
+            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <Shuffle className="w-3 h-3 text-purple-400 shrink-0" />
+            <span className="truncate">Modify</span>
+          </button>
+
+          <button
+            onClick={() => onTriggerAction('Update')}
+            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <RotateCw className="w-3 h-3 text-cyan-400 shrink-0" />
+            <span className="truncate">Update</span>
+          </button>
+
+          <button
+            onClick={() => onTriggerAction('Reveal')}
+            className="app-tactile-btn py-1.5 rounded bg-[#0a182d] hover:bg-[#122c50] text-slate-300 hover:text-white text-[10px] font-medium border border-[#173866] flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <FolderOpen className="w-3 h-3 text-slate-400 shrink-0" />
+            <span className="truncate">Reveal</span>
+          </button>
         </div>
       </div>
     </div>

@@ -53,7 +53,7 @@ import {
 } from 'lucide-react';
 import { useStudio } from './context';
 import { useNavigation } from '../context/NavigationContext';
-import { KNOuXLogo, KNOuXSidebar } from '../components/shell/KNOuXShellComponents';
+import { KNOuXLogo, KNOuXSidebar, KNOuXAssistantTrigger, windowControlProps } from '../components/shell/KNOuXShellComponents';
 import { CategoryKey, StudioStageId } from './types';
 
 // Map icon name to Lucide component
@@ -103,9 +103,10 @@ export function renderCategoryIcon(iconName: string, className = 'w-5 h-5') {
  */
 export function WindowsTitleBar() {
   const { locale, setLocale, openModal, resetToDefaultScreenshotFixture } = useStudio();
+  const { setLocale: navSetLocale } = useNavigation();
 
   return (
-    <div className="h-9 bg-[#040a16] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-50">
+    <div className="h-10 bg-[#040a16] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-50 shrink-0">
       <div className="flex items-center gap-2">
         <KNOuXLogo size="sm" />
         <span className="text-[10px] text-slate-500 hidden sm:inline-block border-l border-[#0d213d] pl-2">
@@ -117,7 +118,11 @@ export function WindowsTitleBar() {
         {/* Quick controls: Locale toggle, Dev test helper */}
         <div className="flex items-center gap-1.5 mr-3">
           <button
-            onClick={() => setLocale(locale === 'en' ? 'ar' : 'en')}
+            onClick={() => {
+              const next = locale === 'en' ? 'ar' : 'en';
+              setLocale(next);
+              navSetLocale(next);
+            }}
             className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#0e223d] hover:bg-[#163866] text-cyan-300 border border-[#1b3f70] transition-colors"
             title="Toggle Arabic / English (RTL/LTR)"
           >
@@ -138,17 +143,27 @@ export function WindowsTitleBar() {
           >
             Reset to Ref
           </button>
+          <KNOuXAssistantTrigger title="Open KNOuX AI Copilot" />
         </div>
 
         {/* Windows standard min/max/close controls */}
         <div className="flex items-center">
-          <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors">
+          <button
+            {...windowControlProps('minimize')}
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
+          >
             <Minus className="w-3.5 h-3.5" />
           </button>
-          <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors">
+          <button
+            {...windowControlProps('maximize')}
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#122b4e] transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
+          >
             <Square className="w-3 h-3" />
           </button>
-          <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600 transition-colors">
+          <button
+            {...windowControlProps('close')}
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600 transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -362,7 +377,7 @@ export function HorizontalStagesBar() {
 /**
  * 08 — Sticky Footer with Selection Summary and Actions
  */
-export function StickyFooter() {
+export function StickyFooter({ dpiControl }: { dpiControl?: React.ReactNode }) {
   const {
     selectedFileIds,
     files,
@@ -393,6 +408,10 @@ export function StickyFooter() {
           {selectedSize}
         </span>
       </div>
+
+      {/* Center slot — hosts the DPI preview switch so it can never be painted
+          over by the footer (the previous floating overlay was occluded here). */}
+      <div className="flex items-center justify-center flex-1 min-w-0">{dpiControl}</div>
 
       {/* Right control buttons */}
       <div className="flex items-center gap-2">

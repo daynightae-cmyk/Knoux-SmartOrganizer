@@ -71,9 +71,8 @@ interface SystemPageProps {
 }
 
 export function SystemPage({ onNavigateSection }: SystemPageProps) {
-  const { navigateTo, isActive } = useNavigation();
-  // Locale & UI states
-  const [isArabic, setIsArabic] = useState<boolean>(false);
+  const { navigateTo, isActive, isArabic, toggleLocale } = useNavigation();
+  // UI states
   const [activeWorkspaceKey, setActiveWorkspaceKey] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
@@ -180,19 +179,19 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
 
   const renderServiceIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Heart': return <Heart className="w-5 h-5 text-rose-400" />;
-      case 'AlertTriangle': return <AlertTriangle className="w-5 h-5 text-amber-400" />;
-      case 'ListFilter': return <ListFilter className="w-5 h-5 text-cyan-400" />;
-      case 'ShieldCheck': return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
-      case 'Clock': return <Clock className="w-5 h-5 text-purple-400" />;
-      case 'BarChart3': return <BarChart3 className="w-5 h-5 text-amber-400" />;
-      case 'Cog': return <Cog className="w-5 h-5 text-cyan-400" />;
-      case 'FileText': return <FileText className="w-5 h-5 text-blue-400" />;
-      case 'PieChart': return <PieChart className="w-5 h-5 text-teal-400" />;
-      case 'PlayCircle': return <PlayCircle className="w-5 h-5 text-emerald-400" />;
-      case 'Network': return <Network className="w-5 h-5 text-purple-400" />;
-      case 'Activity': return <Activity className="w-5 h-5 text-cyan-400" />;
-      default: return <Activity className="w-5 h-5 text-cyan-400" />;
+      case 'Heart': return <Heart className="w-4 h-4 text-rose-400" />;
+      case 'AlertTriangle': return <AlertTriangle className="w-4 h-4 text-amber-400" />;
+      case 'ListFilter': return <ListFilter className="w-4 h-4 text-cyan-400" />;
+      case 'ShieldCheck': return <ShieldCheck className="w-4 h-4 text-emerald-400" />;
+      case 'Clock': return <Clock className="w-4 h-4 text-purple-400" />;
+      case 'BarChart3': return <BarChart3 className="w-4 h-4 text-amber-400" />;
+      case 'Cog': return <Cog className="w-4 h-4 text-cyan-400" />;
+      case 'FileText': return <FileText className="w-4 h-4 text-blue-400" />;
+      case 'PieChart': return <PieChart className="w-4 h-4 text-teal-400" />;
+      case 'PlayCircle': return <PlayCircle className="w-4 h-4 text-emerald-400" />;
+      case 'Network': return <Network className="w-4 h-4 text-purple-400" />;
+      case 'Activity': return <Activity className="w-4 h-4 text-cyan-400" />;
+      default: return <Activity className="w-4 h-4 text-cyan-400" />;
     }
   };
 
@@ -208,7 +207,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
         onNavigateHome={() => (onNavigateSection ? onNavigateSection("home") : navigateTo("home"))}
         searchPlaceholder={isArabic ? "البحث عن ميزات، عمليات، أو إعدادات... (Ctrl+K)" : "Search features, processes, or settings... (Ctrl+K)"}
         isArabic={isArabic}
-        onToggleArabic={() => setIsArabic(!isArabic)}
+        onToggleArabic={toggleLocale}
       />
 
       {/* Main Workspace Body */}
@@ -222,7 +221,8 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
         />
 
         {/* 3. Main Center Canvas */}
-        <main className="flex-1 flex flex-col overflow-y-auto system-custom-scrollbar p-6 space-y-5">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto system-custom-scrollbar p-4 gap-2.5">
           
           {/* Toast Notification */}
           {notificationMsg && (
@@ -233,7 +233,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
           )}
 
           {/* Hero Header Section */}
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-2">
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 pt-0.5 pb-1">
             
             {/* Cybernetic Waveform Background Graphic in Hero */}
             <svg className="system-observatory-wave" viewBox="0 0 580 110" fill="none">
@@ -269,13 +269,13 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
               <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-semibold">
                 SYSTEM OBSERVATORY
               </div>
-              <h1 className="text-3xl font-black text-white tracking-tight mt-0.5 flex items-baseline gap-2">
+              <h1 className="text-2xl font-black text-white tracking-tight mt-0.5 flex items-baseline gap-2">
                 <span>Live</span>
                 <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Pulse
                 </span>
               </h1>
-              <p className="text-xs text-slate-300 mt-1 max-w-xl">
+              <p className="text-[11px] text-slate-300 mt-0.5 max-w-xl">
                 {isArabic
                   ? 'بيئة ويندوز الخاصة بك، مرصودة ومراقبة بذكاء فائق ودقة متناهية.'
                   : 'Your Windows environment, intelligently observed.'}
@@ -316,15 +316,15 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
           </div>
 
           {/* 4. Upper Main Area: Four Large Dashboard Instruments */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {instrumentMetrics.map((inst) => (
               <div
                 key={inst.id}
                 onClick={() => setActiveWorkspaceKey(`system-perf`)}
-                className="p-4 rounded-2xl bg-[#071329] border border-slate-800/90 hover:border-cyan-500/40 cursor-pointer transition shadow-md flex flex-col justify-between group"
+                className="p-3 rounded-2xl bg-[#071329] border border-slate-800/90 hover:border-cyan-500/40 cursor-pointer transition shadow-md flex flex-col justify-between group"
               >
                 {/* Header */}
-                <div className="flex items-center gap-2.5 mb-3">
+                <div className="flex items-center gap-2.5 mb-2">
                   <div className="w-7 h-7 rounded-lg bg-[#0c1f3f] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
                     {inst.id === 'cpu' && <Cpu className="w-4 h-4" />}
                     {inst.id === 'memory' && <Layers className="w-4 h-4 text-purple-400" />}
@@ -337,11 +337,11 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
                   </div>
                 </div>
 
-                {/* Circular Gauge & Mini Waveform Row */}
-                <div className="flex items-center justify-between my-2">
+                {/* Circular Gauge + Sparkline + Inline Footer Stats (REF-07 proportions) */}
+                <div className="flex items-center gap-3">
                   {/* Circular Radial Gauge */}
-                  <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
-                    <svg className="w-20 h-20" viewBox="0 0 80 80">
+                  <div className="relative w-[74px] h-[74px] flex items-center justify-center shrink-0">
+                    <svg className="w-[74px] h-[74px]" viewBox="0 0 80 80">
                       <circle cx="40" cy="40" r="32" stroke="#0e2347" strokeWidth="6" fill="none" />
                       <circle
                         cx="40"
@@ -364,279 +364,339 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
                     </div>
                   </div>
 
-                  {/* Mini Sparkline Waveform */}
-                  <div className="flex-1 pl-3 h-12 flex items-end">
-                    <svg className="w-full h-12" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <path
-                        d={`M 0 35 ${inst.sparklinePoints.map((p, idx) => `L ${(idx / (inst.sparklinePoints.length - 1)) * 100} ${40 - (p / 80) * 35}`).join(' ')}`}
-                        stroke={inst.sparklineColor}
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Footer Measurement Stats */}
-                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-slate-800/80 text-[10px] font-mono mt-2">
-                  {inst.footerStats.map((st, i) => (
-                    <div key={i} className="text-center">
-                      <div className="text-slate-500 text-[9px]">{st.label}</div>
-                      <div className="text-slate-300 font-semibold">{st.value}</div>
+                  {/* Mini Sparkline Waveform + Footer Measurement Stats */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                    <div className="h-10 flex items-end">
+                      <svg className="w-full h-10" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <path
+                          d={`M 0 35 ${inst.sparklinePoints.map((p, idx) => `L ${(idx / (inst.sparklinePoints.length - 1)) * 100} ${40 - (p / 80) * 35}`).join(' ')}`}
+                          stroke={inst.sparklineColor}
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
                     </div>
-                  ))}
+
+                    <div className="grid grid-cols-3 gap-1 text-[10px] font-mono">
+                      {inst.footerStats.map((st, i) => (
+                        <div key={i} className="text-center">
+                          <div className="text-slate-500 text-[9px]">{st.label}</div>
+                          <div className="text-slate-300 font-semibold">{st.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* 5. Center Split Row: Performance Timeline + System Info + Live Service Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-            
-            {/* Center-Left: Performance Timeline Card (5 cols) */}
-            <div className="lg:col-span-5 p-5 rounded-2xl bg-[#071329] border border-slate-800 flex flex-col justify-between shadow-md">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <BarChart2 className="w-4 h-4 text-cyan-400" />
-                    <div>
-                      <h3 className="font-bold text-xs text-white">Performance Timeline</h3>
-                      <div className="text-[10px] text-slate-400">Live system resource usage over time.</div>
-                    </div>
-                  </div>
+{/* 5. Reference Grid (REF-07): Timeline (6) | System Information (3) | Live Service Preview (3, rows 1-2) | Ledger + 12 Diagnostics (9, row 2) */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 xl:grid-rows-[auto_1fr] gap-3 flex-1">
 
-                  {/* Tabs & Interval */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-[#050e1f] p-0.5 rounded-lg border border-slate-800 text-[10px] font-mono">
-                      {(['CPU', 'Memory', 'Disk', 'Network'] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          onClick={() => setTimelineTab(tab)}
-                          className={`px-2 py-0.5 rounded transition ${
-                            timelineTab === tab
-                              ? 'bg-purple-600 text-white font-bold'
-                              : 'text-slate-400 hover:text-slate-200'
-                          }`}
-                        >
-                          {tab}
-                        </button>
-                      ))}
-                    </div>
-
-                    <select
-                      value={timelineInterval}
-                      onChange={(e) => setTimelineInterval(e.target.value)}
-                      className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-300"
-                    >
-                      <option value="30 seconds">30 seconds</option>
-                      <option value="60 seconds">60 seconds</option>
-                      <option value="5 minutes">5 minutes</option>
-                    </select>
+            {/* 5.1 Performance Timeline — cols 1-6, row 1 */}
+            <section className="xl:col-span-6 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <BarChart2 className="w-4 h-4 text-cyan-400" />
+                  <div>
+                    <h3 className="font-bold text-xs text-white">Performance Timeline</h3>
+                    <div className="text-[10px] text-slate-400">Live system resource usage over time.</div>
                   </div>
                 </div>
 
-                {/* Timeline Chart Grid Canvas */}
-                <div className="h-44 w-full bg-[#050e1f] rounded-xl border border-slate-800/80 p-3 relative flex flex-col justify-between overflow-hidden">
-                  {/* Calibrated Y-axis lines */}
-                  {[100, 75, 50, 25, 0].map((val) => (
-                    <div key={val} className="w-full flex items-center text-[9px] font-mono text-slate-600">
-                      <span className="w-6 shrink-0">{val}%</span>
-                      <div className="flex-1 border-b border-dashed border-slate-800 ml-1" />
-                    </div>
-                  ))}
-
-                  {/* Center Awaiting State or Live Curve */}
-                  {isStreamingSample ? (
-                    <div className="absolute inset-0 pt-4 px-10 pb-6 flex items-center">
-                      <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-                        <path
-                          d="M0 80 Q50 30, 100 65 T200 40 T300 60"
-                          stroke="#a855f7"
-                          strokeWidth="2"
-                          fill="none"
-                        />
-                      </svg>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                      <BarChart3 className="w-6 h-6 text-slate-600 mb-1" />
-                      <div className="text-xs font-semibold text-slate-300">Awaiting performance data...</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
-                        System data will appear here once collection begins.
-                      </div>
+                {/* Tabs & Interval */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-[#050e1f] p-0.5 rounded-lg border border-slate-800 text-[10px] font-mono">
+                    {(['CPU', 'Memory', 'Disk', 'Network'] as const).map((tab) => (
                       <button
-                        onClick={() => {
-                          setIsStreamingSample(true);
-                          showToast('Sample performance stream active');
-                        }}
-                        className="mt-2 px-2.5 py-1 rounded bg-[#091833] hover:bg-slate-800 text-[10px] font-mono text-cyan-300 border border-slate-700"
+                        key={tab}
+                        type="button"
+                        onClick={() => setTimelineTab(tab)}
+                        className={`px-2 py-0.5 rounded transition ${
+                          timelineTab === tab
+                            ? 'bg-purple-600 text-white font-bold'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
                       >
-                        Initiate Sample Collection
+                        {tab}
                       </button>
-                    </div>
-                  )}
-
-                  {/* X-axis Timestamps */}
-                  <div className="w-full flex items-center justify-between text-[9px] font-mono text-slate-600 pt-1 border-t border-slate-800">
-                    <span>15:27</span>
-                    <span>15:28</span>
-                    <span>15:29</span>
-                    <span>15:30</span>
-                    <span>15:31</span>
-                    <span>15:32</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Center-Middle: System Information Card (4 cols) */}
-            <div className="lg:col-span-4 p-5 rounded-2xl bg-[#071329] border border-slate-800 flex flex-col justify-between shadow-md">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Monitor className="w-4 h-4 text-cyan-400" />
-                  <div>
-                    <h3 className="font-bold text-xs text-white">System Information</h3>
-                    <div className="text-[10px] text-slate-400">Key details about your Windows environment.</div>
-                  </div>
-                </div>
-
-                {/* Key-Value List */}
-                <div className="space-y-2 text-xs font-mono">
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Windows Version</span>
-                    <span className="text-slate-100 font-semibold">{systemInfo.windowsVersion}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Version / Build</span>
-                    <span className="text-cyan-300">{systemInfo.versionBuild}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">System Manufacturer</span>
-                    <span className="text-slate-300">{systemInfo.systemManufacturer}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">System Model</span>
-                    <span className="text-slate-300">{systemInfo.systemModel}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Processor</span>
-                    <span className="text-slate-300 truncate max-w-[170px]" title={systemInfo.processor}>
-                      {systemInfo.processor}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Installed RAM</span>
-                    <span className="text-slate-100">{systemInfo.installedRam}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Uptime</span>
-                    <span className="text-emerald-400 font-bold">{systemInfo.uptime}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                    <span className="text-slate-400 font-sans">Process Count</span>
-                    <span className="text-slate-200">{systemInfo.processCount}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1">
-                    <span className="text-slate-400 font-sans">Last Read</span>
-                    <span className="text-slate-400 text-[10px]">{systemInfo.lastRead}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Center-Right: Live Service Preview Inspector (3 cols) */}
-            <div className="lg:col-span-3 p-5 rounded-2xl bg-[#071329] border border-cyan-500/25 flex flex-col justify-between shadow-md space-y-3">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity className="w-4 h-4 text-purple-400" />
-                  <div>
-                    <h3 className="font-bold text-xs text-white">Live Service Preview</h3>
-                    <div className="text-[10px] text-slate-400">Inspect a Windows service in real time.</div>
-                  </div>
-                </div>
-
-                {/* Form Selectors */}
-                <div className="space-y-2 text-xs">
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Service</label>
-                    <select
-                      value={selectedService}
-                      onChange={(e) => setSelectedService(e.target.value)}
-                      className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1.5 text-xs text-slate-200"
-                    >
-                      <option value="Windows Update (wuauserv)">Windows Update (wuauserv)</option>
-                      <option value="DCOM Server (DcomLaunch)">DCOM Server (DcomLaunch)</option>
-                      <option value="Windows Defender (WinDefend)">Windows Defender (WinDefend)</option>
-                      <option value="Background Transfer (BITS)">Background Transfer (BITS)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Data Source</label>
-                    <select
-                      value={selectedDataSource}
-                      onChange={(e) => setSelectedDataSource(e.target.value)}
-                      className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1.5 text-xs text-slate-200"
-                    >
-                      <option value="Windows Service Controller">Windows Service Controller</option>
-                      <option value="ETW Kernel Trace Provider">ETW Kernel Trace Provider</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] pt-1">
-                    <span className="text-slate-400">Permissions:</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-800 flex items-center gap-1 font-mono">
-                      <Shield className="w-3 h-3" /> Standard User (Limited)
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Sampling Interval</label>
-                    <select
-                      value={samplingInterval}
-                      onChange={(e) => setSamplingInterval(e.target.value)}
-                      className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1.5 text-xs text-slate-200"
-                    >
-                      <option value="5 seconds">5 seconds</option>
-                      <option value="10 seconds">10 seconds</option>
-                      <option value="30 seconds">30 seconds</option>
-                    </select>
-                  </div>
-
-                  {/* Visible Metrics Checkboxes */}
-                  <div className="pt-2 border-t border-slate-800 space-y-1">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Visible Metrics</span>
-                    {[
-                      { key: 'serviceStatus', label: 'Service Status' },
-                      { key: 'cpuUsage', label: 'CPU Usage' },
-                      { key: 'memoryUsage', label: 'Memory Usage' },
-                      { key: 'diskActivity', label: 'Disk Activity' },
-                      { key: 'networkActivity', label: 'Network Activity' }
-                    ].map((m) => (
-                      <label key={m.key} className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={visibleMetrics[m.key]}
-                          onChange={() => handleToggleMetric(m.key)}
-                          className="w-3.5 h-3.5 rounded accent-purple-500"
-                        />
-                        <span>{m.label}</span>
-                      </label>
                     ))}
                   </div>
+
+                  <select
+                    value={timelineInterval}
+                    onChange={(e) => setTimelineInterval(e.target.value)}
+                    aria-label="Timeline sampling interval"
+                    className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-300"
+                  >
+                    <option value="30 seconds">30 seconds</option>
+                    <option value="60 seconds">60 seconds</option>
+                    <option value="5 minutes">5 minutes</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Preview Container: Awaiting Telemetry State */}
-              <div className="p-3 rounded-xl bg-[#050e1f] border border-slate-800/80 text-center">
-                <BarChart3 className="w-5 h-5 text-slate-600 mx-auto mb-1" />
-                <div className="text-xs font-semibold text-slate-300">Awaiting Windows telemetry...</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">
-                  Select a service and start data collection to view live metrics here.
+              {/* Timeline Chart Grid Canvas */}
+              <div className="flex-1 min-h-[136px] w-full bg-[#050e1f] rounded-xl border border-slate-800/80 p-3 relative flex flex-col justify-between overflow-hidden">
+                {/* Calibrated Y-axis lines */}
+                {[100, 75, 50, 25, 0].map((val) => (
+                  <div key={val} className="w-full flex items-center text-[9px] font-mono text-slate-600">
+                    <span className="w-6 shrink-0">{val}%</span>
+                    <div className="flex-1 border-b border-dashed border-slate-800 ms-1" />
+                  </div>
+                ))}
+
+                {/* Center Awaiting State or Live Curve */}
+                {isStreamingSample ? (
+                  <div className="absolute inset-0 pt-4 px-10 pb-6 flex items-center">
+                    <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
+                      <path
+                        d="M0 80 Q50 30, 100 65 T200 40 T300 60"
+                        stroke="#a855f7"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <BarChart3 className="w-6 h-6 text-slate-600 mb-1" />
+                    <div className="text-xs font-semibold text-slate-300">Awaiting performance data...</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      System data will appear here once collection begins.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStreamingSample(true);
+                        showToast('Sample performance stream active');
+                      }}
+                      className="mt-2 px-2.5 py-1 rounded bg-[#091833] hover:bg-slate-800 text-[10px] font-mono text-cyan-300 border border-slate-700"
+                    >
+                      Initiate Sample Collection
+                    </button>
+                  </div>
+                )}
+
+                {/* X-axis Timestamps */}
+                <div className="w-full flex items-center justify-between text-[9px] font-mono text-slate-600 pt-1 border-t border-slate-800">
+                  <span>15:27</span>
+                  <span>15:28</span>
+                  <span>15:29</span>
+                  <span>15:30</span>
+                  <span>15:31</span>
+                  <span>15:32</span>
                 </div>
+              </div>
+            </section>
+
+            {/* 5.2 System Information — cols 7-9, row 1 */}
+            <section className="xl:col-span-3 p-3 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <Monitor className="w-4 h-4 text-cyan-400" />
+                <div>
+                  <h3 className="font-bold text-xs text-white">System Information</h3>
+                  <div className="text-[10px] text-slate-400">Key details about your Windows environment.</div>
+                </div>
+              </div>
+
+              {/* Key-Value List */}
+              <div className="space-y-0 text-[11px] font-mono">
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Monitor className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Windows Version</span>
+                  </span>
+                  <span className="font-semibold text-slate-100 text-end truncate">{systemInfo.windowsVersion}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <ChevronDown className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Version / Build</span>
+                  </span>
+                  <span className="text-cyan-300 text-end truncate">{systemInfo.versionBuild}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <HardDrive className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">System Manufacturer</span>
+                  </span>
+                  <span className="text-slate-300 text-end truncate">{systemInfo.systemManufacturer}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Cpu className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">System Model</span>
+                  </span>
+                  <span className="text-slate-300 text-end truncate">{systemInfo.systemModel}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Zap className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Processor</span>
+                  </span>
+                  <span className="text-slate-300 text-end truncate" title={systemInfo.processor}>
+                    {systemInfo.processor}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Layers className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Installed RAM</span>
+                  </span>
+                  <span className="text-slate-100 text-end truncate">{systemInfo.installedRam}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Clock className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Uptime</span>
+                  </span>
+                  <span className="text-emerald-400 font-bold text-end truncate">{systemInfo.uptime}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-[1px] border-b border-slate-800/60">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <ListFilter className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Process Count</span>
+                  </span>
+                  <span className="text-slate-200 text-end truncate">{systemInfo.processCount}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <span className="flex items-center gap-1.5 text-slate-400 font-sans min-w-0">
+                    <Activity className="w-3 h-3 text-slate-600 shrink-0" />
+                    <span className="truncate">Last Read</span>
+                  </span>
+                  <span className="text-slate-400 text-[10px] text-end truncate">{systemInfo.lastRead}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* 5.3 Live Service Preview Inspector — cols 10-12, rows 1-2 (full-height rail) */}
+            <section className="xl:col-span-3 xl:row-span-2 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-cyan-500/25 shadow-md flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-purple-400" />
+                <div>
+                  <h3 className="font-bold text-xs text-white">Live Service Preview</h3>
+                  <div className="text-[10px] text-slate-400">Inspect a Windows service in real time.</div>
+                </div>
+              </div>
+
+              {/* Form Selectors */}
+              <div className="space-y-1.5 text-xs">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-0.5" htmlFor="sys-svc-select">Service</label>
+                  <select
+                    id="sys-svc-select"
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1 text-[11px] text-slate-200"
+                  >
+                    <option value="Windows Update (wuauserv)">Windows Update (wuauserv)</option>
+                    <option value="DCOM Server (DcomLaunch)">DCOM Server (DcomLaunch)</option>
+                    <option value="Windows Defender (WinDefend)">Windows Defender (WinDefend)</option>
+                    <option value="Background Transfer (BITS)">Background Transfer (BITS)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-0.5" htmlFor="sys-src-select">Data Source</label>
+                  <select
+                    id="sys-src-select"
+                    value={selectedDataSource}
+                    onChange={(e) => setSelectedDataSource(e.target.value)}
+                    className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1 text-[11px] text-slate-200"
+                  >
+                    <option value="Windows Service Controller">Windows Service Controller</option>
+                    <option value="ETW Kernel Trace Provider">ETW Kernel Trace Provider</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-slate-400">Permissions:</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-800 flex items-center gap-1 font-mono shrink-0">
+                    <Shield className="w-3 h-3" /> Standard User (Limited)
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-0.5" htmlFor="sys-int-select">Sampling Interval</label>
+                  <select
+                    id="sys-int-select"
+                    value={samplingInterval}
+                    onChange={(e) => setSamplingInterval(e.target.value)}
+                    className="w-full bg-[#050e1f] border border-slate-700/80 rounded-lg p-1 text-[11px] text-slate-200"
+                  >
+                    <option value="5 seconds">5 seconds</option>
+                    <option value="10 seconds">10 seconds</option>
+                    <option value="30 seconds">30 seconds</option>
+                  </select>
+                </div>
+
+                {/* Visible Metrics Checkboxes */}
+                <div className="pt-1.5 border-t border-slate-800 space-y-0.5">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Visible Metrics</span>
+                  {[
+                    { key: 'serviceStatus', label: 'Service Status' },
+                    { key: 'cpuUsage', label: 'CPU Usage' },
+                    { key: 'memoryUsage', label: 'Memory Usage' },
+                    { key: 'diskActivity', label: 'Disk Activity' },
+                    { key: 'networkActivity', label: 'Network Activity' }
+                  ].map((m) => (
+                    <label key={m.key} className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={visibleMetrics[m.key]}
+                        onChange={() => handleToggleMetric(m.key)}
+                        className="w-3.5 h-3.5 rounded accent-purple-500"
+                      />
+                      <span>{m.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview Container: Awaiting Telemetry State / Honest Sample Fixture */}
+              <div className="p-2.5 rounded-xl bg-[#050e1f] border border-slate-800/80 text-center flex-1 flex flex-col justify-center min-h-0">
+                {isServiceCollecting ? (
+                  <>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-300">Sample fixture active</span>
+                    </div>
+                    <div className="text-[11px] font-semibold text-slate-200">{selectedService}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      {samplingInterval} sampling · {selectedDataSource}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                      {[
+                        { key: 'serviceStatus', label: 'Status' },
+                        { key: 'cpuUsage', label: 'CPU' },
+                        { key: 'memoryUsage', label: 'Memory' },
+                        { key: 'diskActivity', label: 'Disk' },
+                        { key: 'networkActivity', label: 'Network' }
+                      ].filter((m) => visibleMetrics[m.key]).map((m) => (
+                        <span key={m.key} className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#091833] border border-slate-800 text-slate-400">
+                          {m.label}: --
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-[9px] text-slate-600 mt-1.5">
+                      Design fixture — no native Windows counters are connected in this phase.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <BarChart3 className="w-4 h-4 text-slate-600 mx-auto mb-0.5" />
+                    <div className="text-[11px] font-semibold text-slate-300">Awaiting Windows telemetry...</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      Select a service and start data collection to view live metrics here.
+                    </div>
+                  </>
+                )}
                 <button
+                  type="button"
                   onClick={() => {
                     setIsServiceCollecting(!isServiceCollecting);
                     showToast(
@@ -654,218 +714,230 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
                   {isServiceCollecting ? 'Stop Collection' : 'Start Collection (Safe Preview)'}
                 </button>
               </div>
-            </div>
+            </section>
 
-          </div>
+            {/* 5.4 Lower region — cols 1-9, row 2 */}
+            <div className="xl:col-span-9 min-w-0 flex flex-col gap-3">
 
-          {/* 6. Lower Row: Process Ledger + 12 System Services & Diagnostics Matrix */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-            
-            {/* Process Ledger (5 cols) */}
-            <div className="xl:col-span-5 p-5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <ListFilter className="w-4 h-4 text-cyan-400" />
-                  <div>
-                    <h3 className="font-bold text-xs text-white">Process Ledger</h3>
-                    <div className="text-[10px] text-slate-400">Live list of running processes and resource usage.</div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowProcessSampleList(!showProcessSampleList);
-                    showToast(!showProcessSampleList ? 'Process sample ledger loaded' : 'Process ledger cleared to honest awaiting state');
-                  }}
-                  className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition"
-                  title="Refresh process list"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${showProcessSampleList ? 'text-cyan-400' : ''}`} />
-                </button>
-              </div>
-
-              {/* Filters toolbar */}
-              <div className="flex items-center gap-2 text-xs">
-                <input
-                  type="text"
-                  placeholder="Search processes..."
-                  value={processSearch}
-                  onChange={(e) => setProcessSearch(e.target.value)}
-                  className="flex-1 bg-[#050e1f] border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500"
-                />
-                <select
-                  value={processStatusFilter}
-                  onChange={(e) => setProcessStatusFilter(e.target.value)}
-                  className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300"
-                >
-                  <option value="All">Status: All</option>
-                  <option value="Running">Running</option>
-                  <option value="Suspended">Suspended</option>
-                </select>
-                <select
-                  value={processUserFilter}
-                  onChange={(e) => setProcessUserFilter(e.target.value)}
-                  className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300"
-                >
-                  <option value="All">User: All</option>
-                  <option value="SYSTEM">SYSTEM</option>
-                  <option value="User">User</option>
-                </select>
-              </div>
-
-              {/* Table Ledger or Awaiting State */}
-              <div className="border border-slate-800/80 rounded-xl overflow-hidden bg-[#050e1f] min-h-[170px]">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#071329] text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800">
-                    <tr>
-                      <th className="p-2.5">Process Name</th>
-                      <th className="p-2.5">PID</th>
-                      <th className="p-2.5">CPU</th>
-                      <th className="p-2.5">Memory</th>
-                      <th className="p-2.5">User</th>
-                      <th className="p-2.5 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {showProcessSampleList ? (
-                      filteredProcesses.map((p) => (
-                        <tr key={p.pid} className="border-b border-slate-800/40 hover:bg-[#0c1f40] transition text-[11px] font-mono">
-                          <td className="p-2.5 font-sans font-medium text-slate-200">{p.name}</td>
-                          <td className="p-2.5 text-cyan-300">{p.pid}</td>
-                          <td className="p-2.5 text-slate-300">{p.cpu}</td>
-                          <td className="p-2.5 text-slate-300">{p.memory}</td>
-                          <td className="p-2.5 text-slate-400 text-[10px]">{p.user}</td>
-                          <td className="p-2.5 text-right">
-                            <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800">
-                              {p.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="p-8 text-center">
-                          <Cog className="w-6 h-6 text-slate-600 mx-auto mb-1 animate-spin-slow" />
-                          <div className="text-xs font-semibold text-slate-300">Awaiting process data...</div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">
-                            Process information will appear here once collection begins.
-                          </div>
-                          <button
-                            onClick={() => {
-                              setShowProcessSampleList(true);
-                              showToast('Sample process inventory loaded');
-                            }}
-                            className="mt-2.5 px-3 py-1 rounded bg-[#091833] hover:bg-slate-800 text-[11px] text-cyan-300 border border-slate-700"
-                          >
-                            Inspect Process Sample (Safe)
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* System Services & Diagnostics (12 Domain Cards) (7 cols) */}
-            <div className="xl:col-span-7 p-5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-cyan-400" />
-                  <div>
-                    <h3 className="font-bold text-xs text-white">System Services & Diagnostics</h3>
-                    <div className="text-[10px] text-slate-400">Explore system health, events, services, and more.</div>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">
-                  12 tools available
-                </span>
-              </div>
-
-              {/* 12 Service Cards (4 cols x 3 rows) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                {INITIAL_SERVICES_CATALOG.map((svc) => (
-                  <div
-                    key={svc.id}
-                    onClick={() => setActiveWorkspaceKey(svc.serviceKey)}
-                    className="p-3 rounded-xl bg-[#050e1f] border border-slate-800/90 hover:border-cyan-500/50 hover:bg-[#091833] cursor-pointer transition flex flex-col justify-between group"
-                  >
+              {/* Process Ledger */}
+              <section className="p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col flex-1 min-h-[118px] overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <ListFilter className="w-4 h-4 text-cyan-400" />
                     <div>
-                      <div className="w-8 h-8 rounded-lg bg-[#071329] border border-slate-800 flex items-center justify-center mb-2 group-hover:scale-105 transition">
-                        {renderServiceIcon(svc.iconName)}
-                      </div>
-                      <div className="font-semibold text-xs text-slate-200 group-hover:text-cyan-300 transition">
-                        {svc.name}
-                      </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                        {svc.subtitle}
-                      </div>
+                      <h3 className="font-bold text-xs text-white">Process Ledger</h3>
+                      <div className="text-[10px] text-slate-400">Live list of running processes and resource usage.</div>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Filters toolbar (inline with header, REF-07) */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <input
+                      type="text"
+                      placeholder="Search processes..."
+                      aria-label="Search processes"
+                      value={processSearch}
+                      onChange={(e) => setProcessSearch(e.target.value)}
+                      className="w-[132px] bg-[#050e1f] border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-200 placeholder-slate-500"
+                    />
+                    <select
+                      value={processStatusFilter}
+                      aria-label="Filter processes by status"
+                      onChange={(e) => setProcessStatusFilter(e.target.value)}
+                      className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-1 text-[10px] font-mono text-slate-300"
+                    >
+                      <option value="All">Status: All</option>
+                      <option value="Running">Running</option>
+                      <option value="Suspended">Suspended</option>
+                    </select>
+                    <select
+                      value={processUserFilter}
+                      aria-label="Filter processes by user"
+                      onChange={(e) => setProcessUserFilter(e.target.value)}
+                      className="bg-[#050e1f] border border-slate-800 rounded px-1.5 py-1 text-[10px] font-mono text-slate-300"
+                    >
+                      <option value="All">User: All</option>
+                      <option value="SYSTEM">SYSTEM</option>
+                      <option value="User">User</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProcessSampleList(!showProcessSampleList);
+                        showToast(!showProcessSampleList ? 'Process sample ledger loaded' : 'Process ledger cleared to honest awaiting state');
+                      }}
+                      className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition shrink-0"
+                      title="Refresh process list"
+                      aria-label="Refresh process list"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${showProcessSampleList ? 'text-cyan-400' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table Ledger or Awaiting State (bounded internal scroller) */}
+                <div className="border border-slate-800/80 rounded-xl overflow-hidden bg-[#050e1f] flex-1 min-h-[44px] max-h-[260px] overflow-y-auto knx-custom-scrollbar">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#071329] text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800 sticky top-0 z-10">
+                      <tr>
+                        <th className="p-2.5">Process Name</th>
+                        <th className="p-2.5">PID</th>
+                        <th className="p-2.5">CPU</th>
+                        <th className="p-2.5">Memory</th>
+                        <th className="p-2.5">User</th>
+                        <th className="p-2.5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {showProcessSampleList ? (
+                        filteredProcesses.map((p) => (
+                          <tr key={p.pid} className="border-b border-slate-800/40 hover:bg-[#0c1f40] transition text-[11px] font-mono">
+                            <td className="p-2.5 font-sans font-medium text-slate-200">{p.name}</td>
+                            <td className="p-2.5 text-cyan-300">{p.pid}</td>
+                            <td className="p-2.5 text-slate-300">{p.cpu}</td>
+                            <td className="p-2.5 text-slate-300">{p.memory}</td>
+                            <td className="p-2.5 text-slate-400 text-[10px]">{p.user}</td>
+                            <td className="p-2.5 text-right">
+                              <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                {p.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="p-2.5 text-center">
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                              <Cog className="w-4 h-4 text-slate-600 animate-spin-slow shrink-0" />
+                              <span className="text-[11px] font-semibold text-slate-300">Awaiting process data...</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowProcessSampleList(true);
+                                  showToast('Sample process inventory loaded');
+                                }}
+                                className="px-2.5 py-1 rounded bg-[#091833] hover:bg-slate-800 text-[10px] text-cyan-300 border border-slate-700"
+                              >
+                                Inspect Process Sample (Safe)
+                              </button>
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-1">
+                              Process information will appear here once collection begins.
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* System Services & Diagnostics (12 Domain Tools) */}
+              <section className="p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col shrink-0">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4 text-cyan-400" />
+                    <div>
+                      <h3 className="font-bold text-xs text-white">System Services &amp; Diagnostics</h3>
+                      <div className="text-[10px] text-slate-400">Explore system health, events, services, and more.</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 shrink-0">
+                    12 tools available
+                  </span>
+                </div>
+
+                {/* 12 Service Cards (4 cols x 3 rows) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+                  {INITIAL_SERVICES_CATALOG.map((svc) => (
+                    <button
+                      key={svc.id}
+                      type="button"
+                      onClick={() => setActiveWorkspaceKey(svc.serviceKey)}
+                      className="flex items-center gap-2 text-start py-1 px-1.5 rounded-xl bg-[#050e1f] border border-slate-800/90 hover:border-cyan-500/50 hover:bg-[#091833] cursor-pointer transition group"
+                    >
+                      <div className="w-6 h-6 rounded-lg bg-[#071329] border border-slate-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                        {renderServiceIcon(svc.iconName)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[11px] leading-tight text-slate-200 group-hover:text-cyan-300 transition truncate">
+                          {svc.name}
+                        </div>
+                        <div className="text-[10px] leading-tight text-slate-400 truncate">
+                          {svc.subtitle}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
             </div>
 
           </div>
-
         </main>
+
+          {/* 7. Bottom Command Rail (REF-07 — pinned at the bottom of the content column, never outside the viewport) */}
+          <div className="flex items-center justify-end gap-2 shrink-0 px-4 pb-3 pt-1 bg-gradient-to-t from-[#030710] via-[#030710]/80 to-transparent">
+            <button
+              onClick={() => {
+                setIsStreamingSample(true);
+                setShowProcessSampleList(true);
+                showToast('Refreshed all Windows performance and process telemetry.');
+              }}
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-950/60 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Refresh Data</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowProcessSampleList(true);
+                setActiveWorkspaceKey('system-processes');
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <span>Inspect Processes</span>
+            </button>
+
+            <button
+              onClick={() => setActiveWorkspaceKey('system-events')}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>View Events</span>
+            </button>
+
+            <button
+              onClick={() => {
+                showToast('Exported system live telemetry diagnostics package: KNOuX_Pulse_20261024.json');
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Export Diagnostics</span>
+            </button>
+
+            <button
+              onClick={() => setActiveWorkspaceKey('system-perf')}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 7. Bottom Sticky Control Strip */}
-      <footer className="h-12 bg-[#040b18] border-t border-slate-800/80 px-6 flex items-center justify-between z-30 shrink-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setIsStreamingSample(true);
-              setShowProcessSampleList(true);
-              showToast('Refreshed all Windows performance and process telemetry.');
-            }}
-            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-950/60 transition"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh Data</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setShowProcessSampleList(true);
-              setActiveWorkspaceKey('system-processes');
-            }}
-            className="px-3.5 py-1.5 rounded-xl bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition"
-          >
-            <Search className="w-3.5 h-3.5 text-slate-400" />
-            <span>Inspect Processes</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveWorkspaceKey('system-events')}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>View Events</span>
-          </button>
-
-          <button
-            onClick={() => {
-              showToast('Exported system live telemetry diagnostics package: KNOuX_Pulse_20261024.json');
-            }}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Export Diagnostics</span>
-          </button>
-
-          <button
-            onClick={() => setActiveWorkspaceKey('system-perf')}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#091833] hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>Settings</span>
-          </button>
-        </div>
-      </footer>
+      {/* 8. Service Workspace Overlay (12 diagnostics tools + KPI instruments) */}
+      {activeWorkspaceKey && (
+        <SystemWorkspaces
+          serviceKey={activeWorkspaceKey}
+          onClose={() => setActiveWorkspaceKey(null)}
+          isArabic={isArabic}
+        />
+      )}
 
     </div>
   );

@@ -226,8 +226,9 @@ export function ApplicationCommandSurface({
         </div>
       </div>
 
-      {/* 3. Standout Horizontal Action Toolbar */}
-      <div className="flex items-center gap-1.5 mb-2.5 p-1 rounded-lg bg-[#061427] border border-[#142e56] overflow-x-auto app-scrollbar">
+      {/* 3. Standout Horizontal Action Toolbar — wraps instead of scrolling so no
+          primary action is ever cut off at compact desktop widths. */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-2.5 p-1 rounded-lg bg-[#061427] border border-[#142e56]">
         {/* + Install */}
         <button
           onClick={() => onTriggerAction('Install')}

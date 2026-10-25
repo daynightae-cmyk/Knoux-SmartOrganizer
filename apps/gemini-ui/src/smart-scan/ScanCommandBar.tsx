@@ -27,7 +27,7 @@ export const ScanCommandBar: React.FC<ScanCommandBarProps> = ({
   isArabic = false,
 }) => {
   return (
-    <div className="sticky bottom-0 bg-[#061226]/95 border border-[#11294a] backdrop-blur-md rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_20px_rgba(0,0,0,0.6)] z-30 shrink-0">
+    <div className="relative bg-[#061226]/95 border border-[#11294a] backdrop-blur-md rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_20px_rgba(0,0,0,0.6)] z-30 shrink-0">
       {/* Left Selection Aggregation Status */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shrink-0">
