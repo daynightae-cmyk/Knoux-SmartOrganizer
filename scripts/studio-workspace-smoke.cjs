@@ -235,17 +235,35 @@ if (!(Test-Path -LiteralPath $expected -PathType Container)) { throw 'Fixture di
 $proc=Get-Process -Id $ProcessId -ErrorAction Stop
 $started=$proc.StartTime
 $dialog=$null
+$seen=@{}
+$lastSample=0
 while ($watch.ElapsedMilliseconds -lt $TimeoutMs) {
  $current=Get-Process -Id $ProcessId -ErrorAction Stop
  if ($current.StartTime -ne $started) { throw 'PID was reused.' }
  $children=[Windows.Automation.AutomationElement]::RootElement.FindAll([Windows.Automation.TreeScope]::Children,[Windows.Automation.Condition]::TrueCondition)
  foreach ($window in $children) {
-  if ($window.Current.ProcessId -eq $ProcessId -and $window.Current.ClassName -eq '#32770' -and $window.Current.Name -like 'KNOuX*') { $dialog=$window; break }
+  try {
+   $pidOfWindow=$window.Current.ProcessId
+   $className=$window.Current.ClassName
+   $title=$window.Current.Name
+   if ($className -eq '#32770' -or $title -like 'KNOuX*') {
+    $key=('{0}|{1}|{2}' -f $pidOfWindow,$className,$title)
+    if (!$seen.ContainsKey($key)) { $seen[$key]=[int]$watch.ElapsedMilliseconds }
+   }
+   if ($pidOfWindow -eq $ProcessId -and $className -eq '#32770' -and $title -like 'KNOuX*') { $dialog=$window; break }
+  } catch { }
  }
  if ($dialog) { break }
+ if ($watch.ElapsedMilliseconds - $lastSample -gt 5000) {
+  $lastSample=[int]$watch.ElapsedMilliseconds
+  Mark ('poll-windows-'+$seen.Count)
+ }
  Start-Sleep -Milliseconds 100
 }
-if (!$dialog) { throw 'No PID-owned KNOuX native folder dialog; interactive desktop may be unavailable.' }
+if (!$dialog) {
+ [Console]::WriteLine(('observed-top-level={0}' -f (($seen.Keys | Select-Object -First 25) -join ' || ')))
+ throw 'No PID-owned KNOuX native folder dialog; see observed-top-level for PID/class/title.'
+}
 Mark 'dialog-found'
 $handle=[IntPtr]$dialog.Current.NativeWindowHandle
 function Guard {
@@ -348,7 +366,25 @@ async function helper(ctx, directory, kind) {
   } finally { ctx.helpers.delete(child); }
 }
 async function nativeClick(ctx, selector, text, directory, kind) {
+  // A real native picker needs a foreground-capable Electron page, not only
+  // an attached CDP renderer. Track a genuine DOM click before the OS dialog.
+  await ctx.page.send('Page.bringToFront');
+  await ctx.page.eval(`(() => {
+    window.__knouxNativeClickEvidence = [];
+    document.addEventListener('click', e => {
+      window.__knouxNativeClickEvidence.push({
+        trusted: e.isTrusted, target: e.target?.closest?.('button')?.textContent?.trim() || '',
+        timestamp: Date.now()
+      });
+    }, { once: true, capture: true });
+    return true;
+  })()`);
   await click(ctx, selector, text);
+  const clickEvidence = await ctx.page.eval('window.__knouxNativeClickEvidence || []');
+  ctx.report.actions.push({ action: 'native-trigger-dom-evidence', kind, clickEvidence });
+  if (!clickEvidence.length || !clickEvidence[0].trusted) {
+    throw new Blocked('The CDP mouse interaction did not deliver a trusted DOM click to the Studio button.');
+  }
   await helper(ctx, directory, kind);
   await wait(ctx, `Real ${kind} authorization for exact fixture root`, async () => {
     const records = await api(ctx, kind === 'source' ? 'listSources' : 'listDestinations');
