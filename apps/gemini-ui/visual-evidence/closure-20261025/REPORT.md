@@ -131,6 +131,17 @@ An additional 1920×1080 pass on Home, Startup and Smart Scan shows the layouts 
 cleanly (Startup shows eight register rows + full dossier). Raw per-route JSON lives in the
 working-tree `audit/final-qa/` directory; the curated images are in `final/`.
 
+**Extended addendum matrix (post-review):**
+
+- English dark 1920×1080 — all 14 routes: 0 document/horizontal scroll, 0 occluded controls.
+- English light 1366×768 — all 14 routes: 0/0/0.
+- Arabic light 1366×768 and 1672×941 — all 14 routes each: 0/0/0.
+- Arabic dark 1672×941 — all 14 routes: 0/0/0.
+- Arabic light 1920×1080 — sample on Home, Startup, System and Smart Scan: 0/0/0.
+
+These sweeps close the viewport/theme/RTL evidence matrix. They are local audit
+artifacts (`audit/gate-visual/`, intentionally not committed as a screenshot pile).
+
 ### 3.3 Interaction audit — 22/22 pass
 
 1. Startup services tab exposes 12 cards.
@@ -172,6 +183,30 @@ exceptions:
 - Disabled controls (e.g. muted Start while a service runs) are visually muted by design.
 
 No primary navigation, decision, safety or destructive control is hidden or unreadable.
+
+### 3.5 Per-reference matrix (Gate V5)
+
+Approved references are at 1672×941. Each composite shows the approved REF on the
+left and the current renderer on the right, both at reference viewport. The full
+JPEG set is in [`final/reference-matrix/`](final/reference-matrix/).
+
+| Approved REF | Route | Side-by-side |
+|---|---|---|
+| REF-01 | Organization Studio | [view](final/reference-matrix/REF-01-vs-current.jpg) |
+| REF-02 | Applications | [view](final/reference-matrix/REF-02-vs-current.jpg) |
+| REF-03 | Files | [view](final/reference-matrix/REF-03-vs-current.jpg) |
+| REF-04 | Storage | [view](final/reference-matrix/REF-04-vs-current.jpg) |
+| REF-05 | Cleanup | [view](final/reference-matrix/REF-05-vs-current.jpg) |
+| REF-06 | Startup | [view](final/reference-matrix/REF-06-vs-current.jpg) |
+| REF-07 | System | [view](final/reference-matrix/REF-07-vs-current.jpg) |
+| REF-08 | Repair | [view](final/reference-matrix/REF-08-vs-current.jpg) |
+| REF-09 | Services | [view](final/reference-matrix/REF-09-vs-current.jpg) |
+| REF-10 | Automation | [view](final/reference-matrix/REF-10-vs-current.jpg) |
+
+**NO VERIFIED STANDALONE REFERENCE:** Home, Smart Scan, Google Workspace. The
+provided REF-01 is Studio, not Home; the in-repo Smart Scan artwork is a source
+candidate, not proof of approved parity. These screens are functional and
+accessible, but no pixel-parity claim is made. See the matrix README.
 
 ---
 
@@ -252,9 +287,10 @@ curated dossier.
 
 ## 7. Evidence index
 
-- `final/` — 64 curated screenshots (JPEG, 84% quality) covering English dark 1672, compact
-  English dark 1366, English light 1672/1366, Arabic dark 1366 (with AR 1672 captures retained
-  in the local audit folder), 1920 samples, and the interaction proof shots.
+- `final/` — 64 curated route/interaction screenshots (JPEG, 84% quality) covering English
+  dark 1672, compact English dark 1366, English light 1672/1366, Arabic dark 1366 (AR 1672
+  raw captures remain in the local audit folder), 1920 samples, and the interaction proof
+  shots; plus 10 reference-vs-current composites under `final/reference-matrix/`.
 - `final/interaction-audit.json` — 22/22 interaction assertions with details.
 - `tools/` — CDP audit, contrast probe, dark-surface probe, and interaction runner.
 
