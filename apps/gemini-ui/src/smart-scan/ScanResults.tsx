@@ -41,10 +41,10 @@ export const ScanResults: React.FC<ScanResultsProps> = ({
   ];
 
   return (
-    <div className="bg-[#071329]/80 border border-[#11294a] rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between shadow-lg h-full overflow-hidden">
+    <div className="scan-results-panel bg-[#071329]/80 border border-[#11294a] rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between shadow-lg h-full overflow-hidden">
       <div className="flex flex-col h-full overflow-hidden">
         {/* Table Title & Filter Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#0f2545] shrink-0">
+        <div className="scan-results-head flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2.5 border-b border-[#0f2545] shrink-0">
           <div>
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
               <Filter className="w-4 h-4 text-cyan-400" />
@@ -74,8 +74,8 @@ export const ScanResults: React.FC<ScanResultsProps> = ({
         </div>
 
         {/* Scrollable Data Table Container */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto knx-custom-scrollbar min-h-0">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="scan-results-table flex-1 overflow-x-auto overflow-y-auto knx-custom-scrollbar min-h-0">
+          <table className="w-full text-left rtl:text-right text-xs border-collapse">
             <thead className="sticky top-0 bg-[#071329] z-10 border-b border-[#0f2545] text-[10px] text-slate-400 uppercase font-semibold">
               <tr>
                 <th className="p-2 w-8 text-center">
@@ -117,7 +117,7 @@ export const ScanResults: React.FC<ScanResultsProps> = ({
                       <div className="font-bold text-white group-hover:text-cyan-200">
                         {isArabic ? row.nameAr : row.nameEn}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                      <div className="scan-row-desc text-[10px] text-slate-400 truncate max-w-[190px]">
                         {isArabic ? row.descriptionAr : row.descriptionEn}
                       </div>
                     </td>

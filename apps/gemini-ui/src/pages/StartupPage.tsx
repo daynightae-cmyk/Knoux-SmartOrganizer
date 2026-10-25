@@ -94,6 +94,9 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
 
   // Active Workspace Modal
   const [activeWorkspaceKey, setActiveWorkspaceKey] = useState<string | null>(null);
+  // Bounded pane switch: the register and the 12-service matrix share the
+  // same viewport-sized workspace instead of pushing the tools below the fold.
+  const [activePane, setActivePane] = useState<'register' | 'services'>('register');
 
   // User notifications & actions feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -268,7 +271,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
       />
 
       {/* Main Body Shell: Sidebar + Content Canvas */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
         {/* Tachometer Boot Velocity Glow Arc */}
         <div className="startup-hero-tachometer" />
 
@@ -280,7 +283,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
         />
 
         {/* 3. Main Center Canvas */}
-        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto startup-custom-scrollbar p-4 space-y-3">
+        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto startup-custom-scrollbar p-3 sm:p-4 gap-2.5">
           
           {/* Toast Notification */}
           {toastMessage && (
@@ -291,7 +294,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           )}
 
           {/* Refined Ultra-Sleek Boot Control Hero Header Banner */}
-          <div className="shrink-0 min-h-fit relative p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#061833] via-[#0a2347] to-[#06142a] border border-cyan-400/40 overflow-hidden shadow-[0_0_25px_rgba(14,165,233,0.22)]">
+          <div className="startup-hero-banner shrink-0 min-h-fit relative px-4 py-3 rounded-2xl bg-gradient-to-r from-[#061833] via-[#0a2347] to-[#06142a] border border-cyan-400/40 overflow-hidden shadow-[0_0_25px_rgba(14,165,233,0.22)]">
             {/* Ambient Background Glow Arcs */}
             <div className="absolute -top-10 -right-10 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
             <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -307,7 +310,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="px-2 py-0.5 rounded-md bg-cyan-400/20 text-cyan-200 text-[10px] font-mono font-bold tracking-wider uppercase border border-cyan-400/40">
-                      KNOuX Boot Controller · REF-06
+                      KNOuX Boot Controller
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 text-[10px] font-mono font-bold flex items-center gap-1 border border-emerald-500/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -318,10 +321,10 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                     </span>
                   </div>
 
-                  <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-300 tracking-tight">
+                  <h1 className="startup-hero-title text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-300 tracking-tight">
                     {isArabic ? 'مركز التحكم بتسلسل الإقلاع وبدء التشغيل' : 'Startup & Boot Sequence Controller'}
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mt-1 leading-relaxed font-medium">
+                  <p className="startup-hero-copy text-xs text-slate-300 max-w-2xl mt-1 leading-relaxed font-medium">
                     {isArabic
                       ? 'تحسين وتنسيق تسلسل إقلاع ويندوز، تقليل زمن تحميل السجل، وتحليل تأثير البرامج مع ضمان معالجة الرجوع الآمن.'
                       : 'Optimize Windows boot sequence, stagger autostart delays, analyze system impact, and reduce logon latency with verified rollback safety.'}
@@ -356,11 +359,11 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           </div>
 
           {/* 4-Metric Summary Ribbon */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {INITIAL_BOOT_METRICS.map((metric) => (
               <div
                 key={metric.id}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`startup-metric-card p-2.5 rounded-xl border transition-all ${
                   metric.isAlert
                     ? 'bg-gradient-to-br from-[#1a1215] to-[#091833] border-rose-500/40 shadow-md shadow-rose-950/20'
                     : 'bg-[#081733] border-slate-800 hover:border-cyan-500/40'
@@ -374,23 +377,23 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                     <span className="w-2 h-2 rounded-full bg-cyan-400" />
                   )}
                 </div>
-                <div className="text-xl font-black font-mono text-white tracking-tight">
+                <div className="text-lg font-black font-mono text-white tracking-tight">
                   {metric.type === 'potential_savings' && stagedCount > 0 ? (
                     <span className="text-emerald-400">+{((totalStagedSavingsMs) / 1000).toFixed(1)}s</span>
                   ) : (
                     metric.value
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
-                  <span>{metric.subtext}</span>
-                  {metric.isAlert && <span className="text-rose-400 font-mono text-[10px]">Action Advised</span>}
+                <div className="startup-metric-sub text-[11px] text-slate-400 mt-0.5 flex items-center justify-between gap-2 min-w-0">
+                  <span className="truncate">{metric.subtext}</span>
+                  {metric.isAlert && <span className="startup-metric-alert text-rose-400 font-mono text-[10px] shrink-0">Action Advised</span>}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Interactive Boot Stages Waterfall Breakdown Ribbon */}
-          <div className="p-3 rounded-xl bg-[#08152e] border border-slate-800 space-y-2">
+          <div className="p-2.5 rounded-xl bg-[#08152e] border border-slate-800 space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-cyan-400" />
@@ -438,9 +441,9 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
           </div>
 
           {/* Filters, Search & Command Toolbar */}
-          <div className="p-3 rounded-xl bg-[#081733] border border-slate-800 space-y-2.5">
+          <div className="startup-filter-rail p-2.5 rounded-xl bg-[#081733] border border-slate-800 space-y-2">
             {/* Source Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 {[
                   { key: 'all', label: 'All Items', count: items.length },
@@ -548,15 +551,56 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
             </div>
           </div>
 
+          {/* Bounded workspace switch. The 12-domain matrix is always one visible
+              click away instead of being buried under a scrolling main canvas. */}
+          <div className="startup-pane-tabs shrink-0 flex items-center justify-between gap-2 border-b border-slate-800/80">
+            <div role="tablist" aria-label={isArabic ? 'مساحة عمل بدء التشغيل' : 'Startup workspace'} className="flex items-center gap-1.5">
+              <button
+                id="startup-tab-register"
+                role="tab"
+                aria-selected={activePane === 'register'}
+                onClick={() => setActivePane('register')}
+                className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold border-b-2 transition flex items-center gap-2 ${
+                  activePane === 'register'
+                    ? 'border-cyan-400 text-cyan-200 bg-cyan-500/10'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>{isArabic ? 'سجل برامج بدء التشغيل' : 'Startup Register'}</span>
+                <span className="px-1.5 py-0.2 rounded bg-[#050e1f] border border-slate-700 font-mono text-[10px]">{filteredItems.length}</span>
+              </button>
+              <button
+                id="startup-tab-services"
+                role="tab"
+                aria-selected={activePane === 'services'}
+                onClick={() => setActivePane('services')}
+                className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold border-b-2 transition flex items-center gap-2 ${
+                  activePane === 'services'
+                    ? 'border-cyan-400 text-cyan-200 bg-cyan-500/10'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>{isArabic ? 'خدمات الإقلاع' : 'Boot Domain Services'}</span>
+                <span className="px-1.5 py-0.2 rounded bg-[#050e1f] border border-slate-700 font-mono text-[10px]">{STARTUP_SERVICES_CATALOG.length}</span>
+              </button>
+            </div>
+            <span className="hidden md:inline text-[10px] font-mono text-slate-500">
+              {isArabic ? 'مساحة عمل محددة — تمرير داخلي' : 'Bounded workspace · internal scroll'}
+            </span>
+          </div>
+
           {/* Main Content Composition: Split Table Register + Right Inspector
               Both panes are bounded tiles with internal scrollers so the register
               can never run under the staging footer and the dossier stays aligned. */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+          {activePane === 'register' && (
+          <div className="flex-1 min-h-0 grid grid-cols-1 grid-rows-2 xl:grid-rows-1 xl:grid-cols-12 gap-3 items-stretch">
             
             {/* Left/Center: Startup Items Table Register (8 Columns) */}
-            <div className="xl:col-span-8 bg-[#071329] border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col h-[clamp(220px,30vh,340px)] [@media(max-height:880px)]:h-[210px]">
+            <div className="xl:col-span-8 bg-[#071329] border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col h-full min-h-[170px]">
               <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto startup-custom-scrollbar">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="startup-register-table w-full text-left text-xs border-collapse">
                   <thead className="sticky top-0 z-10 bg-[#0a1835] text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800 tracking-wider">
                     <tr>
                       <th className="p-3 w-10 text-center">
@@ -568,7 +612,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                         />
                       </th>
                       <th className="p-3">Application & Publisher</th>
-                      <th className="p-3">Source & Location</th>
+                      <th className="startup-col-source p-3">Source & Location</th>
                       <th className="p-3">Boot Impact</th>
                       <th className="p-3">Status</th>
                       <th className="p-3 text-center">Delay Queue</th>
@@ -627,7 +671,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                           </td>
 
                           {/* Source & Hive */}
-                          <td className="p-3 font-mono text-[11px] text-slate-400">
+                          <td className="startup-col-source p-3 font-mono text-[11px] text-slate-400">
                             <div className="truncate max-w-[180px]" title={item.sourceLocation}>
                               {item.source === 'registry_hkcu' && 'HKCU\\...\\Run'}
                               {item.source === 'registry_hklm' && 'HKLM\\...\\Run'}
@@ -641,7 +685,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
                           {/* Impact */}
                           <td className="p-3 whitespace-nowrap">
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                              className={`startup-impact-value px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
                                 item.impact === 'high'
                                   ? 'bg-rose-950 text-rose-300 border border-rose-800'
                                   : item.impact === 'medium'
@@ -724,7 +768,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
 
             {/* Right: Startup Item Dossier & Inspector (4 Columns) — bounded tile,
                 internal scroller keeps it flush with the register tile. */}
-            <div className="xl:col-span-4 space-y-3 xl:h-[clamp(220px,30vh,340px)] [@media(max-height:880px)]:xl:h-[210px] xl:overflow-y-auto startup-custom-scrollbar xl:pr-1">
+            <div className="xl:col-span-4 h-full min-h-0 space-y-3 overflow-y-auto startup-custom-scrollbar xl:pr-1">
               <div className="p-4 rounded-2xl bg-[#071329] border border-cyan-500/30 shadow-xl space-y-3">
                 
                 {/* Header Lockup */}
@@ -880,9 +924,11 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
             </div>
 
           </div>
+          )}
 
-          {/* Twelve Domain Services Matrix Dock */}
-          <div className="space-y-3 pt-2">
+          {/* Twelve Domain Services Matrix Dock — bounded pane, never below the fold */}
+          {activePane === 'services' && (
+          <div className="flex-1 min-h-0 overflow-y-auto startup-custom-scrollbar space-y-3 pr-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-cyan-400" />
@@ -893,7 +939,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
               <span className="text-xs text-slate-400 font-mono">12 specialized interactive modules ready</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5">
               {STARTUP_SERVICES_CATALOG.map((svc) => (
                 <div
                   key={svc.id}
@@ -936,6 +982,7 @@ export function StartupPage({ onNavigateSection }: StartupPageProps) {
               ))}
             </div>
           </div>
+          )}
 
           {/* Docked Live Process & Telemetry Inspector — non-overlapping */}
 

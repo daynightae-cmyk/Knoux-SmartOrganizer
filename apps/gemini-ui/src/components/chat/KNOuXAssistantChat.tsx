@@ -237,7 +237,7 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
       {isOpen && (
         <div
           dir={isAr ? 'rtl' : 'ltr'}
-          className="fixed bottom-[4.75rem] end-6 z-50 w-[380px] sm:w-[420px] h-[min(560px,calc(100vh-8.5rem))] bg-[#040a16] border border-[#1b3f70] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden text-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-300 font-sans"
+          className="fixed bottom-[7.5rem] end-6 z-50 w-[380px] sm:w-[420px] h-[min(560px,calc(100vh-11rem))] bg-[#040a16] border border-[#1b3f70] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden text-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-300 font-sans"
         >
           {/* Header Bar */}
           <div className="px-4 py-3 bg-[#061226] border-b border-[#0f2444] flex items-center justify-between shrink-0">

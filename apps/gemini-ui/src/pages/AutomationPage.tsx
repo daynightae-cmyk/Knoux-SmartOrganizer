@@ -601,7 +601,7 @@ export function AutomationPage({ onNavigateSection }: AutomationPageProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-2">
                   {AUTOMATION_SERVICE_CARDS.map(card => (
                     <button
                       key={card.id}

@@ -233,7 +233,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
           )}
 
           {/* Hero Header Section */}
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 pt-0.5 pb-1">
+          <div className="system-hero relative flex flex-col md:flex-row md:items-center justify-between gap-3 pt-0.5 pb-1">
             
             {/* Cybernetic Waveform Background Graphic in Hero */}
             <svg className="system-observatory-wave" viewBox="0 0 580 110" fill="none">
@@ -316,12 +316,12 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
           </div>
 
           {/* 4. Upper Main Area: Four Large Dashboard Instruments */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="system-instrument-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
             {instrumentMetrics.map((inst) => (
               <div
                 key={inst.id}
                 onClick={() => setActiveWorkspaceKey(`system-perf`)}
-                className="p-3 rounded-2xl bg-[#071329] border border-slate-800/90 hover:border-cyan-500/40 cursor-pointer transition shadow-md flex flex-col justify-between group"
+                className="system-instrument-card p-3 rounded-2xl bg-[#071329] border border-slate-800/90 hover:border-cyan-500/40 cursor-pointer transition shadow-md flex flex-col justify-between group"
               >
                 {/* Header */}
                 <div className="flex items-center gap-2.5 mb-2">
@@ -340,8 +340,8 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
                 {/* Circular Gauge + Sparkline + Inline Footer Stats (REF-07 proportions) */}
                 <div className="flex items-center gap-3">
                   {/* Circular Radial Gauge */}
-                  <div className="relative w-[74px] h-[74px] flex items-center justify-center shrink-0">
-                    <svg className="w-[74px] h-[74px]" viewBox="0 0 80 80">
+                  <div className="system-gauge relative w-[74px] h-[74px] flex items-center justify-center shrink-0">
+                    <svg className="system-gauge-svg w-[74px] h-[74px]" viewBox="0 0 80 80">
                       <circle cx="40" cy="40" r="32" stroke="#0e2347" strokeWidth="6" fill="none" />
                       <circle
                         cx="40"
@@ -394,10 +394,10 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
           </div>
 
 {/* 5. Reference Grid (REF-07): Timeline (6) | System Information (3) | Live Service Preview (3, rows 1-2) | Ledger + 12 Diagnostics (9, row 2) */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 xl:grid-rows-[auto_1fr] gap-3 flex-1">
+          <div className="system-workspace-grid grid grid-cols-1 xl:grid-cols-12 xl:grid-rows-[auto_1fr] gap-3 flex-1 min-h-0">
 
             {/* 5.1 Performance Timeline — cols 1-6, row 1 */}
-            <section className="xl:col-span-6 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col">
+            <section className="system-timeline-panel xl:col-span-6 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col min-h-0">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
                   <BarChart2 className="w-4 h-4 text-cyan-400" />
@@ -440,7 +440,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
               </div>
 
               {/* Timeline Chart Grid Canvas */}
-              <div className="flex-1 min-h-[136px] w-full bg-[#050e1f] rounded-xl border border-slate-800/80 p-3 relative flex flex-col justify-between overflow-hidden">
+              <div className="system-timeline-canvas flex-1 min-h-[136px] w-full bg-[#050e1f] rounded-xl border border-slate-800/80 p-3 relative flex flex-col justify-between overflow-hidden">
                 {/* Calibrated Y-axis lines */}
                 {[100, 75, 50, 25, 0].map((val) => (
                   <div key={val} className="w-full flex items-center text-[9px] font-mono text-slate-600">
@@ -494,7 +494,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
             </section>
 
             {/* 5.2 System Information — cols 7-9, row 1 */}
-            <section className="xl:col-span-3 p-3 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col">
+            <section className="system-info-panel xl:col-span-3 p-3 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col min-h-0">
               <div className="flex items-center gap-2 mb-2">
                 <Monitor className="w-4 h-4 text-cyan-400" />
                 <div>
@@ -574,7 +574,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
             </section>
 
             {/* 5.3 Live Service Preview Inspector — cols 10-12, rows 1-2 (full-height rail) */}
-            <section className="xl:col-span-3 xl:row-span-2 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-cyan-500/25 shadow-md flex flex-col gap-2">
+            <section className="system-live-panel xl:col-span-3 xl:row-span-2 xl:self-stretch p-4 rounded-2xl bg-[#071329] border border-cyan-500/25 shadow-md flex flex-col gap-2 min-h-0 overflow-hidden">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-purple-400" />
                 <div>
@@ -717,10 +717,10 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
             </section>
 
             {/* 5.4 Lower region — cols 1-9, row 2 */}
-            <div className="xl:col-span-9 min-w-0 flex flex-col gap-3">
+            <div className="xl:col-span-9 min-w-0 min-h-0 flex flex-col gap-3">
 
               {/* Process Ledger */}
-              <section className="p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col flex-1 min-h-[118px] overflow-hidden">
+              <section className="system-ledger-panel p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col flex-1 min-h-[118px] overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <ListFilter className="w-4 h-4 text-cyan-400" />
@@ -833,7 +833,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
               </section>
 
               {/* System Services & Diagnostics (12 Domain Tools) */}
-              <section className="p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col shrink-0">
+              <section className="system-diagnostics-panel p-3.5 rounded-2xl bg-[#071329] border border-slate-800 shadow-md flex flex-col shrink-0">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
                     <LayoutGrid className="w-4 h-4 text-cyan-400" />
@@ -863,7 +863,7 @@ export function SystemPage({ onNavigateSection }: SystemPageProps) {
                         <div className="font-semibold text-[11px] leading-tight text-slate-200 group-hover:text-cyan-300 transition truncate">
                           {svc.name}
                         </div>
-                        <div className="text-[10px] leading-tight text-slate-400 truncate">
+                        <div className="system-tool-sub text-[10px] leading-tight text-slate-400 truncate">
                           {svc.subtitle}
                         </div>
                       </div>

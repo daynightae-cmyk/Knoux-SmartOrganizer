@@ -458,11 +458,11 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
                 </div>
 
                 <div className="flex-1 min-w-[140px]">Name</div>
-                <div className="w-48 hidden sm:block">Parent Folder</div>
+                <div className="w-44 hidden 2xl:block">Parent Folder</div>
                 <div className="w-32 hidden md:block">Type</div>
                 <div className="w-20 text-right pr-2">Size</div>
                 <div className="w-36 hidden lg:block">Date Modified ↓</div>
-                <div className="w-24 hidden xl:block">Source</div>
+                <div className="w-24 hidden 2xl:block">Source</div>
                 <div className="w-10 text-center">•••</div>
               </div>
 
@@ -518,7 +518,7 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
                       </div>
 
                       {/* Parent Folder */}
-                      <div className="w-48 text-slate-400 truncate text-[11px] font-mono hidden sm:block" title={file.parentFolder}>
+                      <div className="w-44 text-slate-400 truncate text-[11px] font-mono hidden 2xl:block" title={file.parentFolder}>
                         {file.parentFolder}
                       </div>
 
@@ -538,7 +538,7 @@ export function FilesPage({ onNavigateSection }: FilesPageProps) {
                       </div>
 
                       {/* Source */}
-                      <div className="w-24 text-slate-400 text-[11px] truncate hidden xl:block">
+                      <div className="w-24 text-slate-400 text-[11px] truncate hidden 2xl:block">
                         {file.source}
                       </div>
 

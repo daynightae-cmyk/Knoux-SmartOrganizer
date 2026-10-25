@@ -156,7 +156,7 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#061226] relative overflow-hidden">
+        <main className="app-main flex-1 flex flex-col min-w-0 bg-[#061226] relative overflow-hidden">
           {/* Action Notification Toast */}
           {activeActionNotification && (
             <div className="absolute top-3 right-6 z-50 px-3.5 py-2 rounded-lg bg-cyan-950/90 border border-cyan-400 text-cyan-200 text-xs shadow-xl animate-fade-in flex items-center gap-2">
@@ -295,7 +295,7 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
           </div>
 
           {/* 3. Main Center Content: Table Register & Right Dossier */}
-          <div className="flex-1 flex gap-3 px-6 py-2.5 min-h-0 overflow-hidden">
+          <div className="app-command-area flex-1 flex gap-3 px-6 py-2.5 min-h-0 overflow-hidden">
             {/* Left-Center Main Register */}
             <ApplicationCommandSurface
               apps={apps}
@@ -365,7 +365,7 @@ export function ApplicationsPage({ onNavigateSection }: ApplicationsPageProps) {
           )}
 
 {/* 4. Bottom 12 Domain Service Cards */}
-          <div className="px-6 py-2 bg-[#050e1d] border-t border-[#0e223d] shrink-0 select-none">
+          <div className="app-services-strip px-6 py-2 bg-[#050e1d] border-t border-[#0e223d] shrink-0 select-none">
             <div className="flex items-center justify-between pb-1 mb-1.5">
               <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                 {locale === 'en' ? 'Application Management Services' : 'خدمات إدارة البرمجيات'}

@@ -270,6 +270,14 @@ html[data-theme="light"] .knx-master-search-btn:hover {
   backdrop-filter: blur(8px);
 }
 
+/* The decorative right/left mantra is dropped on compact desktops, where it
+   would otherwise be squeezed against the mirrored hero edge in RTL. */
+@media (max-width: 1400px) {
+  .knx-hero-tagline {
+    display: none !important;
+  }
+}
+
 /* Region B: 6 Compact KPI Cards */
 .knx-kpis-grid {
   display: grid;

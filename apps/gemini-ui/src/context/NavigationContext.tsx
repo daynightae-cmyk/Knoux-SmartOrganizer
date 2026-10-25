@@ -9,6 +9,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 
+export type AppTheme = 'dark' | 'light';
+
 export type AppSection =
   | 'home'
   | 'smart_scan'
@@ -156,6 +158,9 @@ export interface NavigationContextValue {
   isArabic: boolean;
   setLocale: (locale: 'en' | 'ar') => void;
   toggleLocale: () => void;
+  theme: AppTheme;
+  setTheme: (theme: AppTheme) => void;
+  toggleTheme: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null);
@@ -197,6 +202,35 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
 
   const isArabic = locale === 'ar';
 
+  /**
+   * Global appearance. Persisted across routes so switching to light on Home
+   * does not strand a flag on screens that had no theme control of their own.
+   */
+  const [theme, setThemeState] = useState<AppTheme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('knoux_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    }
+    return 'dark';
+  });
+
+  const setTheme = useCallback((newTheme: AppTheme) => {
+    setThemeState(newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('knoux_theme', newTheme);
+      if (newTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      document.documentElement.style.colorScheme = newTheme;
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  }, [theme, setTheme]);
+
   const setLocale = useCallback(
     (newLocale: 'en' | 'ar') => {
       setLocaleState(newLocale);
@@ -223,6 +257,17 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
       document.documentElement.setAttribute('lang', locale);
     }
   }, [locale, isArabic]);
+
+  // Keep the theme attribute synchronized on first mount as well as on change.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
 
   // Listen to hash changes in browser
   useEffect(() => {
@@ -301,8 +346,25 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
       isArabic,
       setLocale,
       toggleLocale,
+      theme,
+      setTheme,
+      toggleTheme,
     }),
-    [currentSection, navigateTo, isActive, history, goBack, sectionMeta, locale, isArabic, setLocale, toggleLocale]
+    [
+      currentSection,
+      navigateTo,
+      isActive,
+      history,
+      goBack,
+      sectionMeta,
+      locale,
+      isArabic,
+      setLocale,
+      toggleLocale,
+      theme,
+      setTheme,
+      toggleTheme,
+    ]
   );
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;

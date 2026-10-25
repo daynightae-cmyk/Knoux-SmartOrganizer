@@ -231,7 +231,7 @@ export function CenterCategoriesAndGallery() {
         </div>
 
         {/* 6 columns × 3 rows grid of 18 categories */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-2.5">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 2xl:grid-cols-6 gap-2 pt-2.5">
           {categories.map((cat) => {
             const isSelected = cat.key === selectedCategoryKey;
             return (
@@ -354,7 +354,7 @@ export function CenterCategoriesAndGallery() {
         {/* Gallery Content: 6-column grid */}
         <div className="pt-3 flex-1 overflow-y-auto studio-scrollbar">
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-6 gap-2.5">
               {files.map((file) => {
                 const isChecked = selectedFileIds.has(file.id);
 

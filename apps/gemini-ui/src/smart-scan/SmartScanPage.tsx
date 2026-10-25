@@ -163,7 +163,7 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
         <div className="flex-1 flex flex-col min-h-0">
 
         {/* Main Center Canvas — Zero Page Scroll Layout */}
-        <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-3 gap-3 knx-custom-scrollbar min-h-0">
+        <main className="scan-main flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#040b18] via-[#06142a] to-[#040b18] p-3 gap-3 knx-custom-scrollbar min-h-0">
           
           {/* A. Hero Banner */}
           <SmartScanHero isArabic={isArabic} />
@@ -181,7 +181,7 @@ export const SmartScanPage: React.FC<SmartScanPageProps> = ({ onNavigateSection 
           />
 
           {/* D. Main Results + Findings Breakdown + Scan Review Inspector Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-1 gap-3 flex-1 min-h-[260px]">
+          <div className="scan-results-grid grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-1 gap-3 flex-1 min-h-[240px]">
             {/* Left Column (6 Cols): Main Scan Results Table */}
             <div className="lg:col-span-6 h-full min-h-0">
               <ScanResults

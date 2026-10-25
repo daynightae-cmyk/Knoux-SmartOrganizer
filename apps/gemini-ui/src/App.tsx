@@ -37,6 +37,8 @@ import './repair.css';
 import './services.css';
 import './automation.css';
 import './home-command-center.css';
+// Light-workstation palette bridge must load after every page stylesheet.
+import './theme-light.css';
 
 export type { AppSection };
 

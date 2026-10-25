@@ -61,3 +61,19 @@
 .app-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #2476ff;
 }
+
+/* Compact desktop: preserve a genuinely usable register height and let the
+   secondary 12-service strip scroll into view instead of crushing the table. */
+@media (max-width: 1499px) {
+  .app-main {
+    overflow-y: auto !important;
+  }
+
+  .app-command-area {
+    min-height: 440px;
+  }
+
+  .app-services-strip {
+    flex-shrink: 0;
+  }
+}

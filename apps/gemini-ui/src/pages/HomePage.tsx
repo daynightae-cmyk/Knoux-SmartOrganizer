@@ -31,8 +31,17 @@ export const HomePage: React.FC<HomePageProps> = ({
   onNavigateSection,
   onNavigate,
 }) => {
-  const { currentSection, navigateTo: contextNavigateTo, isActive, locale, isArabic, toggleLocale, setLocale } = useNavigation();
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const {
+    currentSection,
+    navigateTo: contextNavigateTo,
+    isActive,
+    locale,
+    isArabic,
+    toggleLocale,
+    setLocale,
+    theme,
+    setTheme,
+  } = useNavigation();
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [paletteSearch, setPaletteSearch] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -65,17 +74,14 @@ export const HomePage: React.FC<HomePageProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Sync theme with the HTML data-theme attribute. Only the Home command centre
-  // ships a light stylesheet today, so the attribute is cleared on unmount to
-  // avoid stranding a light flag on screens that have no light tokens yet.
+  // Global theme lives in NavigationContext so it survives navigation.
+  // Home only tags the page for its own scoped styles.
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.setAttribute('data-page', 'home');
     return () => {
-      document.documentElement.removeAttribute('data-theme');
       document.documentElement.removeAttribute('data-page');
     };
-  }, [theme]);
+  }, []);
 
   const isAr = locale === 'ar';
 

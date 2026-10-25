@@ -389,11 +389,11 @@ export const HomeCommandCenter: React.FC<HomeCommandCenterProps> = ({
           </div>
 
           {/* Right vertical tagline matching screenshot exactly */}
-          <div className="hidden sm:flex flex-col items-end text-right text-[11px] leading-tight font-medium text-cyan-300/90 pr-2">
+          <div className="knx-hero-tagline hidden sm:flex shrink-0 flex-col items-end text-right rtl:text-left text-[11px] leading-tight font-medium text-cyan-300/90 pe-2">
             <div>{isAr ? 'تنظيم' : 'Organize'}</div>
             <div>{isAr ? 'تحسين' : 'Optimize'}</div>
             <div>{isAr ? 'صيانة' : 'Maintain'}</div>
-            <div className="text-[10.5px] text-slate-400 pt-0.5">
+            <div className="text-[10.5px] text-slate-400 pt-0.5 whitespace-nowrap">
               {isAr ? 'كل ذلك في مكان واحد.' : 'All in one place.'}
             </div>
           </div>
@@ -482,7 +482,7 @@ export const HomeCommandCenter: React.FC<HomeCommandCenterProps> = ({
 
               {/* Metric Value & Subtext */}
               <div className="mt-1">
-                <div className="text-base sm:text-lg font-black text-white tracking-tight flex items-baseline gap-1">
+                <div dir="ltr" className="text-base sm:text-lg font-black text-white tracking-tight flex items-baseline justify-end gap-1">
                   <span>{kpi.value}</span>
                   {kpi.id === 'kpi-health' && <span className="text-xs font-normal text-slate-400">/ 100</span>}
                 </div>

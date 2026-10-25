@@ -89,3 +89,74 @@
   left: 18%;
   transform: rotate(8deg);
 }
+
+/* ==========================================================================
+   Compact desktop (1366x768 class) — keep the register, the 12-service tab
+   and the staged decision bar inside the app frame without page scrolling.
+   ========================================================================== */
+@media (max-height: 820px) {
+  .startup-hero-banner {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .startup-hero-banner .startup-hero-title {
+    font-size: 1.25rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .startup-hero-banner .startup-hero-copy {
+    display: none;
+  }
+
+  .startup-metric-card {
+    padding: 6px 9px !important;
+    border-radius: 10px !important;
+  }
+
+  .startup-metric-card .text-lg {
+    font-size: 1rem !important;
+  }
+
+  .startup-filter-rail {
+    padding: 7px 9px !important;
+  }
+
+  .startup-pane-tabs {
+    min-height: 32px;
+  }
+
+  .startup-metric-alert {
+    display: none;
+  }
+
+  .startup-register-table th,
+  .startup-register-table td {
+    padding: 6px 8px !important;
+  }
+
+  .startup-register-table tbody td:first-child,
+  .startup-register-table thead th:first-child {
+    padding-inline: 6px !important;
+  }
+
+  .startup-register-table tbody td {
+    font-size: 11px;
+  }
+}
+
+/* Compact desktop: drop the secondary source column instead of forcing a
+   horizontal scroll that hides the delay and inspect controls. */
+@media (max-width: 1499px) {
+  .startup-col-source {
+    display: none;
+  }
+}
+
+/* RTL: keep the boot-impact measurement itself left-to-right so the numeric
+   delta (+2400 ms) is not visually reordered by the bidi algorithm. */
+[dir="rtl"] .startup-viewport .startup-impact-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}

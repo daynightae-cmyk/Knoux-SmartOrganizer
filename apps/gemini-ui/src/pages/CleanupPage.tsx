@@ -366,8 +366,8 @@ export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
                           />
                         </th>
                         <th className="px-3 py-2.5">Name / Path</th>
-                        <th className="px-3 py-2.5">Source</th>
-                        <th className="px-3 py-2.5">Age ▾</th>
+                        <th className="cleanup-col-source px-3 py-2.5">Source</th>
+                        <th className="cleanup-col-age px-3 py-2.5">Age ▾</th>
                         <th className="px-3 py-2.5">Size ▾</th>
                         <th className="px-3 py-2.5">Safety</th>
                         <th className="px-3 py-2.5 text-right">Inspect</th>
@@ -408,10 +408,10 @@ export function CleanupPage({ onNavigateSection }: CleanupPageProps) {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-3 font-sans text-xs text-slate-300 whitespace-nowrap">
+                            <td className="cleanup-col-source px-3 py-3 font-sans text-xs text-slate-300 whitespace-nowrap">
                               {cand.source}
                             </td>
-                            <td className="px-3 py-3 text-slate-400 whitespace-nowrap">
+                            <td className="cleanup-col-age px-3 py-3 text-slate-400 whitespace-nowrap">
                               {cand.ageDisplay}
                             </td>
                             <td className="px-3 py-3 font-bold text-cyan-300 whitespace-nowrap">

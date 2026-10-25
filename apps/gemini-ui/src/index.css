@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* --------------------------------------------------------------------------
+   RTL numeric and table hygiene
+   Latin numerals, hashes, versions, sizes and keyboard shortcuts remain
+   left-to-right inside an Arabic document, while Arabic prose keeps RTL
+   flow. This prevents values such as "241 / 271" from being reordered.
+   -------------------------------------------------------------------------- */
+[dir='rtl'] .font-mono {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir='rtl'] .text-right {
+  text-align: left;
+}
+
+[dir='rtl'] .text-left {
+  text-align: right;
+}

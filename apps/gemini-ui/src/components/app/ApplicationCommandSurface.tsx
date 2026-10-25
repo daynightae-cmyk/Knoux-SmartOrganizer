@@ -98,7 +98,7 @@ export function ApplicationCommandSurface({
   const allChecked = filteredApps.length > 0 && filteredApps.every((a) => checkedAppIds.has(a.id));
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 select-none">
+    <div className="app-command-surface flex-1 flex flex-col min-w-0 select-none">
       {/* 1. Header with Title & Hamburger */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#0f2545]">
         <div className="flex items-center gap-2">

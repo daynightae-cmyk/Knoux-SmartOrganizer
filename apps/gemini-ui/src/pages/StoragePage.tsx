@@ -387,7 +387,7 @@ export function StoragePage({ onNavigateSection }: StoragePageProps) {
               {/* Main Content Split: Treemap (Left) + Largest Items in This Folder (Right) */}
               <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 min-h-[300px]">
                 {/* 1. Treemap Visualization (7 Columns) */}
-                <div className="md:col-span-7 flex flex-col gap-1.5 bg-[#030a16] p-2 rounded-xl border border-slate-800">
+                <div className="storage-treemap md:col-span-7 flex flex-col gap-1.5 bg-[#030a16] p-2 rounded-xl border border-slate-800">
                   <div className="flex-1 flex gap-1.5 min-h-[260px]">
                     {/* Left Column of Treemap: Windows block */}
                     <div

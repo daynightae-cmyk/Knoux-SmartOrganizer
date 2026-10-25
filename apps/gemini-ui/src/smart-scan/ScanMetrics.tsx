@@ -16,7 +16,7 @@ export interface ScanMetricsProps {
 
 export const ScanMetrics: React.FC<ScanMetricsProps> = ({ metrics, isArabic = false }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 shrink-0">
+    <div className="scan-metrics grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 shrink-0">
       {metrics.map((m) => {
         const isCoverage = m.id === 'coverage';
         const isFiles = m.id === 'files';
@@ -28,7 +28,7 @@ export const ScanMetrics: React.FC<ScanMetricsProps> = ({ metrics, isArabic = fa
         return (
           <div
             key={m.id}
-            className={`bg-[#07152b]/90 border rounded-xl p-3 flex flex-col justify-between transition-all shadow-md ${
+            className={`scan-metric-card bg-[#07152b]/90 border rounded-xl p-3 flex flex-col justify-between transition-all shadow-md ${
               isCoverage
                 ? 'border-[#132c4f] hover:border-cyan-500/50'
                 : isFiles

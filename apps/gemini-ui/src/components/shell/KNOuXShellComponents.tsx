@@ -31,6 +31,8 @@ import {
   CheckCircle2,
   Globe,
   Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 /**
@@ -291,14 +293,14 @@ export const KNOuXSidebar: React.FC<KNOuXSidebarProps> = ({
         {/* Bottom Engine Health / Status Card */}
         <div className="p-2.5 border-t border-[#0e223d]/70 bg-[#040b18]">
           <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#10b981]" />
-              {isArabic ? 'النظام متصل وآمن' : 'System Guard Active'}
+            <span className="flex items-center gap-1.5 text-cyan-300 font-medium" title="Native Windows engines are not connected in the visual phase.">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#22d3ee]" />
+              {isArabic ? 'معاينة مرئية — المحرك غير متصل' : 'Visual preview — engine not connected'}
             </span>
             <span className="font-mono text-slate-500">v2.4.0</span>
           </div>
           <div className="text-[10px] text-slate-400 truncate">
-            {isArabic ? 'أبعاد Shell متوافقة' : 'Windows Desktop Shell'}
+            {isArabic ? 'هيكل سطح مكتب ويندوز (معاينة)' : 'Windows Desktop Shell (preview)'}
           </div>
         </div>
       </div>
@@ -553,6 +555,32 @@ export const KNOuXTitleBar: React.FC<KNOuXTitleBarProps> = ({
             <span className="font-mono">{isArabic ? 'English' : 'العربية'}</span>
           </button>
         )}
+
+        <button
+          onClick={nav.toggleTheme}
+          aria-pressed={nav.theme === 'light'}
+          title={
+            nav.theme === 'light'
+              ? isArabic
+                ? 'التبديل إلى الوضع الداكن'
+                : 'Switch to dark theme'
+              : isArabic
+              ? 'التبديل إلى الوضع الفاتح'
+              : 'Switch to light theme'
+          }
+          aria-label={
+            nav.theme === 'light'
+              ? isArabic
+                ? 'التبديل إلى الوضع الداكن'
+                : 'Switch to dark theme'
+              : isArabic
+              ? 'التبديل إلى الوضع الفاتح'
+              : 'Switch to light theme'
+          }
+          className="p-1.5 rounded-lg bg-[#0a1a38] hover:bg-[#122b54] border border-[#1a3860] text-cyan-300 hover:text-white transition-colors cursor-pointer"
+        >
+          {nav.theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+        </button>
 
         <div className="relative">
           <button

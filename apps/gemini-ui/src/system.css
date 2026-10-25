@@ -80,3 +80,95 @@
   left: 12%;
   transform: scaleX(-1);
 }
+
+/* Time axes and numeric runtimes stay chronological in RTL. */
+[dir="rtl"] .system-timeline-canvas {
+  direction: ltr;
+}
+
+[dir="rtl"] .system-viewport table {
+  text-align: right;
+}
+
+/* ==========================================================================
+   Compact desktop (1366x768 class): keep the four instruments, timeline,
+   ledger and all 12 diagnostics inside the visible workspace. Panels stay
+   bounded and scroll internally instead of pushing the lower region away.
+   ========================================================================== */
+@media (max-height: 820px) {
+  .system-hero {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .system-hero p {
+    display: none;
+  }
+
+  .system-instrument-grid {
+    gap: 8px !important;
+  }
+
+  .system-instrument-card {
+    padding: 8px 10px !important;
+  }
+
+  .system-gauge,
+  .system-gauge-svg {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .system-workspace-grid {
+    grid-template-rows: 176px minmax(0, 1fr) !important;
+  }
+
+  .system-timeline-panel {
+    padding: 10px !important;
+  }
+
+  .system-timeline-panel .mb-3 {
+    margin-bottom: 6px !important;
+  }
+
+  .system-timeline-canvas {
+    min-height: 86px !important;
+    padding: 8px !important;
+  }
+
+  .system-info-panel {
+    padding: 8px 10px !important;
+    overflow-y: auto;
+  }
+
+  .system-live-panel {
+    padding: 10px !important;
+  }
+
+  .system-ledger-panel {
+    padding: 10px !important;
+    min-height: 0 !important;
+  }
+
+  .system-diagnostics-panel {
+    padding: 10px !important;
+  }
+
+  .system-diagnostics-panel .grid {
+    gap: 4px !important;
+  }
+
+  .system-diagnostics-panel button {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  .system-tool-sub {
+    display: none;
+  }
+
+  .system-diagnostics-panel .w-6 {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}

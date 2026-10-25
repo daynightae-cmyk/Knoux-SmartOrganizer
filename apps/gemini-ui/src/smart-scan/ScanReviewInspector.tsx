@@ -64,7 +64,9 @@ export const ScanReviewInspector: React.FC<ScanReviewInspectorProps> = ({
             <div className="font-extrabold text-cyan-300 text-xs truncate">
               {selectedItem.sizeGB > 0 ? `${selectedItem.sizeGB} GB` : 'High'}
             </div>
-            <span className="text-[9px] text-slate-400">Can be safely reclaimed</span>
+            <span className="text-[9px] text-slate-400">
+              {isArabic ? 'يمكن استعادتها بأمان' : 'Can be safely reclaimed'}
+            </span>
           </div>
           <div className="bg-[#0b1b36] p-2.5 rounded-xl border border-[#142e54]">
             <span className="text-[10px] text-slate-400 block mb-0.5 font-medium">
@@ -74,7 +76,9 @@ export const ScanReviewInspector: React.FC<ScanReviewInspectorProps> = ({
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{isArabic ? 'آمن' : 'Safe'}</span>
             </div>
-            <span className="text-[9px] text-slate-400">No important files</span>
+            <span className="text-[9px] text-slate-400">
+              {isArabic ? 'لا توجد ملفات مهمة' : 'No important files'}
+            </span>
           </div>
         </div>
 

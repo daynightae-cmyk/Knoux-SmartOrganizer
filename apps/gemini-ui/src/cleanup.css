@@ -90,3 +90,12 @@
   left: auto;
   right: 13px;
 }
+
+/* Compact desktop: the safety verdict and inspect action must stay visible.
+   The source label duplicates the path already shown in the name column. */
+@media (max-width: 1499px) {
+  .cleanup-col-source,
+  .cleanup-col-age {
+    display: none;
+  }
+}

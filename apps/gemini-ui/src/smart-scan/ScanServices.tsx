@@ -65,14 +65,14 @@ export const ScanServices: React.FC<ScanServicesProps> = ({
   };
 
   return (
-    <section className="bg-[#071329]/80 border border-[#11294a] rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-lg shrink-0">
-      <div className="flex items-center justify-between">
+    <section className="scan-services bg-[#071329]/80 border border-[#11294a] rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 shadow-lg shrink-0">
+      <div className="scan-services-head flex items-center justify-between">
         <div>
           <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
             {isArabic ? 'خدمات الفحص' : 'Scan Services'}
           </h2>
-          <p className="text-[11px] text-slate-300 mt-0.5 font-medium">
+          <p className="scan-services-copy text-[11px] text-slate-300 mt-0.5 font-medium">
             {isArabic
               ? 'اختر نوع الفحص أو شغل تحليلاً كاملاً. كل خدمة تستهدف منطقة محددة في نظامك.'
               : 'Choose a scan type or run a complete analysis. Each service targets a specific area of your system.'}
@@ -100,7 +100,7 @@ export const ScanServices: React.FC<ScanServicesProps> = ({
             <div
               key={srv.id}
               onClick={() => onSelectService(srv)}
-              className={`group relative bg-[#091a38]/80 hover:bg-[#0f2852] border rounded-xl p-2.5 flex items-center justify-between gap-2 transition-all duration-200 cursor-pointer shadow-sm ${
+              className={`scan-service-card group relative bg-[#091a38]/80 hover:bg-[#0f2852] border rounded-xl p-2.5 flex items-center justify-between gap-2 transition-all duration-200 cursor-pointer shadow-sm ${
                 isSelected
                   ? 'border-cyan-400/80 bg-[#0e2850] shadow-[0_0_15px_rgba(38,198,218,0.3)]'
                   : 'border-[#14325a] hover:border-cyan-400/60 hover:shadow-[0_0_12px_rgba(38,198,218,0.2)]'
@@ -123,7 +123,7 @@ export const ScanServices: React.FC<ScanServicesProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-slate-400 truncate block">
+                  <span className="scan-service-sub text-[10px] text-slate-400 truncate block">
                     {sub}
                   </span>
                 </div>
