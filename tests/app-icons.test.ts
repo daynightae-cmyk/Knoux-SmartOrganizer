@@ -256,7 +256,13 @@ beforeEach(async () => {
   await mkdir(tempZone, { recursive: true });
 });
 
-afterEach(async () => { await rm(root, { recursive: true, force: true }); });
+afterEach(async () => {
+  // Batch teardown is asynchronous and best-effort. On Windows a just-killed
+  // fake PowerShell can leave a disposable cache directory handle alive for a
+  // few milliseconds; retry the temp-root sweep instead of turning that into a
+  // test failure. No assertion or production behavior is changed.
+  await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }).catch(() => {});
+});
 
 // -- DisplayIcon parsing ---------------------------------------------------
 
