@@ -348,7 +348,31 @@ async function helper(ctx, directory, kind) {
   } finally { ctx.helpers.delete(child); }
 }
 async function nativeClick(ctx, selector, text, directory, kind) {
+  // The native folder picker requires an actual foreground-capable renderer.
+  // Capture a trusted DOM click when available to diagnose CI picker failures.
+  try {
+    await ctx.page.send('Page.bringToFront');
+    await ctx.page.eval(`(() => {
+      window.__knouxNativeClickEvidence = [];
+      document.addEventListener('click', e => {
+        window.__knouxNativeClickEvidence.push({
+          trusted: e.isTrusted,
+          target: e.target?.closest?.('button')?.textContent?.trim() || '',
+          timestamp: Date.now()
+        });
+      }, { once: true, capture: true });
+      return true;
+    })()`);
+  } catch (error) {
+    ctx.report.actions.push({ action: 'native-click-instrumentation-unavailable', kind, message: error.message });
+  }
   await click(ctx, selector, text);
+  try {
+    const clickEvidence = await ctx.page.eval('window.__knouxNativeClickEvidence || []');
+    ctx.report.actions.push({ action: 'native-trigger-dom-evidence', kind, clickEvidence });
+  } catch (error) {
+    ctx.report.actions.push({ action: 'native-click-evidence-unavailable', kind, message: error.message });
+  }
   await helper(ctx, directory, kind);
   await wait(ctx, `Real ${kind} authorization for exact fixture root`, async () => {
     const records = await api(ctx, kind === 'source' ? 'listSources' : 'listDestinations');

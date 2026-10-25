@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AlertTriangle, AppWindow, Ban, Boxes, Building2, Check, Copy, FolderOpen,
   HardDrive, ListChecks, RefreshCw, Search, ShieldCheck, Users, X
@@ -800,18 +801,12 @@ export default function ApplicationsPage() {
           )}
 
           {/*
-           * The staging deck rides the register column, not the window.
-           *
-           * A page-level entrance animation puts the whole document inside a
-           * transformed element, and a transformed ancestor becomes the
-           * containing block for `position: fixed` descendants: the tray is then
-           * measured against the bottom of the page rather than the bottom of
-           * the screen, and a queue you can only reach by scrolling is not a
-           * queue. Sticky inside the column keeps the deck on screen for as long
-           * as the register is in view and lets it settle into the flow at the
-           * end of the page.
+           * Render the selection dock into the stable .main shell, not beneath
+           * motion's transformed page-transition. The CSS anchors the portaled
+           * dock inside .main so it remains visible even when the register has
+           * many rows and the workspace has its own scroll container.
            */}
-          {stagedRecords.length > 0 && (
+          {stagedRecords.length > 0 && createPortal(
             <div className="appx__deck" role="region" aria-label={t('app.deck.label')}>
               <div className="appx__deckinner">
                 <span className="appx__deckcount">
@@ -840,7 +835,8 @@ export default function ApplicationsPage() {
                   </button>
                 </span>
               </div>
-            </div>
+            </div>,
+            document.querySelector('.main') ?? document.body
           )}
         </div>
 

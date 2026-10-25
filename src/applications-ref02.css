@@ -238,9 +238,18 @@ html[data-theme="high-contrast"] .appref :is(.world-head,.world-metric,.appref__
 .appref__dquick button {display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 5px;min-width:0;border-radius:7px;border:1px solid #397fca7a;background:#1a58a43b;color:#a7cdff;font-size:10px;font-weight:700;cursor:pointer}
 .appref__dquick button:nth-child(2) {border-color:#9066cb89;background:#542e8c30;color:#d4b3ff}
 .appref__dquick button:nth-child(3) {border-color:#da607260;background:#92284422;color:#ff9cad}
-.appref__dquick button:disabled {opacity:.48;cursor:not-allowed}
+.appref__dquick button:disabled {opacity:1;cursor:not-allowed;border-style:dashed;filter:saturate(.65);color:#c8dcfa;background:#203552}
+html[data-theme="light"] .appref__dquick button:disabled {color:#344862;background:#e4eaf3;border-color:#687d98}
 .appref__dquick button:not(:disabled):hover {filter:brightness(1.3)}
 html[data-theme="light"] .appref__dquick button {background:var(--surface-raised);color:var(--text)}
+
+/* Keep the staged-action tray inside the stable desktop shell, independent of
+   the animated page/column height. ApplicationsPage portals the tray to .main. */
+.main:has(> .appx__deck) {position:relative}
+.main > .appx__deck {position:absolute;inset-inline:12px;bottom:10px;z-index:70;pointer-events:none}
+.main > .appx__deck .appx__deckinner {pointer-events:auto;max-width:100%;box-sizing:border-box;flex-wrap:wrap;gap:7px;padding:9px 12px}
+.main > .appx__deck .appx__decknote {flex:1 1 150px}
+@media (max-width:960px) {.main > .appx__deck {inset-inline:7px;bottom:6px}.main > .appx__deck .appx__deckinner {padding:6px 8px;gap:5px}.main > .appx__deck .appx__decknote {display:none}}
 
 /* CI visual acceptance: unavailable service actions remain clearly unavailable
    without reducing label contrast below the documented 2:1 floor. This is a
