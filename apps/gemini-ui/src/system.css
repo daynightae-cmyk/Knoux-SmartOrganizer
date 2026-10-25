@@ -1,0 +1,82 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* ==========================================================================
+   KNOuX REF-07: System Live Pulse & Windows Intelligence Styles
+   ========================================================================== */
+
+.system-viewport {
+  background-color: #040a16;
+  background-image:
+    radial-gradient(ellipse 70% 35% at 80% 8%, rgba(139, 92, 246, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 20% 12%, rgba(56, 189, 248, 0.1), transparent 50%),
+    linear-gradient(to bottom, #050e20, #030814);
+  color: #f1f5f9;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Cybernetic Observatory Waveform Ribbon */
+.system-observatory-wave {
+  position: absolute;
+  top: 0;
+  right: 12%;
+  width: 580px;
+  height: 110px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* Radar pulse animation for Telemetry Source */
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep-reticle {
+  animation: radarSweep 6s linear infinite;
+}
+
+/* Circular gauge track */
+.gauge-svg-circle {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Custom scrollbar for system registers */
+.system-custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.system-custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 24, 48, 0.4);
+}
+
+.system-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.5);
+  border-radius: 3px;
+}
+
+.system-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* RTL layout overrides */
+[dir="rtl"] .system-observatory-wave {
+  right: auto;
+  left: 12%;
+  transform: scaleX(-1);
+}

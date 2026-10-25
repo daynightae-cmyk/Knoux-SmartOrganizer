@@ -1,0 +1,106 @@
+/**
+ * KNOuX SmartOrganizer — Studio CSS & Visual Styles
+ * Reference Target: REF-01_Smart_Organization_Studio.png (1672x941 native)
+ */
+
+:root {
+  --knoux-navy-base: #050d1d;
+  --knoux-navy-card: #081629;
+  --knoux-navy-card-hover: #0c1f38;
+  --knoux-border-subtle: #132c52;
+  --knoux-border-active: #2476ff;
+  --knoux-blue-electric: #2476ff;
+  --knoux-blue-glow: rgba(36, 118, 255, 0.4);
+  --knoux-cyan: #26c6ff;
+  --knoux-violet: #713bff;
+  --knoux-green: #10b981;
+  --knoux-amber: #f59e0b;
+  --knoux-red: #ef4444;
+}
+
+/* Atmospheric planet horizon header effect */
+.planet-horizon-glow {
+  background: radial-gradient(ellipse 65% 55% at 54% -20%, rgba(36, 118, 255, 0.42) 0%, rgba(38, 198, 255, 0.22) 28%, rgba(113, 59, 255, 0.12) 48%, rgba(5, 13, 29, 0) 75%);
+}
+
+.planet-arc-line {
+  position: absolute;
+  top: -140px;
+  left: 20%;
+  right: 15%;
+  height: 220px;
+  border-radius: 50%;
+  border-top: 1.5px solid rgba(138, 215, 255, 0.85);
+  box-shadow: 0 0 35px 4px rgba(36, 118, 255, 0.65), 0 0 70px 10px rgba(38, 198, 255, 0.35);
+  pointer-events: none;
+}
+
+/* Glass panel surfaces */
+.studio-glass-panel {
+  background-color: rgba(8, 22, 41, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(23, 46, 84, 0.85);
+}
+
+.studio-glass-panel-subtle {
+  background-color: rgba(6, 18, 36, 0.65);
+  border: 1px solid rgba(19, 44, 82, 0.7);
+}
+
+/* Controlled luminous glows */
+.studio-glow-blue {
+  box-shadow: 0 0 16px -2px rgba(36, 118, 255, 0.45);
+}
+
+.studio-glow-active-pill {
+  box-shadow: 0 0 14px 1px rgba(36, 118, 255, 0.55), inset 0 0 12px rgba(38, 198, 255, 0.25);
+}
+
+.studio-glow-cyan-btn {
+  box-shadow: 0 4px 20px -2px rgba(36, 118, 255, 0.6);
+}
+
+/* Thin custom scrollbar */
+.studio-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.studio-scrollbar::-webkit-scrollbar-track {
+  background: rgba(5, 13, 29, 0.5);
+}
+
+.studio-scrollbar::-webkit-scrollbar-thumb {
+  background: #173663;
+  border-radius: 3px;
+}
+
+.studio-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2476ff;
+}
+
+/* Stage chevron clip path */
+.stage-chevron-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* RTL layout adjustments */
+[dir="rtl"] .planet-arc-line {
+  left: 15%;
+  right: 20%;
+}
+
+/* Animations */
+@keyframes studio-pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: studio-pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
