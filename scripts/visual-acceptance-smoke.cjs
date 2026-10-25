@@ -44,6 +44,7 @@ function run(exe, args, logPath) {
     child.stderr.pipe(stream);
     let timer = null;
     let settled = false;
+    let timedOut = false;
     const finish = (action, value) => {
       if (settled) return;
       settled = true;
@@ -63,14 +64,20 @@ function run(exe, args, logPath) {
       }
     };
     timer = setTimeout(() => {
+      // Mark the timeout before killing: taskkill makes the child emit 'exit'
+      // with a nonzero code, and that must not be mistaken for a normal failure
+      // that hides the harness progress. The finally block retries profile
+      // cleanup after the tree is gone.
+      timedOut = true;
       terminateTree();
-      // Let Windows release the profile handle before the caller's finally block
-      // attempts removal, and always surface the timeout rather than a cleanup
-      // side effect.
-      setTimeout(() => finish(reject, new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`)), 1200);
+      finish(reject, new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`));
     }, SMOKE_TIMEOUT_MS);
-    child.once('error', error => finish(reject, error));
-    child.once('exit', code => { stream.end(); finish(resolve, code); });
+    child.once('error', error => { if (!timedOut) finish(reject, error); });
+    child.once('exit', code => {
+      stream.end();
+      if (timedOut) return;
+      finish(resolve, code);
+    });
   });
 }
 
