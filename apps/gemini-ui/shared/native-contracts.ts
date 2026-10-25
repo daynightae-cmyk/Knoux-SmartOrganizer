@@ -324,3 +324,134 @@ export interface NativeShellApi {
   chooseFolder: () => Promise<NativeEnvelope<FolderChoiceData>>;
   windowControl: (action: (typeof WINDOW_ACTIONS)[number]) => Promise<NativeEnvelope<{ action: string }>>;
 }
+
+export interface FilesItem {
+  id: number;
+  name: string;
+  relative: string;
+  parentFolder: string;
+  category: string;
+  size: number;
+  ext: string;
+  modifiedAt: string;
+  modifiedMs: number;
+  readonly: boolean;
+  hidden: boolean;
+}
+
+export interface FilesOverview {
+  source: StudioSource;
+  totals: {
+    files: number;
+    bytes: number;
+    folders: number;
+    categories: number;
+    partial: boolean;
+  };
+  categories: Array<{ key: string; count: number; bytes: number }>;
+  extensions: Array<{ ext: string; count: number; bytes: number }>;
+  ages: Array<{ key: string; label: string; count: number; bytes: number }>;
+  recent: FilesItem[];
+  largest: FilesItem[];
+  scannedAt: string | null;
+  warnings: string[];
+  coverage: 'complete' | 'partial';
+  permission: 'read-only';
+}
+
+export interface FilesQueryRequest {
+  sourceId: string;
+  category?: string;
+  categories?: string[];
+  search?: string;
+  extension?: string;
+  minBytes?: number;
+  maxBytes?: number;
+  modifiedAfterMs?: number;
+  modifiedBeforeMs?: number;
+  sort?: 'name' | 'size' | 'modified' | 'type';
+  desc?: boolean;
+  offset?: number;
+  limit?: number;
+}
+
+export interface FilesMetadata {
+  sourceId: string;
+  sourceLabel: string;
+  fileId: number;
+  name: string;
+  relative: string;
+  parentFolder: string;
+  fullPath: string;
+  size: number;
+  ext: string;
+  category: string;
+  modifiedAt: string;
+  createdAt: string | null;
+  entryKind: string;
+  linkCount: number | null;
+  hardlinked: boolean;
+  fileIdentity: string | null;
+  volumeSerial: string | null;
+  readonly: boolean;
+  hidden: boolean;
+  attributesAvailable: boolean;
+  attributes: number | null;
+  zone: {
+    zoneId: number | null;
+    zoneAvailable: boolean;
+    referrer: string | null;
+    host: string | null;
+  };
+  reparse: unknown;
+  permission: 'read-only';
+  warnings: string[];
+}
+
+export interface FilesHashResult {
+  sourceId: string;
+  fileId: number;
+  name: string;
+  algorithm: 'sha256' | 'sha512';
+  digest: string;
+  bytesRead: number;
+  sizeAtRead: number;
+  fileIdentity: string | null;
+  changedDuringRead: boolean;
+  digestReliable: boolean;
+  warnings: string[];
+  permission: 'read-only';
+}
+
+export interface FilesEmptyFoldersResult {
+  items: Array<{ relative: string; fullPath: string }>;
+  summary: {
+    root: string;
+    foldersScanned: number;
+    emptyFolders: number;
+    skippedLinks: number;
+    errors: number;
+    limit: number;
+    elapsedMs: number;
+  };
+  partial: boolean;
+  warnings: string[];
+  permission: 'read-only';
+  mutation: 'none';
+}
+
+export interface FilesShellApi {
+  contractVersion: number;
+  listSources: () => Promise<NativeEnvelope<StudioSource[]>>;
+  chooseSource: () => Promise<NativeEnvelope<StudioSource | null>>;
+  scanSource: (sourceId: string) => Promise<NativeEnvelope<StudioSource>>;
+  cancelScan: (sourceId: string) => Promise<NativeEnvelope<{ cancelled: boolean }>>;
+  query: (request: FilesQueryRequest) => Promise<NativeEnvelope<StudioQueryResult & { unsupported?: string }>>;
+  thumbnails: (sourceId: string, fileIds: number[]) => Promise<NativeEnvelope<Record<string, { thumbnail: string | null; reason?: string }>>>;
+  overview: (sourceId: string) => Promise<NativeEnvelope<FilesOverview>>;
+  metadata: (sourceId: string, fileId: number) => Promise<NativeEnvelope<FilesMetadata>>;
+  hash: (sourceId: string, fileId: number, algorithm?: 'sha256' | 'sha512') => Promise<NativeEnvelope<FilesHashResult>>;
+  emptyFolders: (sourceId: string, limit?: number) => Promise<NativeEnvelope<FilesEmptyFoldersResult>>;
+  open: (sourceId: string, fileId: number) => Promise<NativeEnvelope<{ opened: boolean; fileId: number; requestedPath: string }>>;
+  reveal: (sourceId: string, fileId: number) => Promise<NativeEnvelope<{ requested: boolean; fileId: number; requestedPath: string }>>;
+}

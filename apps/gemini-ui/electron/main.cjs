@@ -9,7 +9,7 @@
  * remain preview-only until their own missions land.
  */
 
-const { app, BrowserWindow, Menu, ipcMain, session, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, session, dialog, nativeImage, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
@@ -23,6 +23,7 @@ const {
   fixturesEnabled,
 } = require('./native/provider-bridge.cjs');
 const { StudioBridge } = require('./native/studio-bridge.cjs');
+const { FilesBridge } = require('./native/files-bridge.cjs');
 const {
   ok,
   fail,
@@ -78,6 +79,7 @@ app.commandLine.appendSwitch('force-color-profile', 'srgb');
 let mainWindow = null;
 let ipcRegistered = false;
 let studioBridge = null;
+let filesBridge = null;
 
 if (!isSmoke && !app.requestSingleInstanceLock()) {
   app.quit();
@@ -296,6 +298,107 @@ function registerIpc() {
     studioGuard(event, 'studio.preview.history', 'read-only', () => studioBridge.previewHistory())
   );
 
+
+  const filesGuard = async (event, capability, permission, work) => {
+    try {
+      assertTrustedSender(event, { mainWindow, isDev, distRoot, devOrigin });
+      if (!filesBridge) {
+        throw Object.assign(new Error('The read-only Files adapter is not initialized.'), { code: 'FILES_UNAVAILABLE' });
+      }
+      const data = await work();
+      return ok({
+        capability,
+        status: 'complete',
+        source: 'KNOuX Files read-only adapter',
+        permission,
+        data,
+      });
+    } catch (error) {
+      const untrusted = error?.code === 'UNTRUSTED_SENDER';
+      return fail({
+        capability,
+        status: untrusted ? 'permission_denied' : 'failed',
+        source: 'KNOuX Files read-only adapter',
+        permission: untrusted ? 'not-granted' : permission,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'FILES_FAILURE',
+          message: String(error?.message || 'Files request failed.').replace(/\s+/g, ' ').slice(0, 300),
+          retryable: false,
+        },
+      });
+    }
+  };
+  const filesArg = (args) => {
+    if (args.length !== 1 || !args[0] || typeof args[0] !== 'object' || Array.isArray(args[0])) {
+      throw Object.assign(new Error('A single structured Files request is required.'), { code: 'FILES_INPUT_INVALID' });
+    }
+    return args[0];
+  };
+
+  ipcMain.handle(contract.channels.filesSources, (event, ...args) =>
+    filesGuard(event, 'files.sources', 'read-only', () => {
+      assertNoArguments(args, contract.channels.filesSources);
+      return filesBridge.listSources();
+    })
+  );
+  ipcMain.handle(contract.channels.filesSourceChoose, (event, ...args) =>
+    filesGuard(event, 'files.source.choose', 'user-initiated', () => {
+      assertNoArguments(args, contract.channels.filesSourceChoose);
+      return filesBridge.chooseSource();
+    })
+  );
+  ipcMain.handle(contract.channels.filesInventoryScan, (event, ...args) =>
+    filesGuard(event, 'files.inventory.scan', 'read-only', () => filesBridge.scanSource(filesArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.filesInventoryCancel, (event, ...args) =>
+    filesGuard(event, 'files.inventory.cancel', 'user-initiated', () => filesBridge.cancelScan(filesArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.filesInventoryQuery, (event, ...args) =>
+    filesGuard(event, 'files.inventory.query', 'read-only', () => {
+      const request = filesArg(args);
+      return filesBridge.query(request.sourceId, request);
+    })
+  );
+  ipcMain.handle(contract.channels.filesThumbnails, (event, ...args) =>
+    filesGuard(event, 'files.thumbnails', 'read-only', () => {
+      const request = filesArg(args);
+      return filesBridge.thumbnails(request.sourceId, request.fileIds);
+    })
+  );
+  ipcMain.handle(contract.channels.filesOverview, (event, ...args) =>
+    filesGuard(event, 'files.overview', 'read-only', () => filesBridge.overview(filesArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.filesMetadata, (event, ...args) =>
+    filesGuard(event, 'files.metadata', 'read-only', () => {
+      const request = filesArg(args);
+      return filesBridge.metadata(request.sourceId, request.fileId);
+    })
+  );
+  ipcMain.handle(contract.channels.filesHash, (event, ...args) =>
+    filesGuard(event, 'files.hash', 'read-only', () => {
+      const request = filesArg(args);
+      return filesBridge.hash(request.sourceId, request.fileId, request.algorithm);
+    })
+  );
+  ipcMain.handle(contract.channels.filesEmptyFolders, (event, ...args) =>
+    filesGuard(event, 'files.emptyFolders', 'read-only', () => {
+      const request = filesArg(args);
+      return filesBridge.emptyFolders(request.sourceId, request.limit);
+    })
+  );
+  ipcMain.handle(contract.channels.filesOpen, (event, ...args) =>
+    filesGuard(event, 'files.open', 'user-initiated', () => {
+      const request = filesArg(args);
+      return filesBridge.open(request.sourceId, request.fileId);
+    })
+  );
+  ipcMain.handle(contract.channels.filesReveal, (event, ...args) =>
+    filesGuard(event, 'files.reveal', 'user-initiated', () => {
+      const request = filesArg(args);
+      return filesBridge.reveal(request.sourceId, request.fileId);
+    })
+  );
+
   ipcMain.handle(contract.channels.windowControl, (event, ...args) =>
     guard(event, 'window.control', args, async (callArgs) => {
       if (callArgs.length !== 1) {
@@ -442,12 +545,28 @@ async function runSmoke(win) {
           const history = await studioApi.previewHistory();
           studio = { bridgePresent: true, sources, query, thumbs, plan, history };
         }
+        const filesApi = window.knouxFilesV1;
+        let files = null;
+        if (filesApi) {
+          const sources = await filesApi.listSources();
+          const sourceId = sources?.data?.[0]?.id || null;
+          const query = sourceId ? await filesApi.query({ sourceId, limit: 20 }) : null;
+          const overview = sourceId ? await filesApi.overview(sourceId) : null;
+          const row = (query?.data?.rows || [])[0] || null;
+          const metadata = sourceId && row ? await filesApi.metadata(sourceId, row.id) : null;
+          const hash = sourceId && row ? await filesApi.hash(sourceId, row.id, 'sha256') : null;
+          const emptyFolders = sourceId ? await filesApi.emptyFolders(sourceId, 50) : null;
+          const thumbIds = (query?.data?.rows || []).filter((entry) => entry.hasThumbnail).slice(0, 4).map((entry) => entry.id);
+          const thumbs = sourceId && thumbIds.length ? await filesApi.thumbnails(sourceId, thumbIds) : null;
+          files = { bridgePresent: true, sources, query, overview, metadata, hash, emptyFolders, thumbs };
+        }
         return {
           href: location.href,
           readyState: document.readyState,
           rootChildren: document.querySelector('#root')?.childElementCount || 0,
           bridgePresent: Boolean(api),
           studioBridgePresent: Boolean(studioApi),
+          filesBridgePresent: Boolean(filesApi),
           contractVersion: api?.contractVersion ?? null,
           nodeRequireType: typeof window.require,
           nodeProcessType: typeof window.process,
@@ -455,6 +574,7 @@ async function runSmoke(win) {
           system,
           services,
           studio,
+          files,
           cspMeta: document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') || null
         };
       })()`,
@@ -630,6 +750,39 @@ async function runSmoke(win) {
         receipt.studioHistoryScreenshot = historyShotPath;
         receipt.studioHistoryScreenshotBytes = (await fsp.stat(historyShotPath)).size;
         receipt.studioHistoryUiReady = studioHistoryReady;
+
+        // Measured Files route: the real adapter probe above has already
+        // resolved the source. Capture the rendered ledger after it arrives.
+        await win.webContents.executeJavaScript(
+          `(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); location.hash = 'files'; return true; })()`,
+          true
+        );
+        const filesDeadline = Date.now() + 20000;
+        let filesUiReady = false;
+        while (Date.now() < filesDeadline) {
+          await sleep(500);
+          filesUiReady = await win.webContents.executeJavaScript(
+            `(() => {
+               const banner = document.querySelector('[data-testid="files-native-banner"]');
+               const text = document.body.innerText || '';
+               return Boolean(banner) &&
+                 (text.includes('Native measured index') || text.includes('فهرس أصلي مقيس')) &&
+                 (text.includes('Instant Find') || text.includes('البحث الفوري')) &&
+                 text.includes('MEASURED') &&
+                 (text.includes('Created') || text.includes('أُنشئ')) &&
+                 (text.includes('Zone / MotW') || text.includes('المنطقة / MotW'));
+             })()`,
+            true
+          );
+          if (filesUiReady) break;
+        }
+        await sleep(2000);
+        const filesShotPath = smokeShotPath.replace(/native-bridge/i, 'files-measured');
+        const filesImage = await win.webContents.capturePage();
+        await fsp.writeFile(filesShotPath, filesImage.toPNG());
+        receipt.filesScreenshot = filesShotPath;
+        receipt.filesScreenshotBytes = (await fsp.stat(filesShotPath)).size;
+        receipt.filesUiReady = filesUiReady;
       } catch (error) {
         receipt.screenshotError = redactError(error);
       }
@@ -679,6 +832,22 @@ async function runSmoke(win) {
       Array.isArray(studioData?.history?.data) &&
       studioData.history.data.length >= 1
     );
+    const filesData = renderer.files;
+    const filesOk = Boolean(
+      filesData?.bridgePresent &&
+      filesData?.sources?.data?.length >= 1 &&
+      filesData?.query?.status === 'complete' &&
+      filesData?.query?.data?.total >= 4 &&
+      filesData?.overview?.status === 'complete' &&
+      filesData.overview.data?.totals?.files >= 4 &&
+      filesData.overview.data?.extensions?.length >= 1 &&
+      filesData?.metadata?.status === 'complete' &&
+      filesData.metadata.data?.fullPath &&
+      filesData?.hash?.status === 'complete' &&
+      filesData.hash.data?.digest?.length === 64 &&
+      filesData?.emptyFolders?.status === 'complete' &&
+      filesData.emptyFolders.data?.mutation === 'none'
+    );
     const screenshotOk = !smokeShotPath || (
       receipt.screenshotBytes > 20000 &&
       receipt.lightScreenshotBytes > 20000 &&
@@ -688,10 +857,12 @@ async function runSmoke(win) {
       receipt.studioPlanScreenshotBytes > 20000 &&
       receipt.studioPlanUiReady === true &&
       receipt.studioHistoryScreenshotBytes > 20000 &&
-      receipt.studioHistoryUiReady === true
+      receipt.studioHistoryUiReady === true &&
+      receipt.filesScreenshotBytes > 20000 &&
+      receipt.filesUiReady === true
     );
-    receipt.checks = { securityOk, bridgeOk, providerOk, studioOk, screenshotOk, windowControlOk };
-    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && studioOk && screenshotOk && windowControlOk);
+    receipt.checks = { securityOk, bridgeOk, providerOk, studioOk, filesOk, screenshotOk, windowControlOk };
+    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && studioOk && filesOk && screenshotOk && windowControlOk);
     receipt.finishedAt = new Date().toISOString();
     trace(`smoke complete ok=${receipt.ok} checks=${JSON.stringify(receipt.checks)}`);
     await fsp.mkdir(path.dirname(smokeReceiptPath), { recursive: true });
@@ -743,6 +914,7 @@ app.whenReady().then(async () => {
   });
   try {
     await studioBridge.init();
+    filesBridge = new FilesBridge({ studio: studioBridge, shell });
     trace('studio bridge initialized');
     const smokeStudioRoot = argValue('--knoux-studio-smoke-root');
     if (smokeStudioRoot && isSmoke && smokeUserData) {
@@ -770,6 +942,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('before-quit', () => {
+  void filesBridge?.dispose();
   void studioBridge?.dispose();
 });
 

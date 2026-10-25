@@ -228,6 +228,16 @@ class StudioBridge {
     return this.sources.map((source) => this.publicSource(source));
   }
 
+  getSource(sourceId) {
+    const id = safeId(sourceId);
+    return id ? this.sources.find((source) => source.id === id) || null : null;
+  }
+
+  getInventory(sourceId) {
+    const id = safeId(sourceId);
+    return id ? this.inventories.get(id) || null : null;
+  }
+
   async chooseSource() {
     if (!this.chooseFolder) throw studioError('STUDIO_PICKER_UNAVAILABLE', 'The native folder picker is not available.');
     const selected = await this.chooseFolder({ title: 'Authorize a source folder (read-only)', buttonLabel: 'Authorize source' });
@@ -352,9 +362,19 @@ class StudioBridge {
     if (!record) throw studioError('STUDIO_INDEX_UNAVAILABLE', 'The source has not been indexed yet.');
     const roots = expandCategories(request.categories || request.category);
     const search = String(request.search || '').trim().toLowerCase();
+    const extension = String(request.extension || '').trim().toLowerCase().replace(/^\./, '');
+    const minBytes = Number.isFinite(Number(request.minBytes)) ? Math.max(0, Number(request.minBytes)) : null;
+    const maxBytes = Number.isFinite(Number(request.maxBytes)) ? Math.max(0, Number(request.maxBytes)) : null;
+    const modifiedAfterMs = Number.isFinite(Number(request.modifiedAfterMs)) ? Number(request.modifiedAfterMs) : null;
+    const modifiedBeforeMs = Number.isFinite(Number(request.modifiedBeforeMs)) ? Number(request.modifiedBeforeMs) : null;
     const rows = record.files.filter((file) => {
       if (roots.length && !roots.includes(file.category)) return false;
       if (search && !file.relative.toLowerCase().includes(search) && !file.name.toLowerCase().includes(search)) return false;
+      if (extension && extension !== 'all' && String(file.ext || '').toLowerCase() !== extension) return false;
+      if (minBytes !== null && file.size < minBytes) return false;
+      if (maxBytes !== null && file.size > maxBytes) return false;
+      if (modifiedAfterMs !== null && file.modifiedMs < modifiedAfterMs) return false;
+      if (modifiedBeforeMs !== null && file.modifiedMs > modifiedBeforeMs) return false;
       return true;
     });
     const sort = ['name', 'size', 'modified', 'type'].includes(request.sort) ? request.sort : 'name';
@@ -535,6 +555,7 @@ class StudioBridge {
 
 module.exports = {
   StudioBridge,
+  STUDIO_DIR,
   UI_CATEGORY_MAP,
   MAX_FILES,
   MAX_THUMBNAILS,

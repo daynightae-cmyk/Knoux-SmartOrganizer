@@ -25,6 +25,7 @@ connected.
 | `electron/automation.cjs` | Existing, unconnected | Not exposed; Mission 13. |
 | `shared/contracts.ts` | Existing root renderer contracts | Used as reference only. Gemini has its own versioned native contract. |
 | Gemini Vite renderer | Works, no native entrypoint, no typed bridge, AI keys in localStorage | New secure shell, preload boundary, typed client, status UI, session-only AI keys. |
+| Files section | Fixture-only ledger and generic service modal | Mission 06 adds `knouxFilesV1` read-only Files capabilities; see `docs/FILES_INSTANT_FIND_AUDIT.md`. Apply/undo remain blocked. |
 | Packaged Gemini runtime | Missing | Built and smoke-tested as an unpacked Electron application (unsigned). |
 
 **Unsafe/unsupported:** raw `ipcRenderer` access, generic invoke channels, renderer
@@ -69,6 +70,7 @@ Source of truth: `shared/native-contract.json`; renderer types:
 | `folder.choose` | `knoux:native:v1:choose-folder` | user-initiated | implemented; interactive dialog not automated |
 | `window.control` | `knoux:window:v1:control` | user-initiated | minimize / maximize-restore / close |
 | Studio read-only set | `knoux:studio:v1:*` | read-only/user-initiated | Mission 03: sources, scan/cancel, query, thumbnails, plan preview, preview receipts, receive-only events. No execute/undo. |
+| Files read-only set | `knoux:files:v1:*` | read-only/user-initiated | Mission 06: sources, scan/cancel, query, thumbnails, overview, metadata, SHA-256/512, empty folders, validated open/reveal. No copy/move/delete/undo. |
 
 Every envelope is `{contractVersion, capability, requestId, status, source,
 observedAt, permission, warnings, data?|error?, provenance?}`. Status vocabulary:
@@ -139,6 +141,7 @@ do not invent incompatible envelopes.
 - maximize + restore window-control toggle PASS;
 - screenshot written (273 KB), plus a **light** native-panel capture and an **Arabic RTL light** capture;
 - Mission 03 Studio probes: list/query/thumbnails/plan/preview-history, measured banner, rendered plan review and persisted receipts, with three Studio screenshots.
+- Mission 06 Files probes: sources/query/overview/metadata/hash/empty-folders, measured Files route with real metadata and hash operations, plus a measured Files screenshot.
 
 Receipt: `visual-evidence/platform-00/native-smoke-dev.json`
 Screenshots: `visual-evidence/platform-00/native-bridge-dev.png`, `native-bridge-dev-light.png`, `native-bridge-dev-ar-light.png`
@@ -158,7 +161,7 @@ checks:
 Receipt: `visual-evidence/platform-00/native-smoke-packaged.json`
 Screenshots: `native-bridge-packaged.png`, `native-bridge-packaged-light.png`, `native-bridge-packaged-ar-light.png`
 
-**CI:** `.github/workflows/gemini-platform.yml` runs the nested renderer's `npm ci`, TypeScript, production build and native contract/provenance gate on Windows, and uploads the contract result. The interactive Electron/provider smoke requires a real Windows desktop injection and remains a local gate (evidence below); CI does not claim native runtime proof.
+**CI:** `.github/workflows/gemini-platform.yml` runs the nested renderer's `npm ci`, TypeScript, production build, native contract/provenance gate, Studio adapter test and Files adapter test on Windows, and uploads the contract result. The interactive Electron/provider smoke requires a real Windows desktop injection and remains a local gate (evidence below); CI does not claim native runtime proof.
 
 **Environment note:** packaging into the D: workspace produced an `EPERM/EBUSY`
 rename while a local file watcher held newly extracted Electron files. The same
@@ -194,7 +197,7 @@ applicable. This table is a routing map, not a claim of implementation.
 | Organization Studio | source.pick, source.scan, plan.build, plan.approve, plan.execute, undo | `electron/studio/*` | write; protected paths, symlinks, preview+approval |
 | Google Workspace | auth.begin, auth.status, auth.revoke; no fixture connected state | none connected | OAuth consent, least scopes, credential vault |
 | Applications | inventory.list, maintenance.plan, update.plan | `windows-providers.cjs` uninstall/appx collectors | staged maintenance; no silent uninstall |
-| Files | inventory.scan, query, preview.thumbnail, selection | `folder-inventory.cjs`, fs metadata | read-only; scope + symlink protection |
+| Files | inventory.scan, query, preview.thumbnail, metadata, hash, empty-folders, open/reveal | `folder-inventory.cjs`, `windows-fs-metadata.cjs`, `studio-thumbnails.cjs` | **Mission 06 read-only slice landed**; on-demand cached index, no watcher/USN, apply/undo blocked |
 | Storage | volumes.read, analysis.read | `windows-providers.cjs` disks | read-only |
 | Cleanup | scan, plan, approve, execute, restore | cleanup modules/tool registry | destructive; recycle/backup, explicit approval |
 | Startup | inventory.read, change.stage, change.apply, rollback | `collectStartupItems`, `startup-manager.cjs` | registry/system change; elevation gate |

@@ -155,11 +155,13 @@ async function main() {
     studioShotPath: shotPath.replace(/native-bridge/i, 'studio-measured'),
     studioPlanShotPath: shotPath.replace(/native-bridge/i, 'studio-plan'),
     studioHistoryShotPath: shotPath.replace(/native-bridge/i, 'studio-history'),
+    filesShotPath: shotPath.replace(/native-bridge/i, 'files-measured'),
     lightShotBytes: receipt?.lightScreenshotBytes || 0,
     arabicShotBytes: receipt?.arabicScreenshotBytes || 0,
     studioShotBytes: receipt?.studioScreenshotBytes || 0,
     studioPlanShotBytes: receipt?.studioPlanScreenshotBytes || 0,
     studioHistoryShotBytes: receipt?.studioHistoryScreenshotBytes || 0,
+    filesShotBytes: receipt?.filesScreenshotBytes || 0,
     receiptOk: receipt?.ok === true,
     checks: receipt?.checks || null,
     stdoutTail: stdout.slice(-2000),
@@ -170,8 +172,8 @@ async function main() {
 
   await fsp.rm(profilePath, { recursive: true, force: true }).catch(() => {});
 
-  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000 && summary.lightShotBytes > 20000 && summary.arabicShotBytes > 20000 && summary.studioPlanShotBytes > 20000 && summary.studioHistoryShotBytes > 20000, ...safeSummary }, null, 2));
-  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000 || summary.lightShotBytes <= 20000 || summary.arabicShotBytes <= 20000 || summary.studioShotBytes <= 20000 || summary.studioPlanShotBytes <= 20000 || summary.studioHistoryShotBytes <= 20000) {
+  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000 && summary.lightShotBytes > 20000 && summary.arabicShotBytes > 20000 && summary.studioPlanShotBytes > 20000 && summary.studioHistoryShotBytes > 20000 && summary.filesShotBytes > 20000, ...safeSummary }, null, 2));
+  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000 || summary.lightShotBytes <= 20000 || summary.arabicShotBytes <= 20000 || summary.studioShotBytes <= 20000 || summary.studioPlanShotBytes <= 20000 || summary.studioHistoryShotBytes <= 20000 || summary.filesShotBytes <= 20000) {
     console.error('[native-smoke] FAILED — inspect native-smoke-dev.json and native-bridge-dev.png');
     process.exit(1);
   }

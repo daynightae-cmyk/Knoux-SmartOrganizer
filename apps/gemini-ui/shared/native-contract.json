@@ -17,7 +17,19 @@
     "studioDestinationChoose": "knoux:studio:v1:destination-choose",
     "studioPlanPreview": "knoux:studio:v1:plan-preview",
     "studioPreviewHistory": "knoux:studio:v1:preview-history",
-    "studioEvent": "knoux:studio:v1:event"
+    "studioEvent": "knoux:studio:v1:event",
+    "filesSources": "knoux:files:v1:sources",
+    "filesSourceChoose": "knoux:files:v1:source-choose",
+    "filesInventoryScan": "knoux:files:v1:inventory-scan",
+    "filesInventoryCancel": "knoux:files:v1:inventory-cancel",
+    "filesInventoryQuery": "knoux:files:v1:inventory-query",
+    "filesThumbnails": "knoux:files:v1:thumbnails",
+    "filesOverview": "knoux:files:v1:overview",
+    "filesMetadata": "knoux:files:v1:metadata",
+    "filesHash": "knoux:files:v1:hash",
+    "filesEmptyFolders": "knoux:files:v1:empty-folders",
+    "filesOpen": "knoux:files:v1:open",
+    "filesReveal": "knoux:files:v1:reveal"
   },
   "capabilities": {
     "bridge.status": {
@@ -103,6 +115,78 @@
       "title": "Plan preview receipts",
       "mode": "read-only",
       "channel": "knoux:studio:v1:preview-history"
+    },
+    "files.sources": {
+      "id": "files.sources",
+      "title": "Files authorized sources",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:sources"
+    },
+    "files.source.choose": {
+      "id": "files.source.choose",
+      "title": "Choose and authorize a Files source",
+      "mode": "user-initiated",
+      "channel": "knoux:files:v1:source-choose"
+    },
+    "files.inventory.scan": {
+      "id": "files.inventory.scan",
+      "title": "Read-only Files inventory",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:inventory-scan"
+    },
+    "files.inventory.cancel": {
+      "id": "files.inventory.cancel",
+      "title": "Cancel a Files inventory scan",
+      "mode": "user-initiated",
+      "channel": "knoux:files:v1:inventory-cancel"
+    },
+    "files.inventory.query": {
+      "id": "files.inventory.query",
+      "title": "Query the measured Files inventory",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:inventory-query"
+    },
+    "files.thumbnails": {
+      "id": "files.thumbnails",
+      "title": "Bounded Files thumbnails",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:thumbnails"
+    },
+    "files.overview": {
+      "id": "files.overview",
+      "title": "Measured file distributions and rankings",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:overview"
+    },
+    "files.metadata": {
+      "id": "files.metadata",
+      "title": "Measured file metadata dossier",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:metadata"
+    },
+    "files.hash": {
+      "id": "files.hash",
+      "title": "Bounded read-only file hash",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:hash"
+    },
+    "files.emptyFolders": {
+      "id": "files.emptyFolders",
+      "title": "Bounded empty-folder discovery",
+      "mode": "read-only",
+      "channel": "knoux:files:v1:empty-folders"
+    },
+    "files.open": {
+      "id": "files.open",
+      "title": "Open an indexed file with the Windows shell",
+      "mode": "user-initiated",
+      "channel": "knoux:files:v1:open"
+    },
+    "files.reveal": {
+      "id": "files.reveal",
+      "title": "Reveal an indexed file in Explorer",
+      "mode": "user-initiated",
+      "channel": "knoux:files:v1:reveal"
     }
   },
   "windowActions": [

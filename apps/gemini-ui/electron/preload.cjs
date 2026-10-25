@@ -29,6 +29,18 @@ const CHANNELS = Object.freeze({
   studioPlanPreview: 'knoux:studio:v1:plan-preview',
   studioPreviewHistory: 'knoux:studio:v1:preview-history',
   studioEvent: 'knoux:studio:v1:event',
+  filesSources: 'knoux:files:v1:sources',
+  filesSourceChoose: 'knoux:files:v1:source-choose',
+  filesInventoryScan: 'knoux:files:v1:inventory-scan',
+  filesInventoryCancel: 'knoux:files:v1:inventory-cancel',
+  filesInventoryQuery: 'knoux:files:v1:inventory-query',
+  filesThumbnails: 'knoux:files:v1:thumbnails',
+  filesOverview: 'knoux:files:v1:overview',
+  filesMetadata: 'knoux:files:v1:metadata',
+  filesHash: 'knoux:files:v1:hash',
+  filesEmptyFolders: 'knoux:files:v1:empty-folders',
+  filesOpen: 'knoux:files:v1:open',
+  filesReveal: 'knoux:files:v1:reveal',
 });
 const WINDOW_ACTIONS = Object.freeze(['minimize', 'maximize', 'close']);
 
@@ -76,5 +88,27 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.on(CHANNELS.studioEvent, listener);
       return () => ipcRenderer.removeListener(CHANNELS.studioEvent, listener);
     },
+  })
+);
+
+/* Files v1 is a separate read-only namespace. It exposes no write operation,
+   no generic invoke and no raw IPC object. Scan progress is shared with the
+   Studio event channel through the Studio namespace. */
+contextBridge.exposeInMainWorld(
+  'knouxFilesV1',
+  Object.freeze({
+    contractVersion: CONTRACT_VERSION,
+    listSources: () => ipcRenderer.invoke(CHANNELS.filesSources),
+    chooseSource: () => ipcRenderer.invoke(CHANNELS.filesSourceChoose),
+    scanSource: (sourceId) => ipcRenderer.invoke(CHANNELS.filesInventoryScan, { sourceId }),
+    cancelScan: (sourceId) => ipcRenderer.invoke(CHANNELS.filesInventoryCancel, { sourceId }),
+    query: (request) => ipcRenderer.invoke(CHANNELS.filesInventoryQuery, request),
+    thumbnails: (sourceId, fileIds) => ipcRenderer.invoke(CHANNELS.filesThumbnails, { sourceId, fileIds }),
+    overview: (sourceId) => ipcRenderer.invoke(CHANNELS.filesOverview, { sourceId }),
+    metadata: (sourceId, fileId) => ipcRenderer.invoke(CHANNELS.filesMetadata, { sourceId, fileId }),
+    hash: (sourceId, fileId, algorithm) => ipcRenderer.invoke(CHANNELS.filesHash, { sourceId, fileId, algorithm }),
+    emptyFolders: (sourceId, limit) => ipcRenderer.invoke(CHANNELS.filesEmptyFolders, { sourceId, limit }),
+    open: (sourceId, fileId) => ipcRenderer.invoke(CHANNELS.filesOpen, { sourceId, fileId }),
+    reveal: (sourceId, fileId) => ipcRenderer.invoke(CHANNELS.filesReveal, { sourceId, fileId }),
   })
 );

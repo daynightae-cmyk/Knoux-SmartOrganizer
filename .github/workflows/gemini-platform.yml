@@ -41,6 +41,8 @@ jobs:
           npm run test:native | tee native-contract-result.txt
       - name: Read-only Studio adapter test
         run: npm run test:studio
+      - name: Read-only Files adapter test
+        run: npm run test:files
       - name: Upload contract evidence
         uses: actions/upload-artifact@v4
         with:

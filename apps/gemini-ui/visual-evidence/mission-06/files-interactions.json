@@ -1,0 +1,116 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:3000/#/files",
+  "viewport": [
+    1672,
+    941
+  ],
+  "mode": "fixture preview (native proven separately)",
+  "results": [
+    {
+      "name": "fixture ledger renders real design rows",
+      "pass": true,
+      "detail": {
+        "rows": 12
+      }
+    },
+    {
+      "name": "search input filters the ledger",
+      "pass": true,
+      "detail": {
+        "searchRows": [
+          "Aurora_Norway.jpg"
+        ]
+      }
+    },
+    {
+      "name": "category pills filter the ledger",
+      "pass": true,
+      "detail": {
+        "imageRows": [
+          "Mountains_Lake_4K.jpg",
+          "Aurora_Norway.jpg",
+          "logo-transparent.png",
+          "City_Skyline_8K.jpg"
+        ]
+      }
+    },
+    {
+      "name": "extension filter updates rows",
+      "pass": true,
+      "detail": {
+        "zipRows": [
+          "source_code.zip"
+        ]
+      }
+    },
+    {
+      "name": "size filter updates rows",
+      "pass": true,
+      "detail": {
+        "largeRows": [
+          "Demo_Video.mp4"
+        ]
+      }
+    },
+    {
+      "name": "date filter produces an honest empty state",
+      "pass": true,
+      "detail": {
+        "empty": true
+      }
+    },
+    {
+      "name": "size sort places the largest row first",
+      "pass": true,
+      "detail": {
+        "first": "Demo_Video.mp4"
+      }
+    },
+    {
+      "name": "grid view renders the same rows",
+      "pass": true,
+      "detail": {
+        "gridCards": 12,
+        "gridVisible": true
+      }
+    },
+    {
+      "name": "select-all updates the sticky footer",
+      "pass": true,
+      "detail": {
+        "selectedCount": 12,
+        "selectState": {
+          "rows": 12,
+          "footer": [
+            "12 files selected"
+          ],
+          "checkbox": true
+        }
+      }
+    },
+    {
+      "name": "plan CTA opens Organization Studio",
+      "pass": true,
+      "detail": {
+        "hash": "#studio"
+      }
+    },
+    {
+      "name": "Files language toggle produces Arabic RTL",
+      "pass": true,
+      "detail": {
+        "dir": "rtl",
+        "arabicTitle": true,
+        "rtlRows": true
+      }
+    },
+    {
+      "name": "service dock opens a domain focus panel",
+      "pass": true,
+      "detail": {
+        "text": "تجزئة الملفات\nFIXTURE\n\nحساب بصمات التجزئة والتشفير للملفات\n\nهذه الخدمة معاينة تصميم فقط حتى يتم التصريح بمصدر في Electro"
+      }
+    }
+  ]
+}
