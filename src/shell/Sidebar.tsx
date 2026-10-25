@@ -83,6 +83,12 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+      {page === 'studio' && !collapsed && (
+        <div className="studio-sidebar-note" aria-hidden="true">
+          <span>{t('app.tagline')}</span>
+          <i />
+        </div>
+      )}
       <div className="sidebar-foot">
         <span className="local-badge"><ShieldCheck size={14} /> {!collapsed && t('common.local')}</span>
         {!collapsed && <span className="muted version">v{appInfo?.version || '—'}</span>}

@@ -530,10 +530,10 @@ async function stop(ctx) {
   if (ctx.browser) { ctx.browser.close(); ctx.browser = null; }
 }
 
-async function capture(ctx, name, locale, theme, expectedCategories = false) {
-  await ctx.page.send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false });
+async function capture(ctx, name, locale, theme, expectedCategories = false, width = 1366, height = 768) {
+  await ctx.page.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
   await api(ctx, 'updateSettings', { localization: { locale }, appearance: { theme } }, 'knoux');
-  await wait(ctx, `${locale}/${theme} live DOM settings`, () => ctx.page.eval(`document.documentElement.lang===${quote(locale)} && document.documentElement.dir===${quote(locale === 'ar' ? 'rtl' : 'ltr')} && document.documentElement.dataset.theme===${quote(theme)} && innerWidth===1366 && innerHeight===768`));
+  await wait(ctx, `${locale}/${theme} live DOM settings`, () => ctx.page.eval(`document.documentElement.lang===${quote(locale)} && document.documentElement.dir===${quote(locale === 'ar' ? 'rtl' : 'ltr')} && document.documentElement.dataset.theme===${quote(theme)} && innerWidth===${width} && innerHeight===${height}`));
   const library = locale === 'ar' ? 'المكتبة المرئية' : 'Visual library';
   // Do not guess Arabic UI labels: the rail's fixed surface order is production DOM.
   if (expectedCategories) {
@@ -543,20 +543,20 @@ async function capture(ctx, name, locale, theme, expectedCategories = false) {
   await ctx.page.eval(`(() => { document.querySelector('.st-root')?.scrollIntoView({block:'start',behavior:'instant'}); return true; })()`);
   await wait(ctx, 'Fonts and live image previews ready', () => ctx.page.eval(`document.fonts.status==='loaded' && Array.from(document.querySelectorAll('.st-thumb img')).every(e=>e.complete && e.naturalWidth>0)`));
   const metrics = await ctx.page.eval(`(() => {
-    const root=document.documentElement, stage=document.querySelector('.st-stage'), box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:e.scrollWidth,clientWidth:e.clientWidth,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}};
-    const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'};
+    const root=document.documentElement, stage=document.querySelector('.st-stage'), studio=document.querySelector('.st-root'), rail=document.querySelector('.st-rail'), box=e=>{if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:e.scrollWidth,clientWidth:e.clientWidth,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}};
+    const visible=e=>{if(!e)return false;const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'};
     const cards=Array.from(document.querySelectorAll('.st-category'));
-    return {lang:root.lang,dir:root.dir,theme:root.dataset.theme,viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},clientWidth:root.clientWidth,scrollWidth:root.scrollWidth,horizontalOverflow:root.scrollWidth>root.clientWidth+1,bodyBackground:getComputedStyle(document.body).backgroundColor,studioBackground:getComputedStyle(document.querySelector('.st-root')).backgroundColor,headings:Array.from(document.querySelectorAll('.st-root h1,.st-root h2')).map(e=>e.textContent),stage:stage?box(stage):null,rail:box(document.querySelector('.st-rail')),categoryCount:cards.length,categories:cards.map(e=>({text:e.textContent,rect:box(e),visible:visible(e)})),focusable:Array.from(document.querySelectorAll('.st-root button,.st-root input,.st-root select')).filter(visible).length,overflowing:Array.from(document.querySelectorAll('.st-root *')).filter(e=>{const s=getComputedStyle(e);if(!visible(e)||['absolute','fixed'].includes(s.position)||['hidden','clip','auto','scroll'].includes(s.overflowX))return false;return e.clientWidth>0&&e.scrollWidth>e.clientWidth+4}).slice(0,25).map(e=>({tag:e.tagName,className:String(e.className),rect:box(e)}))};
+    return {lang:root.lang,dir:root.dir,theme:root.dataset.theme,viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},clientWidth:root.clientWidth,scrollWidth:root.scrollWidth,horizontalOverflow:root.scrollWidth>root.clientWidth+1,bodyBackground:getComputedStyle(document.body).backgroundColor,studioBackground:studio?getComputedStyle(studio).backgroundColor:null,hasStudio:!!studio,headings:Array.from(document.querySelectorAll('.st-root h1,.st-root h2')).map(e=>e.textContent),stage:box(stage),rail:box(rail),categoryCount:cards.length,categories:cards.map(e=>({text:e.textContent,rect:box(e),visible:visible(e)})),focusable:Array.from(document.querySelectorAll('.st-root button,.st-root input,.st-root select')).filter(visible).length,overflowing:Array.from(document.querySelectorAll('.st-root *')).filter(e=>{const s=getComputedStyle(e);if(!visible(e)||['absolute','fixed'].includes(s.position)||['hidden','clip','auto','scroll'].includes(s.overflowX))return false;return e.clientWidth>0&&e.scrollWidth>e.clientWidth+4}).slice(0,25).map(e=>({tag:e.tagName,className:String(e.className),rect:box(e)}))};
   })()`);
   const screenshot = await ctx.page.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false }, 15000);
   const bytes = Buffer.from(screenshot.data, 'base64');
   assert(bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])), 'CDP screenshot is not a PNG.');
-  const width = bytes.readUInt32BE(16), height = bytes.readUInt32BE(20);
+  const actualWidth = bytes.readUInt32BE(16), actualHeight = bytes.readUInt32BE(20);
   const file = await writeNew(ctx, `${name}.png`, bytes);
-  ctx.report.screenshots.push({ name, file, capturedVia: 'Page.captureScreenshot / real Electron renderer', locale, theme, width, height, metrics, surfaceHint: expectedCategories ? library : 'current real Studio surface' });
-  assert(width === 1366 && height === 768, `Screenshot size mismatch: ${width}x${height}`);
+  ctx.report.screenshots.push({ name, file, capturedVia: 'Page.captureScreenshot / real Electron renderer (emulated CSS viewport, not physical monitor DPI)', locale, theme, width: actualWidth, height: actualHeight, metrics, surfaceHint: expectedCategories ? library : 'current real Studio surface' });
+  assert(actualWidth === width && actualHeight === height, `Screenshot size mismatch: ${actualWidth}x${actualHeight}; requested ${width}x${height}`);
   assert(!metrics.horizontalOverflow, `${name}: document horizontal overflow.`);
-  assert(metrics.headings.length && metrics.focusable >= 3, `${name}: Studio did not render an accessible workspace.`);
+  assert(metrics.hasStudio && metrics.rail && metrics.headings.length && metrics.focusable >= 3, `${name}: Studio did not render an accessible workspace.`);
   if (expectedCategories) assert(metrics.categoryCount === 18, `${name}: missing category cards.`);
 }
 async function screenshotMatrix(ctx, populated) {
@@ -691,7 +691,7 @@ async function undoUI(ctx, journal, restart) {
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes('--help')) { console.log(HELP); return; }
-  for (const arg of args) assert(arg === '--skip-restart' || /^--timeout-ms=\d+$/.test(arg), `Unknown argument ${arg}; use --help.`);
+  for (const arg of args) assert(arg === '--skip-restart' || arg === '--capture-only' || /^--timeout-ms=\d+$/.test(arg), `Unknown argument ${arg}; use --help.`);
   const timeout = Number(args.find(arg => arg.startsWith('--timeout-ms='))?.split('=')[1] || 600000);
   assert(Number.isInteger(timeout) && timeout >= 60000 && timeout <= 1800000, '--timeout-ms must be 60000..1800000.');
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'knoux-studio-smoke-'));
@@ -717,9 +717,17 @@ async function main() {
     });
     await step(ctx, 'Create owned disposable fixtures', () => fixtures(ctx));
     await step(ctx, 'Launch isolated real Electron and click Studio', () => launch(ctx));
+    if (args.includes('--capture-only')) {
+      await step(ctx, 'Reference UI screenshot matrix only (no folder grants)', () => screenshotMatrix(ctx, false));
+      await step(ctx, 'Approved reference 1672x941 English dark (emulated viewport)', () => capture(ctx, 'studio-ref-en-dark-1672x941', 'en', 'dark', false, 1672, 941));
+      ctx.report.notTested.push('Capture-only mode does not test native picker, inventory, plan execution or undo.');
+      ctx.report.status = 'incomplete';
+      process.exitCode = 1;
+      return;
+    }
     try {
       await step(ctx, 'Native source picker and actual read-only index', async () => {
-        await nativeClick(ctx, '.st-hero button', 'Add folder', ctx.source, 'source');
+        await nativeClick(ctx, '.st-command__add', 'Add folder', ctx.source, 'source');
         const source = await wait(ctx, 'Real scan result retained by IPC', async () => (await api(ctx, 'listSources')).find(record => normalize(record.folder) === normalize(ctx.source) && record.inventory), 60000);
         const summary = source.inventory;
         assert(summary.totalFiles === 18 && !summary.partial && !summary.truncated && !summary.cancelled && summary.counts.errors === 0, `Incomplete fixture index: ${JSON.stringify(summary)}`);

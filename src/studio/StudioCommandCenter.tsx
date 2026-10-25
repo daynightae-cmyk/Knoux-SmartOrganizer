@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight, Check, Clock, Database, Eye, FolderOpen, FolderPlus, Images,
-  LayoutGrid, List, Loader2, Lock, RefreshCw, Search, ShieldCheck, Trash2, Workflow
+  AlertTriangle, ArrowRight, Check, Clock, Database, Eye, FolderCheck, FolderOpen,
+  FolderPlus, Images, Layers3, LayoutGrid, List, Loader2, Pencil, RefreshCw,
+  Search, Settings2, ShieldCheck, Trash2
 } from 'lucide-react';
 import { formatBytes, formatCount } from '../lib/format';
 import { CATEGORY_LABELS, CATEGORY_ORDER } from './copy';
@@ -9,6 +10,36 @@ import { useStudio } from './context';
 import { CategoryIcon, StudioThumb } from './parts';
 import type { FileInfo, OrganizationMode } from './types';
 import './styles/command-center.css';
+
+/**
+ * REF-01 status rail. Every value is derived from authorized source state; the
+ * timestamp is explicitly the moment this renderer read the current index.
+ */
+export function StudioStatusStrip() {
+  const s = useStudio();
+  const source = s.activeSource;
+  const index = s.inventory;
+  const [readAt, setReadAt] = useState<Date | null>(null);
+  const totalFiles = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalFiles ?? 0), 0);
+  const totalBytes = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalBytes ?? 0), 0);
+  useEffect(() => { setReadAt(index ? new Date() : null); }, [source?.id, index?.inventoryId]);
+  const copy = s.locale === 'ar' ? {
+    auth: 'تصريح المصادر', folders: 'مجلدات مصرح بها', none: 'لا يوجد مجلد مصرح به',
+    scan: 'حالة الفهرسة', scanning: 'الفهرسة جارية', complete: 'اكتملت الفهرسة', partial: 'فهرسة جزئية', waiting: 'بانتظار الفهرسة',
+    files: 'ملفات مفهرسة', refreshed: 'آخر قراءة', unread: 'لم تُقرأ بيانات بعد', refresh: 'تحديث'
+  } : {
+    auth: 'Source Authorization', folders: 'folders authorized', none: 'No folder authorized',
+    scan: 'Scan State', scanning: 'Indexing now', complete: 'Index complete', partial: 'Partial index', waiting: 'Awaiting first index',
+    files: 'Files Analyzed', refreshed: 'Last Refreshed', unread: 'Nothing read yet', refresh: 'Refresh'
+  };
+  return <section className="st-command__strip" aria-label={copy.auth}>
+    <div className="st-command__strip-cell"><span className="st-command__strip-icon" data-state={s.sources.length ? 'ok' : 'wait'}><ShieldCheck size={19} /></span><div><small>{copy.auth}</small><strong>{s.sources.length ? `${formatCount(s.sources.length, s.locale)} ${copy.folders}` : copy.none}</strong></div></div>
+    <div className="st-command__strip-cell"><span className="st-command__strip-icon" data-state={s.scanRunning ? 'busy' : index ? 'ok' : 'wait'}>{s.scanRunning ? <Loader2 className="st-spin" size={19} /> : index ? <Check size={19} /> : <Clock size={19} />}</span><div><small>{copy.scan}</small><strong>{s.scanRunning ? copy.scanning : index ? (index.partial ? copy.partial : copy.complete) : copy.waiting}</strong></div></div>
+    <div className="st-command__strip-cell"><span className="st-command__strip-icon" data-state={totalFiles ? 'ok' : 'wait'}><Database size={19} /></span><div><small>{copy.files}</small><strong>{totalFiles ? `${formatCount(totalFiles, s.locale)} · ${formatBytes(totalBytes, s.locale)}` : '—'}</strong></div></div>
+    <div className="st-command__strip-cell"><span className="st-command__strip-icon" data-state={readAt ? 'ok' : 'wait'}><Clock size={19} /></span><div><small>{copy.refreshed}</small><strong>{readAt ? new Intl.DateTimeFormat(s.locale === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(readAt) : copy.unread}</strong></div></div>
+    <button type="button" className="st-btn st-btn--small st-command__refresh" disabled={!source || !!s.scanRunning} onClick={() => source ? void s.beginScan(source.id) : void s.pickSource()}><RefreshCw size={14} />{copy.refresh}</button>
+  </section>;
+}
 
 /**
  * The flagship command board is a composition of the existing Studio state.
@@ -129,61 +160,27 @@ export function StudioCommandCenter() {
     footerClear: 'Clear selection',
     footerReview: 'Review Organization Plan'
   };
-  const totalFiles = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalFiles ?? 0), 0);
-  const totalBytes = s.sources.reduce((sum, item) => sum + (s.saved[item.id]?.totalBytes ?? 0), 0);
   const measuredCategories = index ? index.categories.filter(entry => entry.count > 0).length : 0;
   const plannedBytes = s.basket.reduce((sum, item) => sum + ('bytes' in item ? item.bytes : item.file.size), 0);
-  const [readAt, setReadAt] = useState<Date | null>(null);
   useEffect(() => {
     setPreviewId(null);
-    // The clock here is when this window read the index, not a timestamp the
-    // engine claims to own — the summary carries no capture time of its own.
-    setReadAt(index ? new Date() : null);
   }, [source?.id, index?.inventoryId]);
   const preview: FileInfo | null = useMemo(
     () => s.page?.rows.find((file) => file.id === previewId) ?? s.page?.rows[0] ?? null,
     [s.page, previewId]
   );
-  const categoryRows = index ? CATEGORY_ORDER.map((key) => ({
+  const categoryRows = CATEGORY_ORDER.map((key) => ({
     key,
-    stat: index.categories.find((entry) => entry.key === key)
-  })) : [];
+    stat: index?.categories.find((entry) => entry.key === key)
+  }));
+  const selectedCategory = s.filters.category !== 'all'
+    ? s.filters.category
+    : preview?.category ?? categoryRows.find(({ stat }) => (stat?.count ?? 0) > 0)?.key ?? null;
+  const selectedStat = selectedCategory ? index?.categories.find((entry) => entry.key === selectedCategory) : null;
+  const conflictCount = s.plan?.collisions.length ?? 0;
 
   return (
     <section className="st-command" aria-label={words.heading}>
-      <div className="st-command__strip">
-        <div className="st-command__strip-cell">
-          <span className="st-command__strip-icon" data-state={s.sources.length ? 'ok' : 'wait'}><ShieldCheck size={17} /></span>
-          <div><small>{words.stripAuth}</small><strong>{s.sources.length ? `${formatCount(s.sources.length, s.locale)} ${words.stripFolders}` : words.stripAuthNone}</strong></div>
-        </div>
-        <div className="st-command__strip-cell">
-          <span className="st-command__strip-icon" data-state={s.scanRunning ? 'busy' : index ? 'ok' : 'wait'}>{s.scanRunning ? <Loader2 className="st-spin" size={17} /> : index ? <Check size={17} /> : <Clock size={17} />}</span>
-          <div><small>{words.stripScan}</small><strong>{s.scanRunning ? words.stripScanning : index ? (index.partial ? words.stripPartial : words.stripComplete) : words.stripAwaiting}</strong></div>
-        </div>
-        <div className="st-command__strip-cell">
-          <span className="st-command__strip-icon" data-state={totalFiles ? 'ok' : 'wait'}><Database size={17} /></span>
-          <div><small>{words.stripFiles}</small><strong>{totalFiles ? `${formatCount(totalFiles, s.locale)} · ${formatBytes(totalBytes, s.locale)}` : '—'}</strong></div>
-        </div>
-        <div className="st-command__strip-cell">
-          <span className="st-command__strip-icon" data-state={readAt ? 'ok' : 'wait'}><Clock size={17} /></span>
-          <div><small>{words.stripRead}</small><strong>{readAt ? new Intl.DateTimeFormat(s.locale === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(readAt) : words.stripReadPending}</strong></div>
-        </div>
-        <button type="button" className="st-btn st-btn--small st-command__refresh" disabled={!source || !!s.scanRunning} onClick={() => source ? void s.beginScan(source.id) : void s.pickSource()}>
-          <RefreshCw size={14} />{words.refresh}
-        </button>
-      </div>
-      <header className="st-command__headline">
-        <div className="st-command__identity">
-          <span className="st-command__mark"><Workflow size={24} /></span>
-          <div><h2>{words.heading}</h2><p>{words.caption}</p></div>
-        </div>
-        <div className="st-command__metrics">
-          <div><small>{words.authorized}</small><strong>{formatCount(s.sources.length, s.locale)}</strong></div>
-          <div><small>{words.indexed}</small><strong>{formatCount(totalFiles, s.locale)}</strong></div>
-          <div><small>{words.staged}</small><strong>{formatCount(s.basketCount, s.locale)}</strong></div>
-        </div>
-      </header>
-
       <div className="st-command__columns">
         <aside className="st-command__pane st-command__sources" aria-label={words.sources}>
           <div className="st-command__panehead"><h3><FolderOpen size={16} />{words.sources}</h3><span>{s.sources.length}</span></div>
@@ -199,14 +196,35 @@ export function StudioCommandCenter() {
             })}
           </div> : <div className="st-command__source-empty"><FolderPlus size={33} /><p>{words.empty}</p></div>}
           <button type="button" className="st-btn st-btn--primary st-command__add" onClick={() => void s.pickSource()} disabled={!!s.scanRunning}><FolderPlus size={15} />{words.add}</button>
+          <button type="button" className="st-btn st-btn--small st-command__source-refresh" disabled={!source || !!s.scanRunning} onClick={() => source && void s.beginScan(source.id)}><RefreshCw size={14} />{words.refresh}</button>
           {s.scanRunning && <p className="st-command__scanstatus" role="status"><Loader2 className="st-spin" size={14} />{s.t.indexing}</p>}
-          <p className="st-command__footnote"><Lock size={13} />{s.t.readOnlyIndex}</p>
+          <div className="st-command__inventory">
+            <h4><Database size={15} />{s.locale === 'ar' ? 'ملخص الفهرس' : 'Inventory Summary'}</h4>
+            <dl>
+              <div><dt>{s.t.files}</dt><dd>{index ? formatCount(index.totalFiles, s.locale) : '—'}</dd></div>
+              <div><dt>{s.t.bytes}</dt><dd>{index ? formatBytes(index.totalBytes, s.locale) : '—'}</dd></div>
+              <div><dt>{s.t.folders}</dt><dd>{index ? formatCount(index.counts.folders, s.locale) : '—'}</dd></div>
+              <div><dt>{s.locale === 'ar' ? 'أنواع الملفات' : 'File types'}</dt><dd>{index ? formatCount(index.extensions.length, s.locale) : '—'}</dd></div>
+            </dl>
+          </div>
         </aside>
 
         <div className="st-command__pane st-command__library" aria-label={words.visual}>
           <div className="st-command__panehead">
-            <h3><LayoutGrid size={16} />{words.visual}</h3>
+            <h3><LayoutGrid size={16} />{s.locale === 'ar' ? 'تصنيفات الملفات (18)' : 'File Categories (18)'}</h3>
             <button type="button" className="st-link" onClick={() => s.goto('library')}>{words.categories}<ArrowRight size={13} /></button>
+          </div>
+          {index?.partial && <p className="st-command__warning" role="status">{words.partial}</p>}
+          <div className="st-command__sectionlabel"><strong>{words.tiles}</strong><small>{index ? measuredCategories : '—'} / {CATEGORY_ORDER.length}</small></div>
+          <div className="st-command__category-grid">
+            {categoryRows.map(({ key, stat }) => <div className={'st-command__category' + (s.filters.category === key ? ' is-active' : '') + (!index ? ' is-unindexed' : '')} key={key}>
+              <button type="button" className="st-command__category-main" disabled={!index} onClick={() => s.updateFilters({ category: s.filters.category === key ? 'all' : key })} aria-pressed={s.filters.category === key}>
+                <CategoryIcon category={key} size={21} />
+                <strong>{CATEGORY_LABELS[key][s.locale]}</strong>
+                <span>{index ? formatCount(stat?.count ?? 0, s.locale) : '—'}</span><small>{index ? formatBytes(stat?.bytes ?? 0, s.locale) : '—'}</small>
+              </button>
+              {stat && stat.count > 0 && <button type="button" className="st-command__category-add" onClick={() => source && s.addCategory(source, key)} aria-label={words.addGroup + ': ' + CATEGORY_LABELS[key][s.locale]} title={words.addGroup}>+</button>}
+            </div>)}
           </div>
           {!index ? <div className="st-command__onboarding">
             <span className="st-command__onboarding-art"><Images size={46} /></span>
@@ -216,18 +234,6 @@ export function StudioCommandCenter() {
               {s.sources.length ? words.scan : words.add}
             </button>
           </div> : <>
-            {index.partial && <p className="st-command__warning" role="status">{words.partial}</p>}
-            <div className="st-command__sectionlabel"><strong>{words.tiles}</strong><small>{index.categories.filter(c => c.count > 0).length} / {CATEGORY_ORDER.length}</small></div>
-            <div className="st-command__category-grid">
-              {categoryRows.map(({ key, stat }) => <div className={'st-command__category' + (s.filters.category === key ? ' is-active' : '')} key={key}>
-                <button type="button" className="st-command__category-main" onClick={() => s.updateFilters({ category: s.filters.category === key ? 'all' : key })} aria-pressed={s.filters.category === key}>
-                  <CategoryIcon category={key} size={21} />
-                  <strong>{CATEGORY_LABELS[key][s.locale]}</strong>
-                  <span>{formatCount(stat?.count ?? 0, s.locale)}</span><small>{formatBytes(stat?.bytes ?? 0, s.locale)}</small>
-                </button>
-                {stat && stat.count > 0 && <button type="button" className="st-command__category-add" onClick={() => source && s.addCategory(source, key)} aria-label={words.addGroup + ': ' + CATEGORY_LABELS[key][s.locale]} title={words.addGroup}>+</button>}
-              </div>)}
-            </div>
             <div className="st-command__gallery-heading">
               <div className="st-command__sectionlabel"><strong>{words.gallery}</strong><small>{s.page ? formatCount(s.page.total, s.locale) : '—'}</small></div>
               <div className="st-command__gallery-tools">
@@ -255,28 +261,25 @@ export function StudioCommandCenter() {
 
         <aside className="st-command__pane st-command__review" aria-label={words.detail}>
           <div className="st-command__panehead"><h3><Eye size={16} />{words.detail}</h3></div>
-          {preview && source && s.bridge ? <div className="st-command__inspector">
-            <StudioThumb bridge={s.bridge} source={source} file={preview} category={preview.category} />
-            <strong title={preview.relative}>{preview.name}</strong>
-            <div className="st-command__inspector-meta"><span>{CATEGORY_LABELS[preview.category][s.locale]}</span><span>{formatBytes(preview.size, s.locale)}</span></div>
-            <button type="button" className="st-btn st-btn--small" onClick={() => s.toggleFile(source, preview)}>
-              {s.isFileSelected(index!.inventoryId, preview) ? words.removeFile : words.addFile}
-            </button>
-          </div> : <div className="st-command__no-preview"><Eye size={27} /><strong>{words.choose}</strong><small>{words.chooseDescription}</small></div>}
+          <div className="st-command__selected-category">
+            <span>{selectedCategory ? <CategoryIcon category={selectedCategory} size={26} /> : <Images size={26} />}</span>
+            <div><small>{s.locale === 'ar' ? 'التصنيف المحدد' : 'Selected Category'}</small><strong>{selectedCategory ? CATEGORY_LABELS[selectedCategory][s.locale] : words.all}</strong><em>{selectedStat ? `${formatCount(selectedStat.count, s.locale)} ${s.t.files} · ${formatBytes(selectedStat.bytes, s.locale)}` : '—'}</em></div>
+          </div>
           <div className="st-command__review-section">
-            <h4>{words.selected}</h4><strong className="st-command__selection">{formatCount(s.basketCount, s.locale)} {s.t.files}</strong>
-            <h4>{words.destination}</h4>
-            <bdi dir="ltr" className="st-command__destination">{s.destination?.path ?? (s.mode === 'virtual' ? s.t.virtualNeedsNoDestination : words.notSet)}</bdi>
-            <button type="button" className="st-link" onClick={() => s.goto('destinations')} disabled={s.mode === 'virtual'}>{words.change}<ArrowRight size={13} /></button>
-            <h4>{words.operation}</h4>
+            <div className="st-command__review-row"><FolderOpen size={16} /><span><small>{s.locale === 'ar' ? 'اقتراح الوجهة' : 'Destination Proposal'}</small><bdi dir="ltr">{s.destination?.path ?? (s.mode === 'virtual' ? s.t.virtualNeedsNoDestination : words.notSet)}</bdi></span><button type="button" onClick={() => s.goto('destinations')} disabled={s.mode === 'virtual'}>{words.change}</button></div>
+            <div className="st-command__review-row"><Pencil size={16} /><span><small>{s.locale === 'ar' ? 'قواعد التسمية' : 'Naming Rules'}</small><strong>{s.collisionPolicy === 'rename' ? s.t.policyRename : s.collisionPolicy === 'skip' ? s.t.policySkip : s.t.policyReview}</strong></span><button type="button" onClick={() => s.goto('builder')}>{s.locale === 'ar' ? 'تحرير…' : 'Edit…'}</button></div>
+            <div className="st-command__review-row"><Layers3 size={16} /><span><small>{s.locale === 'ar' ? 'خيارات التجميع' : 'Grouping Options'}</small><strong>{s.structure === 'categorized' ? s.t.structureCategorized : s.t.structureFlat}</strong></span><button type="button" onClick={() => s.goto('builder')}>{s.locale === 'ar' ? 'تحرير…' : 'Edit…'}</button></div>
+            <h4><Settings2 size={15} />{words.operation}</h4>
             <div className="st-command__modes">
               {([{ key: 'virtual', label: words.virtual }, { key: 'copy', label: words.copy }, { key: 'move', label: words.move }] as Array<{key: OrganizationMode; label: string}>).map(item => <label key={item.key} className={s.mode === item.key ? 'is-active' : ''}>
                 <input type="radio" name="command-mode" checked={s.mode === item.key} onChange={() => s.setMode(item.key)} /><span>{item.label}</span>
               </label>)}
             </div>
+            <div className={`st-command__review-row${conflictCount ? ' is-warning' : ''}`}><AlertTriangle size={16} /><span><small>{s.locale === 'ar' ? 'التعارضات المحتملة' : 'Potential Conflicts'}</small><strong>{s.plan ? `${formatCount(conflictCount, s.locale)} ${s.locale === 'ar' ? 'تعارض' : 'conflicts'}` : (s.locale === 'ar' ? 'تُحسب أثناء مراجعة الخطة' : 'Calculated during plan review')}</strong></span><button type="button" onClick={() => s.goto('review')}>{s.locale === 'ar' ? 'تفاصيل…' : 'Details…'}</button></div>
+            <div className="st-command__review-row"><FolderCheck size={16} /><span><small>{s.locale === 'ar' ? 'الأذونات' : 'Permissions'}</small><strong>{s.destination || s.mode === 'virtual' ? (s.locale === 'ar' ? 'التصريح متوفر' : 'Authorization available') : (s.locale === 'ar' ? 'اختر وجهة للتحقق' : 'Choose a destination to verify')}</strong></span></div>
+            <div className="st-command__review-row"><ShieldCheck size={16} /><span><small>{s.locale === 'ar' ? 'معلومات الأمان' : 'Safety Information'}</small><strong>{s.locale === 'ar' ? 'لا تغيير دون اعتماد الخطة' : 'No changes without plan approval'}</strong></span></div>
           </div>
-          <p className="st-command__safety"><ShieldCheck size={16} />{words.safe}</p>
-          <button type="button" className="st-btn st-btn--primary st-command__plan" disabled={!s.basketCount} onClick={() => s.goto('builder')}><Workflow size={16} />{words.plan}<ArrowRight size={15} /></button>
+          <p className="st-command__preview-only"><Clock size={15} />{s.locale === 'ar' ? 'معاينة فقط — لم تتغير أي ملفات' : 'Preview only — no files changed'}</p>
         </aside>
       </div>
 
