@@ -30,14 +30,12 @@ function Stat({ label, value }: { label: string; value: ReactNode }) {
 export function StudioHero() {
   const s = useStudio();
   return <header className="st-hero">
-    <div className="st-hero__copy"><span className="st-kicker"><Workflow size={14} />{s.t.kicker}</span>
-      <h1>{s.t.title}</h1><p>{s.t.subtitle}</p>
-      <div className="st-inline"><Badge tone="success" icon={Lock}>{s.t.localOnly}</Badge><Badge icon={Database}>{s.t.readOnlyIndex}</Badge><Badge tone="accent" icon={ShieldCheck}>{s.t.planner}</Badge></div>
+    <div className="st-hero__planet" aria-hidden="true"><i /><span /></div>
+    <div className="st-hero__copy">
+      <h1>{s.locale === 'ar' ? 'استوديو التنظيم الذكي' : 'Smart Organization Studio'}</h1>
+      <p>{s.locale === 'ar' ? 'من ملفات مبعثرة إلى ترتيب ذكي.' : 'From scattered files to intelligent order.'}</p>
     </div>
-    <div className="st-hero__aside"><span className="st-orbit" aria-hidden="true"><FolderTree size={42} /></span>
-      <button className="st-btn st-btn--primary" onClick={() => void s.pickSource()} disabled={!!s.scanRunning}><FolderPlus size={16} />{s.t.addSource}</button>
-      <small>{s.t.keepLocal}</small>
-    </div>
+    <small className="st-hero__promise">{s.locale === 'ar' ? 'غدٌ أكثر تنظيماً.' : 'A more organized tomorrow.'}</small>
   </header>;
 }
 
@@ -55,9 +53,7 @@ export function StudioBanners() {
 export function SurfaceRail() {
   const s = useStudio();
   return <nav className="st-rail" aria-label={s.t.surfaceHint}>
-    <span className="st-rail__label">{s.t.surfaceHint}</span>
-    {SURFACES.map(({ id, icon: Icon, text }, i) => <button key={id} className={`st-rail__item${s.surface === id ? ' is-active' : ''}`} aria-current={s.surface === id ? 'page' : undefined} onClick={() => s.goto(id)}><Icon size={17} /><span>{s.t[text]}</span><small>{id === 'builder' && s.basketCount ? formatCount(s.basketCount, s.locale) : String(i + 1).padStart(2, '0')}</small></button>)}
-    <div className="st-rail__foot"><ShieldCheck size={17} /><span>{s.t.selectionCrossSource}</span></div>
+    {SURFACES.map(({ id, icon: Icon, text }, i) => <button key={id} className={`st-rail__item${s.surface === id ? ' is-active' : ''}`} aria-current={s.surface === id ? 'page' : undefined} onClick={() => s.goto(id)}><Icon size={15} /><span>{s.t[text]}</span><small>{id === 'builder' && s.basketCount ? formatCount(s.basketCount, s.locale) : String(i + 1)}</small></button>)}
   </nav>;
 }
 

@@ -595,3 +595,23 @@ html[data-theme="light"] .atlas__inspector { background: linear-gradient(158deg,
 @media (prefers-reduced-motion: reduce) {
   .atlas__bay, .atlas__rung, .atlas__row { transition: none; }
 }
+
+/* REF-04 space map: measured bytes as area, one tile per file the heavy walk
+   reported. Tiles are buttons because picking one opens that file's record. */
+.atlas__map { display: grid; gap: 10px; margin-top: 18px; padding: 14px 15px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); }
+.atlas__maphead { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-width: 0; }
+.atlas__maphead h3 { font-size: var(--text-lg); }
+.atlas__maphead p { margin-top: 4px; font-size: var(--text-sm); line-height: 1.55; color: var(--muted); max-width: 74ch; }
+.atlas__maphead b { flex: none; font-size: 21px; line-height: 1.2; color: var(--primary-bright); font-variant-numeric: tabular-nums; }
+.atlas__mapcanvas { position: relative; height: 300px; overflow: hidden; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--surface-hover); }
+.atlas__tile { position: absolute; display: grid; align-content: start; gap: 2px; padding: 6px 7px; overflow: hidden; text-align: start; color: #fff; border: 1px solid #0000005c; border-radius: 6px; background: hsl(calc(214 - var(--tile-index, 0) * 24) 58% 41%); box-shadow: inset 0 1px #ffffff2b; cursor: pointer; transition: filter .12s ease; }
+.atlas__tile:hover { filter: brightness(1.16); z-index: 2; }
+.atlas__tile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; z-index: 3; }
+.atlas__tile strong { font-size: 11px; line-height: 1.25; font-weight: 650; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.atlas__tile small { font-size: 10px; opacity: .86; font-variant-numeric: tabular-nums; }
+.atlas__mapfoot { font-size: var(--text-sm); color: var(--muted); }
+.atlas__mapempty { display: grid; gap: 6px; justify-items: center; padding: 36px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: 10px; }
+.atlas__mapempty strong { color: var(--text); font-size: var(--text-md); }
+.atlas__mapempty span { font-size: var(--text-sm); max-width: 58ch; line-height: 1.6; }
+@media (max-width: 860px) { .atlas__mapcanvas { height: 220px; } .atlas__maphead { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .atlas__tile { transition: none; } }

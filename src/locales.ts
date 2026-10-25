@@ -351,7 +351,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   'home.commandDeck': { ar: 'مركز القيادة', en: 'Command deck' },
   'home.flagship': { ar: 'مساحة العمل الرئيسية', en: 'Flagship workspace' },
   'home.studioBody': { ar: 'مصادر مُصرّح بها، مكتبة مرئية، ثماني عشرة فئة، مراجعة خطة ثابتة وتنفيذ قابل للتراجع — كل ذلك محليًا.', en: 'Authorized sources, a visual library, 18 categories, immutable plan review and reversible execution — all locally.' },
-  'home.studioCta': { ar: 'افتح استوديو التنظيم', en: 'Open Organization Studio' },
+  'home.studioCta': { ar: 'افتح استوديو التنظيم الذكي', en: 'Open Smart Organization Studio' },
   'home.studioFacts': { ar: '9 مساحات عمل · 18 فئة · خطط محلية', en: '9 workspaces · 18 categories · local plans' },
   'home.systemPulse': { ar: 'نبض النظام', en: 'System pulse' },
   'home.openWorld': { ar: 'افتح العالم', en: 'Open world' },
@@ -685,7 +685,7 @@ const shellCopy: Record<string, { ar: string; en: string }> = {
   // The rail is 240px wide. The page's full title is a sentence, and the nav
   // label is not the page heading: it is a destination in a list, and it has to
   // fit beside its icon without an ellipsis eating the last word.
-  'nav.studio': { ar: 'استوديو التنظيم', en: 'Organization Studio' },
+  'nav.studio': { ar: 'استوديو التنظيم الذكي', en: 'Smart Organization Studio' },
 
   // KNOuX Clipboard Vault
   'nav.clipboard': { ar: 'خزنة الحافظة', en: 'Clipboard Vault' },

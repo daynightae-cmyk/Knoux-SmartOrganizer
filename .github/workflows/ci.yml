@@ -50,7 +50,47 @@ jobs:
         run: npm run smoke:installer
       - name: Offline packaged smoke
         run: npm run smoke:offline
-      - name: Visual acceptance from the packaged application
+      # The full matrix is 56 real captures, and each one boots the packaged
+      # application, waits for a genuine Windows read and then photographs the
+      # window. Measured on the runner: the whole matrix did not fit 1800 s, and
+      # the four data-driven worlds alone did not fit 1500 s — the cost is the
+      # per-scenario reload, not the photograph. So the matrix is cut along the
+      # worlds that are expensive on their own, each with its own ceiling, and
+      # the evidence ledger merges every slice by scenario name. No scenario is
+      # dropped and no assertion is loosened.
+      - name: Visual acceptance — applications
+        env:
+          KNOUX_SMOKE_ONLY: applications
+          KNOUX_SMOKE_TIMEOUT_MS: 1200000
+        timeout-minutes: 22
+        run: npm run smoke:visual
+      # Measured on the runner at a192db2: applications alone passed its slice,
+      # and the only red step was files+storage together overrunning 1200 s. The
+      # two worlds walk real directories per scenario, so they are cut apart the
+      # same way and each gets its own ceiling.
+      - name: Visual acceptance — files
+        env:
+          KNOUX_SMOKE_ONLY: files
+          KNOUX_SMOKE_TIMEOUT_MS: 1200000
+        timeout-minutes: 22
+        run: npm run smoke:visual
+      - name: Visual acceptance — storage
+        env:
+          KNOUX_SMOKE_ONLY: storage
+          KNOUX_SMOKE_TIMEOUT_MS: 1200000
+        timeout-minutes: 22
+        run: npm run smoke:visual
+      - name: Visual acceptance — automation
+        env:
+          KNOUX_SMOKE_ONLY: automation
+          KNOUX_SMOKE_TIMEOUT_MS: 900000
+        timeout-minutes: 17
+        run: npm run smoke:visual
+      - name: Visual acceptance — workspaces and shells
+        env:
+          KNOUX_SMOKE_ONLY: home,clipboard,cleanup,startup,system,repair,services,network,hardware,studio
+          KNOUX_SMOKE_TIMEOUT_MS: 1200000
+        timeout-minutes: 22
         run: npm run smoke:visual
       - name: Report the Authenticode state of the built artifacts
         run: npm run signing:verify

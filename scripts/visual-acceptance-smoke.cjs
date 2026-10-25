@@ -39,12 +39,60 @@ function run(exe, args, logPath) {
     // environment is cleaned here instead of being left to the caller's shell.
     delete env.ELECTRON_RUN_AS_NODE;
     delete env.ELECTRON_EXEC_PATH;
-    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env });
+    const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env, detached: process.platform === 'win32' });
     child.stdout.pipe(stream);
-    child.stderr.pipe(stream);    const timer = setTimeout(() => { child.kill(); reject(new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`)); }, SMOKE_TIMEOUT_MS);
+    child.stderr.pipe(stream);
+    // An Electron shell is never one process: the GPU, network and renderer
+    // children outlive a plain child.kill(), and a stray holder of the user
+    // data directory is what turns the next run's cleanup into EBUSY. On
+    // Windows the launcher is spawned in its own process group so the whole
+    // tree can be taken down by pid; elsewhere the negative pid reaches the
+    // group. Nothing outside this launch is touched.
+    const stopTree = () => {
+      if (child.exitCode !== null || child.signalCode !== null) return;
+      try {
+        if (process.platform === 'win32') {
+          const killer = spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+          killer.once('error', () => { try { child.kill(); } catch { /* already gone */ } });
+        } else {
+          process.kill(-child.pid, 'SIGTERM');
+        }
+      } catch {
+        try { child.kill(); } catch { /* already gone */ }
+      }
+    };
+    const timer = setTimeout(() => {
+      stopTree();
+      reject(new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`));
+    }, SMOKE_TIMEOUT_MS);
     child.once('error', error => { clearTimeout(timer); reject(error); });
     child.once('exit', code => { clearTimeout(timer); stream.end(); resolve(code); });
   });
+}
+
+/**
+ * Remove a temporary directory without letting a locked file decide the verdict.
+ *
+ * The directory is one this harness created under the OS temp root, so nothing
+ * in it is user data. Windows can still hold a handle for a moment after the
+ * application exits — the SQLite write-ahead log of a profile is the usual
+ * offender — and an unbounded rm() turned a passing capture into a failing
+ * release job. The retry is bounded, and what survives is named rather than
+ * silently swallowed.
+ */
+async function removeDirectory(directory) {
+  const problems = [];
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    problems.length = 0;
+    try {
+      await fs.rm(directory, { recursive: true, force: true, maxRetries: 4, retryDelay: 250 });
+      return [];
+    } catch (error) {
+      problems.push(error.message);
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
+  }
+  return problems;
 }
 
 async function main() {
@@ -284,6 +332,25 @@ async function main() {
       notes,
       failures
     };
+    // A narrowed pass (KNOUX_SMOKE_ONLY) photographs a few worlds, not the
+    // product. Writing it over the ledger used to delete the other fifty-odd
+    // scenarios and their PNG references in one go, which is how a layout
+    // question cost a full evidence pass to undo. The new records replace only
+    // the scenarios they re-captured, and the ledger says it is mixed-vintage.
+    if (process.env.KNOUX_SMOKE_ONLY) {
+      const previous = await fs.readFile(evidencePath, 'utf8')
+        .then(text => JSON.parse(text))
+        .catch(() => null);
+      if (previous && Array.isArray(previous.scenarios)) {
+        const refreshed = new Map(records.map(record => [record.name, record]));
+        const merged = previous.scenarios
+          .map(record => refreshed.get(record.name) ?? record)
+          .concat(records.filter(record => !previous.scenarios.some(old => old.name === record.name)));
+        evidence.scenarios = merged;
+        evidence.notes = [...notes, `This pass re-captured ${records.length} of ${merged.length} scenarios (${process.env.KNOUX_SMOKE_ONLY}); the remaining records are from ${previous.capturedAt ?? 'an earlier pass'} and their PNGs were not retaken.`];
+        evidence.partial = true;
+      }
+    }
     await fs.writeFile(evidencePath, JSON.stringify(evidence, null, 2), 'utf8');
     if (failures.length) throw new Error(`Visual acceptance found ${failures.length} problem(s): ${failures.join(' | ')}`);
     console.log(`Visual acceptance PASS: ${records.length} scenarios captured from the packaged application with no horizontal overflow.`);
@@ -291,11 +358,23 @@ async function main() {
     // A capture that fails is usually a timing story told by the application's
     // own progress log, and that log lives in the temporary work directory.
     // KNOUX_VISUAL_KEEP_WORKDIR leaves it in place and names it, so the run can
-    // be read instead of guessed at.
+    // be read instead of guessed at. Otherwise the two logs are copied into the
+    // evidence tree first: deleting the directory should not delete the reason.
     if (process.env.KNOUX_VISUAL_KEEP_WORKDIR) {
       console.log(`Visual acceptance work directory kept: ${workDirectory}`);
     } else {
-      await fs.rm(workDirectory, { recursive: true, force: true });
+      for (const log of ['visual-progress.log', 'application.log']) {
+        try {
+          const text = await fs.readFile(path.join(workDirectory, log), 'utf8');
+          if (!text.trim()) continue;
+          await fs.mkdir(path.join(evidenceDirectory, 'visual-acceptance-diagnostics'), { recursive: true });
+          await fs.writeFile(path.join(evidenceDirectory, 'visual-acceptance-diagnostics', log), text, 'utf8');
+        } catch { /* the run produced nothing to keep */ }
+      }
+      const leftovers = await removeDirectory(workDirectory);
+      if (leftovers.length) {
+        console.log(`Visual acceptance left ${workDirectory} behind because Windows still held a handle: ${leftovers[0]}. It is a temporary profile, not user data, and the next pass will not reuse it.`);
+      }
     }
   }
 }

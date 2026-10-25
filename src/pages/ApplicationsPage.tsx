@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  AlertTriangle, AppWindow, Ban, Check, Copy, FolderOpen,
-  ListChecks, RefreshCw, Search, Users, X
+  AlertTriangle, AppWindow, Ban, Boxes, Building2, Check, Copy, FolderOpen,
+  HardDrive, ListChecks, RefreshCw, Search, ShieldCheck, Users, X
 } from 'lucide-react';
 import AppIcon from '../components/app/AppIcon';
+import { ApplicationCommandBar, ApplicationOperationPreview } from '../components/app/ApplicationCommandSurface';
+import '../applications-ref02.css';
 import { ServicesRail } from '../components/world/ServicesRail';
 import {
   actionsFor, applyFacet, buildInventory, dossierFields, facetsFor, groupRecords, inventorySignature, parseDate,
@@ -171,6 +174,7 @@ function LedgerRow({ record, active, staged, t, locale, onOpen, onToggle }: RowP
         ) : <i className="appx__empty">—</i>}
       </span>
       <span className={`appx__cell appx__cell--faint appx__cell--date${installed === '—' ? ' appx__empty' : ''}`}>{installed}</span>
+      <span className="appref__row-actions"><button type="button" onClick={() => onOpen(record)} aria-label={t('app.dossier.label') + ': ' + record.name}><AppWindow size={14}/></button></span>
     </div>
   );
 }
@@ -244,6 +248,17 @@ function Dossier({ record, t, locale, onClose, onAction }: DossierProps) {
         </div>
         <button type="button" className="knx-btn knx-btn--icon appx__dclose" onClick={onClose} aria-label={t('app.dossier.close')} title={t('app.dossier.close')}>
           <X size={15} />
+        </button>
+      </div>
+      <div className="appref__dquick" role="group" aria-label={t('app.dossier.actions')}>
+        <button type="button" disabled={!record.installLocation} onClick={() => onAction('inspect-folder', record)} title={!record.installLocation ? t('app.action.reason.noLocation') : undefined}>
+          <FolderOpen size={14} />{locale === 'ar' ? 'عرض المجلد' : 'Reveal folder'}
+        </button>
+        <button type="button" onClick={() => onAction('copy-summary', record)}>
+          <Copy size={14} />{locale === 'ar' ? 'نسخ التفاصيل' : 'Copy details'}
+        </button>
+        <button type="button" disabled title={t('app.action.reason.noUninstallEngine')}>
+          <Ban size={14} />{locale === 'ar' ? 'إزالة' : 'Uninstall'}
         </button>
       </div>
 
@@ -344,6 +359,7 @@ export default function ApplicationsPage() {
   const [activeUid, setActiveUid] = useState<string | null>(null);
   const [staged, setStaged] = useState<ReadonlySet<string>>(() => new Set());
   const [, setIconTick] = useState(0);
+  const [dockGeometry, setDockGeometry] = useState({ left: 0, width: 0 });
 
   const rowsRef = useRef<HTMLDivElement | null>(null);
   const headCheckRef = useRef<HTMLInputElement | null>(null);
@@ -365,11 +381,12 @@ export default function ApplicationsPage() {
     signatureRef.current = signature;
     setSnapshot(completed);
     if (!unchanged) {
-      setActiveUid(null);
+      const firstByName = sortRecords(completed.records, 'name', 'ascending', locale)[0];
+      setActiveUid(firstByName?.uid ?? null);
       setStaged(new Set());
     }
     setPhase(ok ? 'ready' : 'failed');
-  }, []);
+  }, [locale]);
 
   const load = useCallback(async () => {
     if (!inventoryTool) return;
@@ -409,6 +426,26 @@ export default function ApplicationsPage() {
   const activeRecord = useMemo(() => snapshot?.records.find(record => record.uid === activeUid) ?? null, [snapshot, activeUid]);
   const stagedRecords = useMemo(() => (snapshot ? snapshot.records.filter(record => staged.has(record.uid)) : []), [snapshot, staged]);
   const stagedWithFolder = stagedRecords.filter(record => record.installLocation).length;
+
+  // Keep the tray within the visible main viewport, not the scrolled document.
+  useEffect(() => {
+    if (!stagedRecords.length) return;
+    const main = document.querySelector<HTMLElement>('.main');
+    if (!main) return;
+    const update = () => {
+      const rect = main.getBoundingClientRect();
+      const left = Math.round(rect.left);
+      const width = Math.round(rect.width);
+      setDockGeometry(previous =>
+        previous.left === left && previous.width === width ? previous : { left, width }
+      );
+    };
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(main);
+    window.addEventListener('resize', update);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', update); };
+  }, [stagedRecords.length]);
 
   // The provider ids currently on screen are the only ids worth asking about.
   const visibleIds = useMemo(() => rows.map(record => record.id).filter(Boolean), [rows]);
@@ -520,12 +557,13 @@ export default function ApplicationsPage() {
     : t('app.head.refresh');
 
   return (
-    <div className="world appx" data-world="applications" onKeyDown={onRootKeyDown}>
+    <div className="world appx appref" data-world="applications" onKeyDown={onRootKeyDown}>
       <section className="world-head">
         <div className="world-head__row">
           <div className="world-head__identity">
             <span className="world-tile"><AppWindow size={22} /></span>
             <div>
+              <span className="appref__kicker">KNOuX / SOFTWARE OPERATIONS</span>
               <h2 className="world-head__title">{t('app.head.title')}</h2>
               <p className="world-head__subtitle">{t('app.head.subtitle')}</p>
             </div>
@@ -546,29 +584,34 @@ export default function ApplicationsPage() {
           <>
             <div className="world-metrics">
               <div className="world-metric world-metric--accent">
+                <span className="appref__metric-icon appref__metric-icon--blue"><Boxes size={19}/></span>
                 <b>{formatCount(snapshot.totals.all, locale)}</b>
                 <span>{t('app.head.programs')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--violet"><ShieldCheck size={19}/></span>
                 <b>{formatCount(snapshot.totals.machineWide, locale)} · {formatCount(snapshot.totals.userOnly, locale)}</b>
                 <span>{t('app.stat.machine')} / {t('app.stat.user')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--purple"><Building2 size={19}/></span>
                 <b>{formatCount(snapshot.totals.distinctPublishers, locale)}</b>
                 <span>{t('app.stat.publishers')}</span>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--green"><HardDrive size={19}/></span>
                 <b>{snapshot.totals.withAdvertisedSize ? formatBytes(snapshot.totals.totalAdvertisedBytes, locale) : '—'}</b>
                 <span>{t('app.stat.declared')}</span>
                 <i>{t('app.stat.declaredNote')}</i>
               </div>
               <div className="world-metric">
+                <span className="appref__metric-icon appref__metric-icon--amber"><ListChecks size={19}/></span>
                 <b>{formatCount(snapshot.totals.uninstallSupported, locale)}</b>
                 <span>{t('app.stat.uninstallable')}</span>
                 <i>{t('app.stat.uninstallableNote')}</i>
               </div>
             </div>
-            <CoverageRibbon coverage={snapshot.coverage} t={t} />
+            <details className="appref__coverage"><summary>{locale === 'ar' ? 'تغطية بيانات البرامج' : 'Inventory data coverage'} <span>{locale === 'ar' ? 'تفاصيل اكتمال بيانات Windows' : 'See recorded-field completeness'}</span></summary><CoverageRibbon coverage={snapshot.coverage} t={t} /></details>
           </>
         )}
       </section>
@@ -645,6 +688,18 @@ export default function ApplicationsPage() {
 
       <div className="appx__body">
         <div className="appx__column">
+      <ApplicationCommandBar
+        record={activeRecord}
+        stagedCount={stagedRecords.length}
+        locale={locale}
+        loading={busy || phase === 'loading'}
+        onRefresh={() => { void load(); }}
+        onShowDetails={() => document.querySelector('.appx__dossier')?.scrollIntoView({ block: 'nearest' })}
+        onInspectFolder={() => { if (activeRecord) void runAction('inspect-folder', activeRecord); }}
+        onCopySummary={() => { if (activeRecord) void runAction('copy-summary', activeRecord); }}
+        onReviewStartup={() => setPage('startup')}
+        onCopyBatchManifest={() => { void copyManifest(); }}
+      />
           {(snapshot?.partial || (snapshot?.warnings.length ?? 0) > 0) && phase === 'ready' && (
             <p className="appx__warn">
               <AlertTriangle size={15} />
@@ -722,6 +777,7 @@ export default function ApplicationsPage() {
                     <span className="appx__col--version">{t('app.col.version')}</span>
                     <span className="is-num">{t('app.col.size')}</span>
                     <span className="appx__col--date">{t('app.col.installed')}</span>
+                    <span className="appref__row-actions-head">{locale === 'ar' ? 'إجراءات' : 'Actions'}</span>
                   </div>
                   {rows.map(record => (
                     <LedgerRow
@@ -766,19 +822,11 @@ export default function ApplicationsPage() {
           )}
 
           {/*
-           * The staging deck rides the register column, not the window.
-           *
-           * A page-level entrance animation puts the whole document inside a
-           * transformed element, and a transformed ancestor becomes the
-           * containing block for `position: fixed` descendants: the tray is then
-           * measured against the bottom of the page rather than the bottom of
-           * the screen, and a queue you can only reach by scrolling is not a
-           * queue. Sticky inside the column keeps the deck on screen for as long
-           * as the register is in view and lets it settle into the flow at the
-           * end of the page.
+           * Portal the selection dock to body, outside the transformed page;
+           * its horizontal bounds follow the measured .main shell.
            */}
-          {stagedRecords.length > 0 && (
-            <div className="appx__deck" role="region" aria-label={t('app.deck.label')}>
+          {stagedRecords.length > 0 && createPortal(
+            <div className="appx__deck appx__deck--overlay" style={{ left: dockGeometry.left + 8, width: Math.max(0, dockGeometry.width - 16) }} role="region" aria-label={t('app.deck.label')}>
               <div className="appx__deckinner">
                 <span className="appx__deckcount">
                   <b>{formatCount(stagedRecords.length, locale)}</b>
@@ -806,11 +854,21 @@ export default function ApplicationsPage() {
                   </button>
                 </span>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
-        <Dossier record={activeRecord} t={t} locale={locale} onClose={() => setActiveUid(null)} onAction={(action, record) => { void runAction(action, record); }} />
+        <div className="appref__rightstack">
+          <Dossier record={activeRecord} t={t} locale={locale} onClose={() => setActiveUid(null)} onAction={(action, record) => { void runAction(action, record); }} />
+          <ApplicationOperationPreview
+            record={activeRecord}
+            locale={locale}
+            onInspectFolder={() => { if (activeRecord) void runAction('inspect-folder', activeRecord); }}
+            onCopySummary={() => { if (activeRecord) void runAction('copy-summary', activeRecord); }}
+            onReviewStartup={() => setPage('startup')}
+          />
+        </div>
       </div>
 
       <ServicesRail

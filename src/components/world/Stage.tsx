@@ -17,12 +17,12 @@ import type { CSSProperties } from 'react';
  * an empty state that says so.
  */
 
-export function Stage({ world, children }: { world: WorldId; children: ReactNode }) {
+export function Stage({ world, state = 'idle', children }: { world: WorldId; state?: 'idle' | 'reading' | 'ready'; children: ReactNode }) {
   const { t, locale } = useStore();
   const def = worlds.find(item => item.id === world) ?? worlds[0];
   const brief = worldBriefs[world];
   return (
-    <div className="stage" data-world={world} style={{ '--world-hue': def.accent.hue } as CSSProperties}>
+    <div className="stage" data-world={world} data-stage-state={state} style={{ '--world-hue': def.accent.hue } as CSSProperties}>
       <span className="stage__horizon" aria-hidden="true" />
       {children}
       {brief && (
@@ -65,6 +65,7 @@ export interface Stat {
   value: ReactNode;
   detail?: string;
   tone?: 'good' | 'warn' | 'danger';
+  meter?: number | null;
 }
 
 export function StageStats({ items }: { items: Stat[] }) {
@@ -73,12 +74,17 @@ export function StageStats({ items }: { items: Stat[] }) {
       {items.map((item, index) => {
         const Icon = item.icon;
         return (
-          <div key={index} className={`stage__stat${item.tone ? ` stage__stat--${item.tone}` : ''}`}>
+          <div
+            key={index}
+            className={`stage__stat${item.tone ? ` stage__stat--${item.tone}` : ''}`}
+            style={item.meter == null ? undefined : { '--stage-meter': `${Math.max(0, Math.min(100, item.meter))}%` } as CSSProperties}
+          >
             {Icon && <Icon size={19} aria-hidden="true" />}
             <div style={{ minWidth: 0 }}>
               <b>{item.value}</b>
               <span>{item.label}</span>
               {item.detail && <small>{item.detail}</small>}
+              {item.meter != null && <i className="stage__meter" aria-hidden="true"><i /></i>}
             </div>
           </div>
         );

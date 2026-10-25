@@ -1,7 +1,9 @@
 import { Activity, Cpu, Gauge, HardDrive, MemoryStick, Timer } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote, StageKv } from '../components/world/Stage';
 import { EngineConsole, WorldLedger } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatBytes, formatCount } from '../lib/format';
 
 /**
@@ -12,7 +14,7 @@ import { formatBytes, formatCount } from '../lib/format';
  * because a line drawn from one point would be decoration, not telemetry.
  */
 export default function SystemPage() {
-  const { t, locale, health, result } = useStore();
+  const { t, locale, health, result, runById, event } = useStore();
   const read = result && ['system-health', 'event-warnings', 'process-inventory'].includes(result.toolId) ? result : null;
 
   const total = Number(health?.systemDriveTotalBytes);
@@ -22,8 +24,15 @@ export default function SystemPage() {
   const uptime = Number(health?.uptimeSeconds);
   const cores = Number(health?.cpuCores);
 
+  useEffect(() => {
+    if (!health && event?.toolId !== 'system-health') void runById('system-health', {}, true);
+  // The observatory starts with one genuine Windows sample. Historical lines
+  // remain absent until the backend has more than one point. One read per mount,
+  // so the dependency list stays deliberately empty.
+  }, []);
+
   return (
-    <Stage world="system">
+    <Stage world="system" state={health ? 'ready' : event?.toolId === 'system-health' ? 'reading' : 'idle'}>
       <StageHead
         icon={Activity}
         title={t('stage.system.name')}
@@ -33,8 +42,8 @@ export default function SystemPage() {
 
       <StageStats items={[
         { icon: Cpu, label: t('stage.system.stat1'), value: Number.isFinite(cores) ? formatCount(cores, locale) : '—', detail: String(health?.cpuModel ?? t('stage.awaiting')).slice(0, 34) },
-        { icon: MemoryStick, label: t('stage.system.stat2'), value: Number.isFinite(memory) ? `${memory}%` : '—', detail: health ? formatBytes(Number(health.memoryFreeBytes), locale) : t('stage.awaiting') },
-        { icon: HardDrive, label: t('stage.system.stat3'), value: usedPercent == null ? '—' : `${usedPercent}%`, detail: free > 0 ? formatBytes(free, locale) : t('stage.awaiting') },
+        { icon: MemoryStick, label: t('stage.system.stat2'), value: Number.isFinite(memory) ? `${memory}%` : '—', detail: health ? formatBytes(Number(health.memoryFreeBytes), locale) : t('stage.awaiting'), meter: Number.isFinite(memory) ? memory : null },
+        { icon: HardDrive, label: t('stage.system.stat3'), value: usedPercent == null ? '—' : `${usedPercent}%`, detail: free > 0 ? formatBytes(free, locale) : t('stage.awaiting'), meter: usedPercent },
         { icon: Timer, label: t('stage.system.stat4'), value: Number.isFinite(uptime) ? uptimeLabel(uptime) : '—', detail: t('stage.system.stat4d') }
       ]} />
 
@@ -66,6 +75,7 @@ export default function SystemPage() {
       </StagePanel>
 
       <WorldLedger world="system" t={t} locale={locale} />
+      <WorldDock world="system" count={read ? read.items.length : null} tone={read ? 'ready' : event?.toolId === 'system-health' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

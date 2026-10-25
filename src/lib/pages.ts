@@ -28,9 +28,9 @@ export const pageGroups: Array<{ id: GroupId; nameKey: string; pages: PageDef[] 
   ] },
   { id: 'organize', nameKey: 'nav.group.organize', pages: [
     page('studio', 'nav.studio', FolderOpen, 'organize'),
-    page('storage', 'nav.storage', HardDrive, 'organize'),
+    page('applications', 'nav.apps', AppWindow, 'organize'),
     page('files', 'nav.files', FolderOpen, 'organize'),
-    page('applications', 'nav.apps', AppWindow, 'organize')
+    page('storage', 'nav.storage', HardDrive, 'organize')
   ] },
   { id: 'optimize', nameKey: 'nav.group.optimize', pages: [
     page('cleanup', 'nav.cleanup', Trash2, 'optimize'),

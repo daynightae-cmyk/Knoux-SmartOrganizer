@@ -3,8 +3,8 @@ import type { StudioCategoryKey } from './types';
 
 const en = {
   kicker: 'KNOuX  /  SMART ORGANIZATION STUDIO',
-  title: 'Your files, arranged with intent.',
-  subtitle: 'Index real folders, inspect every group, then approve an exact plan. Nothing moves, copies or changes without your explicit approval.',
+  title: 'Smart Organization Studio',
+  subtitle: 'From scattered files to intelligent order. Index real folders, inspect every group, then approve an exact plan. Nothing moves, copies or changes without your explicit approval.',
   localOnly: 'Local only',
   readOnlyIndex: 'Read-only indexing',
   planner: 'Verified planner',
@@ -470,8 +470,8 @@ export type StudioText = typeof en;
 
 const ar: StudioText = {
   kicker: 'KNOuX  /  استوديو التنظيم الذكي',
-  title: 'ملفاتك، مرتبة بقرار منك.',
-  subtitle: 'افهرس مجلدات حقيقية، افحص كل مجموعة، ثم اعتمد خطة دقيقة. لا نقل ولا نسخ ولا تغيير قبل موافقتك الصريحة.',
+  title: 'استوديو التنظيم الذكي',
+  subtitle: 'من ملفات متفرقة إلى ترتيب مقصود. افهرس مجلدات حقيقية، افحص كل مجموعة، ثم اعتمد خطة دقيقة. لا نقل ولا نسخ ولا تغيير قبل موافقتك الصريحة.',
   localOnly: 'محلي فقط',
   readOnlyIndex: 'فهرسة للقراءة فقط',
   planner: 'مخطط مُتحقَّق منه',

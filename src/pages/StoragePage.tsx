@@ -452,7 +452,7 @@ function ReadBoard({ volume, reads, phases, tab, canWalk, walking, onTab, onWalk
 /* --------------------------------------------------------------------- page */
 
 export default function StoragePage() {
-  const { t, locale, tools, runById, result, event, setNotice } = useStore();
+  const { t, locale, tools, runById, result, event, setNotice, setPage } = useStore();
 
   const [atlas, setAtlas] = useState<AtlasSnapshot | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -965,6 +965,8 @@ export default function StoragePage() {
 
       {/* -- Ledger and inspector --------------------------------------------- */}
       <section className="atlas__split">
+        <SpaceMap rows={heavyRows} locale={locale} onPick={path => setSelected({ kind: 'file', path })} />
+
         <div className="atlas__ledger">
           <div className="atlas__ledgerbar">
             <div className="world-facets" role="group" aria-label={t('store.ledger.title')}>
@@ -1303,6 +1305,91 @@ export default function StoragePage() {
         t={t}
         locale={locale}
       />
+
+      <footer className={`world-dock ${atlas ? 'world-dock--ready' : volumesBusy ? 'world-dock--busy' : 'world-dock--idle'}`} aria-label={locale === 'ar' ? 'قياسات الأطلس والخطوة التالية' : 'Atlas measurements and next step'}>
+        <span className="world-dock__mark" aria-hidden="true" />
+        <div className="world-dock__read">
+          <b>{volumesBusy
+            ? (locale === 'ar' ? 'يُقرأ جدول الأحجام في Windows…' : 'Reading the Windows volume table…')
+            : atlas
+              ? `${locale === 'ar' ? 'جداول الأحجام مقاسة' : 'Volume table measured'} · ${[heavy, duplicates, empties].filter(Boolean).length} / 3 ${locale === 'ar' ? 'جولات أجيب عنها' : 'walks answered'}`
+              : (locale === 'ar' ? 'لم يُقرأ شيء بعد' : 'Nothing read yet')}</b>
+          <small>{locale === 'ar' ? 'الأطلس يقيس فقط: لا حذف ولا نقل من هنا.' : 'The atlas measures only. Nothing is deleted or moved from here.'}</small>
+        </div>
+        <div className="world-dock__actions">
+          <button type="button" className="world-control" disabled={volumesBusy || !diskTool} onClick={() => void runById('disk-overview', {}, true)}>
+            {locale === 'ar' ? 'إعادة قراءة الأحجام' : 'Re-read volumes'}
+          </button>
+          <button type="button" className="world-control world-control--primary" onClick={() => setPage('files')}>
+            {locale === 'ar' ? 'افتح منضدة التنزيلات' : 'Open the Downloads bench'}
+          </button>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+/* -- REF-04 space map ------------------------------------------------------ */
+type MapTile = { row: HeavyRow; x: number; y: number; w: number; h: number };
+
+/**
+ * Slice the box by measured share, always cutting along the longer edge. The
+ * rectangles tile the area exactly, so a big file is a big rectangle and the
+ * sum of the areas is the sum of the bytes Windows reported for the files in
+ * view. Nothing is drawn before a walk has answered.
+ */
+function layoutTiles(rows: HeavyRow[], x: number, y: number, w: number, h: number, out: MapTile[] = []): MapTile[] {
+  if (!rows.length || w <= 0.01 || h <= 0.01) return out;
+  const sizes = rows.map(row => Math.max(1, row.size));
+  const total = sizes.reduce((sum, size) => sum + size, 0);
+  const share = sizes[0] / total;
+  if (w >= h) {
+    const width = w * share;
+    out.push({ row: rows[0], x, y, w: width, h });
+    return layoutTiles(rows.slice(1), x + width, y, w - width, h, out);
+  }
+  const height = h * share;
+  out.push({ row: rows[0], x, y, w, h: height });
+  return layoutTiles(rows.slice(1), x, y + height, w, h - height, out);
+}
+
+function SpaceMap({ rows, locale, onPick }: { rows: HeavyRow[]; locale: 'ar' | 'en'; onPick: (path: string) => void }) {
+  const words = locale === 'ar'
+    ? { title: 'خريطة المساحة', hint: 'مستطيل لكل ملف قياسي، ومساحته بنسبة البايتات التي أبلغ عنها Windows.', foot: (shown: number, all: number) => `${shown} من ${all} ملفاً مقياساً مرسومة هنا`, empty: 'لا خريطة قبل جولة', emptyNote: 'شغّل جولة الملفات الثقيلة لتُقرأ الأحجام، ثم تُرسم هنا بنسبة حقيقية.' }
+    : { title: 'Space map', hint: 'One rectangle per measured file, sized by the bytes Windows reported.', foot: (shown: number, all: number) => `${shown} of ${all} measured files drawn here`, empty: 'No map before a walk', emptyNote: 'Run the heavy-files walk and its measured sizes are drawn here in true proportion.' };
+  const ordered = useMemo(() => [...rows].sort((a, b) => b.size - a.size), [rows]);
+  const tiles = useMemo(() => layoutTiles(ordered.slice(0, 24), 0, 0, 100, 100), [ordered]);
+  const bytes = rows.reduce((sum, row) => sum + row.size, 0);
+  return (
+    <section className="atlas__map" data-state={tiles.length ? 'drawn' : 'empty'} aria-label={words.title}>
+      <header className="atlas__maphead">
+        <div>
+          <h3>{words.title}</h3>
+          <p>{words.hint}</p>
+        </div>
+        <b>{tiles.length ? formatBytes(bytes, locale) : '—'}</b>
+      </header>
+      {tiles.length ? (
+        <>
+          <div className="atlas__mapcanvas">
+            {tiles.map((tile, index) => (
+              <button
+                type="button"
+                key={tile.row.path}
+                className="atlas__tile"
+                style={{ left: `${tile.x}%`, top: `${tile.y}%`, width: `${tile.w}%`, height: `${tile.h}%`, '--tile-index': index } as CSSProperties}
+                title={`${tile.row.name} · ${formatBytes(tile.row.size, locale)}`}
+                onClick={() => onPick(tile.row.path)}
+              >
+                {tile.w > 11 && tile.h > 8 && <><strong>{tile.row.name}</strong><small>{formatBytes(tile.row.size, locale)}</small></>}
+              </button>
+            ))}
+          </div>
+          <p className="atlas__mapfoot">{words.foot(tiles.length, rows.length)}</p>
+        </>
+      ) : (
+        <p className="atlas__mapempty"><strong>{words.empty}</strong><span>{words.emptyNote}</span></p>
+      )}
+    </section>
   );
 }

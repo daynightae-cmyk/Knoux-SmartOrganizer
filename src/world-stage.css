@@ -238,3 +238,307 @@ html[data-theme="light"] .stage__row--on {
 }
 html[dir="rtl"][data-theme="light"] .stage__row--on { box-shadow: inset -3px 0 0 color-mix(in srgb, var(--world-hue) 62%, #171522); }
 html[data-theme="light"] .stage__panel { background: linear-gradient(168deg, #fff, var(--surface-raised) 82%); box-shadow: 0 12px 30px #29315e0c; }
+
+/* -------------------------------------------------- premium command worlds
+   The specialist pages are operational consoles, not a vertical stack of
+   cards. This section deliberately tightens the shared rhythm and gives the
+   live register, contextual rail and review sequence one coordinated frame.
+   World colour comes from the catalog token; no world invents a second shell. */
+
+.stage {
+  gap: 11px;
+  container-type: inline-size;
+}
+
+.stage__horizon {
+  top: -10px;
+  height: 224px;
+  opacity: .9;
+  background:
+    radial-gradient(72% 74% at 76% -6%, color-mix(in srgb, var(--world-hue) 24%, transparent), transparent 64%),
+    radial-gradient(54% 78% at 15% 18%, #273b9a3b, transparent 66%);
+}
+
+.stage__head {
+  min-height: 92px;
+  padding: 16px 20px;
+  border-color: color-mix(in srgb, var(--world-hue) 24%, var(--border));
+  border-radius: 18px;
+  background:
+    radial-gradient(54% 180% at 73% 108%, color-mix(in srgb, var(--world-hue) 16%, transparent), transparent 71%),
+    linear-gradient(104deg, color-mix(in srgb, var(--world-hue) 11%, var(--surface-raised)), var(--surface) 62%);
+}
+
+.stage__head::before {
+  background-image:
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px),
+    linear-gradient(0deg, #ffffff04 1px, transparent 1px);
+  background-size: 72px 100%, 100% 28px;
+}
+
+.stage__head::after {
+  top: auto;
+  bottom: -112px;
+  inset-inline: auto -3%;
+  width: min(46%, 520px);
+  height: 164px;
+  border: 1px solid color-mix(in srgb, var(--world-hue) 42%, transparent);
+  border-radius: 50% 50% 0 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--world-hue) 24%, transparent), transparent 68%);
+  box-shadow: 0 -7px 22px color-mix(in srgb, var(--world-hue) 18%, transparent);
+  opacity: .72;
+}
+
+.stage__head-row { align-items: center; min-height: 58px; }
+.stage__identity { align-items: center; }
+.stage__glyph {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 #ffffff30,
+    0 0 0 5px color-mix(in srgb, var(--world-hue) 6%, transparent),
+    0 12px 30px color-mix(in srgb, var(--world-hue) 18%, transparent);
+}
+.stage__head h2 { font-size: clamp(28px, 2.6vw, 38px); letter-spacing: -1.2px; }
+.stage__lead { margin-top: 3px; font-size: 12px; }
+.stage__stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: #07091366;
+  backdrop-filter: blur(12px);
+}
+.stage__stamp::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.stage[data-stage-state="ready"] .stage__stamp::before { background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 12%, transparent), 0 0 13px color-mix(in srgb, var(--green) 64%, transparent); }
+.stage[data-stage-state="reading"] .stage__stamp::before { background: color-mix(in srgb, var(--world-hue) 76%, white); animation: stage-reading 1.1s ease-in-out infinite; }
+@keyframes stage-reading { 50% { opacity: .35; transform: scale(.7); } }
+
+.stage__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stage__stat {
+  position: relative;
+  min-height: 82px;
+  padding: 13px 14px 12px;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--world-hue) 17%, var(--border-soft));
+  background:
+    radial-gradient(110% 150% at 100% 0%, color-mix(in srgb, var(--world-hue) 12%, transparent), transparent 60%),
+    linear-gradient(145deg, color-mix(in srgb, var(--surface-raised) 82%, transparent), var(--surface));
+}
+.stage__stat::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--world-hue) 54%, transparent), transparent);
+}
+.stage__stat > svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--world-hue) 25%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--world-hue) 11%, transparent);
+}
+.stage__stat b { font-size: 20px; letter-spacing: -.35px; }
+.stage__stat span { font-size: 10px; }
+.stage__stat small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage__meter {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-soft);
+}
+.stage__meter > i {
+  display: block;
+  width: var(--stage-meter, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--world-hue) 76%, white), var(--primary-bright));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--world-hue) 46%, transparent);
+}
+
+.stage__split { grid-template-columns: minmax(0, 1.9fr) minmax(292px, .9fr); gap: 10px; }
+.stage__panel { gap: 10px; padding: 13px 14px; border-radius: 14px; }
+.stage__panel-head h3 { font-size: 15px; }
+.stage__panel-head p { font-size: 10px; }
+.stage__stack { gap: 10px; }
+
+.stage .world-control-group {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
+  max-width: 100%;
+  border-radius: 10px;
+}
+.stage .world-control-group button {
+  min-height: 29px;
+  flex: 1 1 auto;
+  justify-content: center;
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+.stage .world-control-group button[aria-pressed="true"] {
+  color: color-mix(in srgb, var(--world-hue) 74%, white);
+  box-shadow: inset 0 -2px color-mix(in srgb, var(--world-hue) 70%, white);
+}
+
+.stage .runner-body { gap: 7px; }
+.stage .tool-heading {
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+.stage .tool-heading > span { padding: 8px; }
+.stage .tool-heading h2 { font-size: 15px; margin-bottom: 2px; }
+.stage .tool-heading p { font-size: 10px; line-height: 1.4; }
+.stage .tool-heading-badges { margin-top: 5px; }
+.stage .runner-actions { margin-top: 7px; }
+.stage .runner-actions .run-button { min-height: 34px; }
+.stage .result { margin-top: 4px; padding: 10px; }
+.stage .result h3 { margin: 0 0 5px; }
+.stage .result-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--border-soft); border-radius: 9px; overflow: hidden; }
+.stage .result-grid > div { display: grid; gap: 2px; padding: 7px 8px; background: var(--surface-raised); }
+.stage .result-grid dt { font-size: 9px; }
+.stage .result-grid dd { margin: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+.stage .result-items { max-height: 150px; overflow: auto; padding-inline-end: 4px; }
+.stage .category-tables { gap: 7px; margin: 0; }
+.stage .data-table-wrap {
+  max-height: 294px;
+  overflow: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface-raised);
+}
+.stage .data-table-wrap > p,
+.stage .data-table-wrap > .table-filter { margin: 8px 9px; }
+.stage .data-table { font-size: 10.5px; }
+.stage .data-table th,
+.stage .data-table td { padding: 7px 8px; }
+.stage .data-table thead { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px var(--border); }
+
+.stage__flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 0;
+}
+.stage__flow::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  inset-inline: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--world-hue) 58%, transparent) 8%, color-mix(in srgb, var(--world-hue) 58%, transparent) 92%, transparent);
+}
+.stage__step { position: relative; z-index: 1; display: grid; justify-items: start; gap: 7px; min-width: 0; padding: 4px 8px; }
+.stage__step b {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--world-hue) 24%, var(--surface));
+  box-shadow: 0 0 0 4px var(--surface), 0 0 16px color-mix(in srgb, var(--world-hue) 22%, transparent);
+}
+.stage__step span { font-size: 10px; line-height: 1.35; }
+
+.stage__note { margin: 0; padding: 8px 9px; }
+.stage__kv > div { font-size: 10.5px; }
+
+/* Each world keeps the same interaction grammar but gets a recognisable
+   instrument character: lab amber, launch cyan, observatory teal, recovery
+   coral and service-control indigo. */
+.stage[data-world="cleanup"] { --world-hue: #f4aa35 !important; }
+.stage[data-world="startup"] { --world-hue: #37bdf8 !important; }
+.stage[data-world="system"] { --world-hue: #3dd8c5 !important; }
+.stage[data-world="repair"] { --world-hue: #ff6f84 !important; }
+.stage[data-world="services"] { --world-hue: #7c70ff !important; }
+.stage[data-world="network"] { --world-hue: #35c7ee !important; }
+.stage[data-world="hardware"] { --world-hue: #78c5ff !important; }
+
+.stage[data-world="cleanup"] .stage__head::before {
+  background-image:
+    linear-gradient(90deg, #f4aa350a 1px, transparent 1px),
+    radial-gradient(circle at 74% 52%, #f4aa3515 0 4px, transparent 5px);
+  background-size: 64px 100%, 32px 32px;
+}
+.stage[data-world="system"] .stage__head::before {
+  background-image:
+    linear-gradient(90deg, transparent 0 4%, #3dd8c512 4.2% 4.4%, transparent 4.6% 9%),
+    linear-gradient(0deg, #3dd8c507 1px, transparent 1px);
+  background-size: 168px 100%, 100% 24px;
+}
+.stage[data-world="services"] .stage__head::before {
+  background-image:
+    linear-gradient(90deg, transparent 0 15%, #7c70ff14 15.2% 15.5%, transparent 15.7% 34%, #7c70ff0f 34.2% 34.5%, transparent 34.7%),
+    linear-gradient(0deg, transparent 0 42%, #7c70ff0d 42.3% 42.7%, transparent 43%);
+  background-size: 220px 100%, 100% 68px;
+}
+
+html[data-theme="light"] .stage__stamp { background: #ffffffb8; }
+html[data-theme="light"] .stage__head::before { opacity: .34; }
+html[data-theme="light"] .stage__stat,
+html[data-theme="light"] .stage .tool-heading,
+html[data-theme="light"] .stage .data-table-wrap { background: #fff; }
+
+@container (max-width: 940px) {
+  .stage__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage__split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .stage { gap: 9px; }
+  .stage__head { min-height: 82px; padding: 13px 14px; }
+  .stage__head h2 { font-size: 25px; }
+  .stage__readout { display: none; }
+  .stage__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage__stat { min-height: 74px; }
+  .stage__flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage__flow::before { display: none; }
+  .stage .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-stage-state="reading"] .stage__stamp::before { animation: none; }
+}
+
+/* REF-04..REF-09 decision dock. Every approved workspace closes with a bar that
+   says what was measured and what the next real step is, so the shared stage
+   grows one here instead of seven near-duplicates. */
+.world-dock {
+  position: sticky; bottom: 12px; z-index: 4;
+  display: flex; align-items: center; gap: 13px; min-width: 0;
+  padding: 11px 15px;
+  border: 1px solid color-mix(in srgb, hsl(var(--world-hue, 258) 70% 62%) 34%, var(--border));
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 5% -45%, hsl(var(--world-hue, 258) 78% 58% / 16%), transparent 62%), linear-gradient(150deg, var(--surface-raised), var(--surface));
+  box-shadow: 0 -10px 30px #00000026, inset 0 1px #ffffff0d;
+}
+.world-dock__mark { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); box-shadow: 0 0 0 4px hsl(var(--world-hue, 258) 70% 55% / 12%); }
+.world-dock--busy .world-dock__mark { background: var(--primary-bright); animation: world-dock-pulse 1.3s ease-in-out infinite; }
+.world-dock--ready .world-dock__mark { background: var(--status-success-text); box-shadow: 0 0 12px color-mix(in srgb, var(--status-success-text) 55%, transparent); }
+.world-dock--warn .world-dock__mark { background: var(--status-warning-text); }
+.world-dock__read { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.world-dock__read b { font-size: var(--text-md); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dock__read small { font-size: var(--text-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dock__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.world-dock__actions .world-control--primary svg { flex: none; }
+html[dir="rtl"] .world-dock__actions .world-control--primary svg { transform: scaleX(-1); }
+@keyframes world-dock-pulse { 50% { opacity: .35; } }
+@media (max-width: 860px) { .world-dock { flex-wrap: wrap; } .world-dock__actions { width: 100%; } .world-dock__actions .world-control { flex: 1; } }
+@media (prefers-reduced-motion: reduce) { .world-dock--busy .world-dock__mark { animation: none; } }

@@ -1,7 +1,9 @@
 import { LockKeyhole, Server, ShieldCheck, Square, Play, Settings2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { useStore } from '../state/store';
 import { Stage, StageHead, StageStats, StageSplit, StagePanel, StageFlow, StageNote } from '../components/world/Stage';
 import { EngineConsole, WorldLedger, summaryNumber } from '../components/world/EngineConsole';
+import { WorldDock } from '../components/world/WorldDock';
 import { formatCount } from '../lib/format';
 
 /**
@@ -13,15 +15,22 @@ import { formatCount } from '../lib/format';
  * same approval path the runner already requires — the page adds no new power.
  */
 export default function ServicesPage() {
-  const { t, locale, result } = useStore();
+  const { t, locale, result, runById, event } = useStore();
   const read = result && result.toolId.startsWith('service') ? result : null;
   const total = summaryNumber(read, 'services');
   const running = summaryNumber(read, 'running');
   const protectedCount = summaryNumber(read, 'protectedServices');
   const delayed = summaryNumber(read, 'delayedAutomatic');
 
+  useEffect(() => {
+    if (!read && event?.toolId !== 'services-inventory') void runById('services-inventory', { limit: 2000 }, true);
+  // Inventory is read-only. Start/stop/configuration remain explicit, confirmed
+  // actions in the existing runner. One read per mount, so the dependency list
+  // stays deliberately empty.
+  }, []);
+
   return (
-    <Stage world="services">
+    <Stage world="services" state={read ? 'ready' : event?.toolId === 'services-inventory' ? 'reading' : 'idle'}>
       <StageHead
         icon={Server}
         title={t('stage.services.name')}
@@ -31,7 +40,7 @@ export default function ServicesPage() {
 
       <StageStats items={[
         { icon: Server, label: t('stage.services.stat1'), value: total == null ? '—' : formatCount(total, locale), detail: read ? String(read.summary.provider ?? '') : t('stage.awaiting') },
-        { icon: Play, label: t('stage.services.stat2'), value: running == null ? '—' : formatCount(running, locale), detail: t('stage.services.stat2d'), tone: 'good' },
+        { icon: Play, label: t('stage.services.stat2'), value: running == null ? '—' : formatCount(running, locale), detail: t('stage.services.stat2d'), tone: 'good', meter: total && running != null ? running / total * 100 : null },
         { icon: Square, label: t('stage.services.stat3'), value: total == null || running == null ? '—' : formatCount(total - running, locale), detail: t('stage.services.stat3d') },
         { icon: ShieldCheck, label: t('stage.services.stat4'), value: protectedCount == null ? '—' : formatCount(protectedCount, locale), detail: t('stage.services.stat4d'), tone: 'warn' }
       ]} />
@@ -63,6 +72,7 @@ export default function ServicesPage() {
       </StagePanel>
 
       <WorldLedger world="services" t={t} locale={locale} />
+      <WorldDock world="services" count={total} tone={read ? 'ready' : event?.toolId === 'services-inventory' ? 'busy' : 'idle'} />
     </Stage>
   );
 }

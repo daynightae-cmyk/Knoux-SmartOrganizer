@@ -98,7 +98,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <MotionConfig reducedMotion={settings?.appearance.reduceMotion || settings?.appearance.animations === false ? 'always' : 'user'}>
-    <div className={sidebarCollapsed ? 'app-shell collapsed' : 'app-shell'}>
+    <div className={`${sidebarCollapsed ? 'app-shell collapsed' : 'app-shell'}${page === 'studio' ? ' app-shell--studio' : ''}`}>
       <div className="shell-atmosphere" aria-hidden="true"><span /><span /><span /></div>
       <SkipLink href="#main" label={t('shell.skipToContent')} />
       <Sidebar />

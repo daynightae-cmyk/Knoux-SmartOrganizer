@@ -1193,6 +1193,10 @@ const WORLD_WAITS = [
   { selector: '.stage__head', min: 1, ms: 90000 },
   { selector: '.svc-card', min: 12, ms: 45000 }
 ];
+const LIVE_STAGE_WAITS = [
+  { selector: '.stage[data-stage-state="ready"]', min: 1, ms: 90000 },
+  { selector: '.svc-card', min: 12, ms: 45000 }
+];
 
 /** The preview panel, after a card has been opened by the prepare script. */
 const PREVIEW_WAITS = [
@@ -1306,16 +1310,16 @@ async function captureVisualEvidence(outputDirectory) {
     // same twelve-card unit, so a single capture per world proves the breadth,
     // and the Arabic, narrow and open-preview passes cover the parts that break
     // first when a card grid meets a real locale and a small window.
-    { name: 'en-cleanup-1366x768', locale: 'en', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'ar-cleanup-1366x768', locale: 'ar', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'en-cleanup-860x600', locale: 'en', page: 'cleanup', width: 860, height: 600, waits: WORLD_WAITS },
-    { name: 'en-startup-1366x768', locale: 'en', page: 'startup', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'en-system-1366x768', locale: 'en', page: 'system', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-cleanup-1366x768', locale: 'en', page: 'cleanup', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'ar-cleanup-1366x768', locale: 'ar', page: 'cleanup', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'en-cleanup-860x600', locale: 'en', page: 'cleanup', width: 860, height: 600, waits: LIVE_STAGE_WAITS },
+    { name: 'en-startup-1366x768', locale: 'en', page: 'startup', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'en-system-1366x768', locale: 'en', page: 'system', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
     { name: 'en-repair-1366x768', locale: 'en', page: 'repair', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'en-services-1366x768', locale: 'en', page: 'services', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'en-network-1366x768', locale: 'en', page: 'network', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'en-hardware-1366x768', locale: 'en', page: 'hardware', width: 1366, height: 768, waits: WORLD_WAITS },
-    { name: 'ar-startup-1366x768', locale: 'ar', page: 'startup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-services-1366x768', locale: 'en', page: 'services', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'en-network-1366x768', locale: 'en', page: 'network', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'en-hardware-1366x768', locale: 'en', page: 'hardware', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
+    { name: 'ar-startup-1366x768', locale: 'ar', page: 'startup', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
     { name: 'en-repair-860x600', locale: 'en', page: 'repair', width: 860, height: 600, waits: WORLD_WAITS, scrollTo: '.stage__flow' },
     { name: 'en-automation-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, scrollTo: '.flowstudio' },
     // Flow Studio evidence: the editor at desktop density, the same editor in
@@ -1328,7 +1332,7 @@ async function captureVisualEvidence(outputDirectory) {
     // The canvas must be interactive, not an illustration: load a template,
     // then add a node through the real control and wait for the sixth card.
     { name: 'en-flow-studio-edited-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, prepare: 'var tpl=document.querySelector(".flow-item--template .flow-item__main"); if(tpl) tpl.click(); setTimeout(function(){ var add=document.querySelector(".flow-add .world-control"); if(add) add.click(); }, 420);', waitsAfterPrepare: [{ selector: '.flow-node', min: 6, ms: 12000 }], requiresEditedFlow: true, scrollTo: '.flowstudio' },
-    { name: 'en-cleanup-light-1366x768', locale: 'en', theme: 'light', page: 'cleanup', width: 1366, height: 768, waits: WORLD_WAITS },
+    { name: 'en-cleanup-light-1366x768', locale: 'en', theme: 'light', page: 'cleanup', width: 1366, height: 768, waits: LIVE_STAGE_WAITS },
     { name: 'en-flow-preview-1366x768', locale: 'en', page: 'automation', width: 1366, height: 768, waits: AUTOMATION_WAITS, scrollTo: '.flow-preview' },
     // The native dialog pass proves modal semantics from the live document and
     // then exercises Tab and Escape with real input events after the frame is
@@ -2173,13 +2177,16 @@ async function captureVisualEvidence(outputDirectory) {
     try { mainWindow.webContents.setBackgroundThrottling(true); } catch {}
     await progress('capture-finished');
     // The window belongs to the user again before its bounds are handed back.
+    await progress('restore-window-start');
     mainWindow.setMovable(true);
     mainWindow.setAlwaysOnTop(originalAlwaysOnTop);
     // The original bounds cannot be restored onto a maximised window: setBounds
     // is ignored while the shell owns the geometry.
     if (mainWindow.isMaximized()) mainWindow.unmaximize();
     mainWindow.setBounds(originalBounds);
+    await progress('restore-settings-start');
     await updateSettings({ general: originalSettings.general, localization: originalSettings.localization, window: originalSettings.window });
+    await progress('restore-settings-finished');
   }
   return results;
 }

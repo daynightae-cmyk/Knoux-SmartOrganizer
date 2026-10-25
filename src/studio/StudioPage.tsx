@@ -19,6 +19,7 @@ import {
   type StudioSurface
 } from './context';
 import { StudioBanners, StudioHero, StudioStage, SurfaceRail } from './panels';
+import { StudioCommandCenter, StudioStatusStrip } from './StudioCommandCenter';
 import type {
   DestinationAuthorization,
   ExecutionResult,
@@ -820,8 +821,10 @@ function StudioWorkspace({ bridge, locale }: { bridge: StudioBridge; locale: 'ar
       <div className="st-root">
         <StudioHero />
         <StudioBanners />
+        <StudioStatusStrip />
+        <SurfaceRail />
+        {surface === 'sources' && <StudioCommandCenter />}
         <div className="st-shell">
-          <SurfaceRail />
           <div className="st-stage" id="studio-stage" tabIndex={-1}>
             <StudioStage />
           </div>
