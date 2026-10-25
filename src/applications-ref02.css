@@ -241,3 +241,20 @@ html[data-theme="high-contrast"] .appref :is(.world-head,.world-metric,.appref__
 .appref__dquick button:disabled {opacity:.48;cursor:not-allowed}
 .appref__dquick button:not(:disabled):hover {filter:brightness(1.3)}
 html[data-theme="light"] .appref__dquick button {background:var(--surface-raised);color:var(--text)}
+
+/* CI visual acceptance: unavailable service actions remain clearly unavailable
+   without reducing label contrast below the documented 2:1 floor. This is a
+   visual state only; availability and click gating remain unchanged. */
+.appref .appx__action--off {opacity:1;border-style:dashed;cursor:not-allowed}
+.appref .appx__action--off .appx__actionlabel {color:#d4e2f5}
+.appref .appx__action--off .appx__action__state {color:#b0c1dc}
+html[data-theme="light"] .appref .appx__action--off .appx__actionlabel {color:#34465d}
+html[data-theme="light"] .appref .appx__action--off .appx__action__state {color:#516078}
+
+/* At compact desktop heights, prioritize keeping the selection decision dock
+   inside the visible register. Rows remain scrollable within their own pane. */
+@media (max-height:820px) and (min-width:1181px) {
+  .appref .appx__rows,.appref .appx__chapters {max-height:min(24vh,228px)}
+  .appref .appx__deck {bottom:6px}
+  .appref .appx__deckinner {padding:8px 11px;gap:7px}
+}
