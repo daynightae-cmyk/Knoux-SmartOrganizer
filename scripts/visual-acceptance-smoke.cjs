@@ -12,7 +12,7 @@ const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const executable = process.env.KNOUX_SMOKE_EXECUTABLE
@@ -41,9 +41,36 @@ function run(exe, args, logPath) {
     delete env.ELECTRON_EXEC_PATH;
     const child = spawn(exe, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env });
     child.stdout.pipe(stream);
-    child.stderr.pipe(stream);    const timer = setTimeout(() => { child.kill(); reject(new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`)); }, SMOKE_TIMEOUT_MS);
-    child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('exit', code => { clearTimeout(timer); stream.end(); resolve(code); });
+    child.stderr.pipe(stream);
+    let timer = null;
+    let settled = false;
+    const finish = (action, value) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      action(value);
+    };
+    // Windows keeps Chromium's profile handles (including Trust Tokens) alive in
+    // child processes after the top-level Electron process is terminated. Kill
+    // the whole tree before deleting the temporary user-data directory; a plain
+    // child.kill() leaves those handles behind and turns cleanup into EBUSY.
+    const terminateTree = () => {
+      if (process.platform === 'win32' && child.pid) {
+        try { spawnSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); }
+        catch {}
+      } else {
+        try { child.kill('SIGKILL'); } catch {}
+      }
+    };
+    timer = setTimeout(() => {
+      terminateTree();
+      // Let Windows release the profile handle before the caller's finally block
+      // attempts removal, and always surface the timeout rather than a cleanup
+      // side effect.
+      setTimeout(() => finish(reject, new Error(`Visual acceptance smoke timed out after ${Math.round(SMOKE_TIMEOUT_MS / 1000)} seconds.`)), 1200);
+    }, SMOKE_TIMEOUT_MS);
+    child.once('error', error => finish(reject, error));
+    child.once('exit', code => { stream.end(); finish(resolve, code); });
   });
 }
 
@@ -295,7 +322,15 @@ async function main() {
     if (process.env.KNOUX_VISUAL_KEEP_WORKDIR) {
       console.log(`Visual acceptance work directory kept: ${workDirectory}`);
     } else {
-      await fs.rm(workDirectory, { recursive: true, force: true });
+      // A failed run must retain its real visual error. Cleanup is best-effort
+      // and retried: deleting a Windows Chromium profile can race a Trust
+      // Tokens/Crashpad handle for a short interval after process exit.
+      await new Promise(resolve => setTimeout(resolve, 750));
+      try {
+        await fs.rm(workDirectory, { recursive: true, force: true, maxRetries: 12, retryDelay: 250 });
+      } catch (cleanupError) {
+        console.error(`Visual acceptance cleanup deferred (visual result preserved): ${cleanupError.message}`);
+      }
     }
   }
 }
