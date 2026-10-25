@@ -359,6 +359,7 @@ export default function ApplicationsPage() {
   const [activeUid, setActiveUid] = useState<string | null>(null);
   const [staged, setStaged] = useState<ReadonlySet<string>>(() => new Set());
   const [, setIconTick] = useState(0);
+  const [dockGeometry, setDockGeometry] = useState({ left: 0, width: 0 });
 
   const rowsRef = useRef<HTMLDivElement | null>(null);
   const headCheckRef = useRef<HTMLInputElement | null>(null);
@@ -425,6 +426,26 @@ export default function ApplicationsPage() {
   const activeRecord = useMemo(() => snapshot?.records.find(record => record.uid === activeUid) ?? null, [snapshot, activeUid]);
   const stagedRecords = useMemo(() => (snapshot ? snapshot.records.filter(record => staged.has(record.uid)) : []), [snapshot, staged]);
   const stagedWithFolder = stagedRecords.filter(record => record.installLocation).length;
+
+  // Keep the tray within the visible main viewport, not the scrolled document.
+  useEffect(() => {
+    if (!stagedRecords.length) return;
+    const main = document.querySelector<HTMLElement>('.main');
+    if (!main) return;
+    const update = () => {
+      const rect = main.getBoundingClientRect();
+      const left = Math.round(rect.left);
+      const width = Math.round(rect.width);
+      setDockGeometry(previous =>
+        previous.left === left && previous.width === width ? previous : { left, width }
+      );
+    };
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(main);
+    window.addEventListener('resize', update);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', update); };
+  }, [stagedRecords.length]);
 
   // The provider ids currently on screen are the only ids worth asking about.
   const visibleIds = useMemo(() => rows.map(record => record.id).filter(Boolean), [rows]);
@@ -801,13 +822,11 @@ export default function ApplicationsPage() {
           )}
 
           {/*
-           * Render the selection dock into the stable .main shell, not beneath
-           * motion's transformed page-transition. The CSS anchors the portaled
-           * dock inside .main so it remains visible even when the register has
-           * many rows and the workspace has its own scroll container.
+           * Portal the selection dock to body, outside the transformed page;
+           * its horizontal bounds follow the measured .main shell.
            */}
           {stagedRecords.length > 0 && createPortal(
-            <div className="appx__deck" role="region" aria-label={t('app.deck.label')}>
+            <div className="appx__deck appx__deck--overlay" style={{ left: dockGeometry.left + 8, width: Math.max(0, dockGeometry.width - 16) }} role="region" aria-label={t('app.deck.label')}>
               <div className="appx__deckinner">
                 <span className="appx__deckcount">
                   <b>{formatCount(stagedRecords.length, locale)}</b>
@@ -836,7 +855,7 @@ export default function ApplicationsPage() {
                 </span>
               </div>
             </div>,
-            document.querySelector('.main') ?? document.body
+            document.body
           )}
         </div>
 

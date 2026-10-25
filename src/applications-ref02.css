@@ -243,13 +243,21 @@ html[data-theme="light"] .appref__dquick button:disabled {color:#344862;backgrou
 .appref__dquick button:not(:disabled):hover {filter:brightness(1.3)}
 html[data-theme="light"] .appref__dquick button {background:var(--surface-raised);color:var(--text)}
 
-/* Keep the staged-action tray inside the stable desktop shell, independent of
-   the animated page/column height. ApplicationsPage portals the tray to .main. */
-.main:has(> .appx__deck) {position:relative}
-.main > .appx__deck {position:absolute;inset-inline:12px;bottom:10px;z-index:70;pointer-events:none}
-.main > .appx__deck .appx__deckinner {pointer-events:auto;max-width:100%;box-sizing:border-box;flex-wrap:wrap;gap:7px;padding:9px 12px}
-.main > .appx__deck .appx__decknote {flex:1 1 150px}
-@media (max-width:960px) {.main > .appx__deck {inset-inline:7px;bottom:6px}.main > .appx__deck .appx__deckinner {padding:6px 8px;gap:5px}.main > .appx__deck .appx__decknote {display:none}}
+/* Body-level portal: fix the dock to the actual window viewport.
+   The caller measures the shell's horizontal bounds; no ancestor transform
+   or scroll-content height may reposition the decision dock. */
+.appx__deck.appx__deck--overlay {position:fixed;inset-inline:auto;right:auto;bottom:10px;z-index:700;pointer-events:none}
+.appx__deck--overlay .appx__deckinner {pointer-events:auto;max-width:100%;box-sizing:border-box;flex-wrap:wrap;gap:7px;padding:9px 12px}
+.appx__deck--overlay .appx__decknote {flex:1 1 150px}
+@media (max-width:960px) {.appx__deck--overlay {bottom:6px}.appx__deck--overlay .appx__deckinner {padding:6px 8px;gap:5px}.appx__deck--overlay .appx__decknote {display:none}}
+
+/* Disabled commands keep their unavailable state but do not dim the entire
+   foreground through group opacity. The action bar was failing 2:1 contrast
+   in the packaged EN/AR desktop matrix at opacity .56. */
+.appref .appref__tool:disabled {opacity:1;cursor:not-allowed}
+.appref .appref__tool:disabled span:not(.appref__lock) {color:var(--tool-color)}
+html[data-theme="light"] .appref .appref__tool:disabled span:not(.appref__lock) {color:var(--text)}
+.appref .appref__tool:disabled .appref__lock {color:var(--muted)}
 
 /* CI visual acceptance: unavailable service actions remain clearly unavailable
    without reducing label contrast below the documented 2:1 floor. This is a
