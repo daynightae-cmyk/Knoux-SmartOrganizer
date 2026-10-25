@@ -236,3 +236,18 @@ node scripts/native-smoke.cjs --packaged --packaged-dir="%TEMP%\knoux-gemini-rel
 
 The existing Vite preview remains at `http://127.0.0.1:3000`. The Electron client
 is a separate runtime and must not be confused with the browser preview.
+
+---
+
+## 9. Integration record
+
+- Starting point: `694278c` (Visual 00 handoff).
+- Automatic preservation checkpoint: `d9e856d` — contained the native bridge source created in this run.
+- Accepted Platform 00 commit: `a49bdf8` — final bridge, renderer integration, session credential fix, evidence and contract map.
+- Root CI scoping commits: `2abc8d9` (root ESLint excludes the nested app) and `b7cea20` (root Vitest excludes nested page tests).
+- Remote branch: `feat/gemini-ui-foundation-20261025`, independently matched to `b7cea20` at completion.
+- GitHub Actions:
+  - **Gemini Platform** run `40205303082`: **success** (install, TypeScript, build, native contract/provenance, artifact upload).
+  - Root **CI / Source verification** run `40205515812`: **success** after the scoping fixes.
+  - Root Windows packaged-runtime job is a legacy release pipeline; it is not a substitute for the packaged Gemini smoke above.
+- Local packaged smoke: PASS, unsigned unpacked Electron 43.4.1 application; see `visual-evidence/platform-00/`.
