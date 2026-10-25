@@ -14,7 +14,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
-const contract = require('../../shared/native-contract.json');
+const contract = require('../shared/native-contract.json');
+const appPackage = require('../package.json');
 const {
   readSystemSummary,
   readServicesSummary,
@@ -99,6 +100,8 @@ function bridgeStatusData() {
     ...(fixture ? { detail: 'Development fixture mode — no measured reading' } : {}),
   }));
   return {
+    contractVersion: contract.contractVersion,
+    requestId: crypto.randomUUID(),
     capability: 'bridge.status',
     status: 'available',
     source: 'KNOuX Gemini Electron main',
@@ -120,7 +123,7 @@ function bridgeStatusData() {
     data: {
       bridge: 'ready',
       platform: process.platform,
-      appVersion: app.getVersion(),
+      appVersion: appPackage.version,
       packaged: app.isPackaged,
       providerMode: fixture ? 'fixture' : windows ? 'measured' : 'unavailable',
       fixtureEnabled: fixture,
@@ -327,7 +330,7 @@ async function runSmoke(win) {
     schema: 'knoux.gemini.native-smoke.v1',
     startedAt,
     packaged: app.isPackaged,
-    appVersion: app.getVersion(),
+    appVersion: appPackage.version,
     electronVersion: process.versions.electron,
     platform: process.platform,
     security: null,
@@ -340,7 +343,9 @@ async function runSmoke(win) {
     await sleep(1200);
     const prefs = win.webContents.getLastWebPreferences() || {};
     receipt.security = {
-      preloadBasename: prefs.preload ? path.basename(prefs.preload) : null,
+      // Electron does not expose the preload path through getLastWebPreferences;
+      // bridgePresent below proves the preload module actually executed.
+      preloadExposedBridge: null,
       contextIsolation: Boolean(prefs.contextIsolation),
       sandbox: Boolean(prefs.sandbox),
       nodeIntegration: Boolean(prefs.nodeIntegration),
@@ -377,6 +382,7 @@ async function runSmoke(win) {
     ]);
     trace(`renderer probe complete bridge=${Boolean(renderer?.bridgePresent)} system=${renderer?.system?.status} services=${renderer?.services?.status}`);
     receipt.renderer = renderer;
+    receipt.security.preloadExposedBridge = renderer.bridgePresent === true;
 
     if (smokeShotPath) {
       try {
@@ -388,17 +394,24 @@ async function runSmoke(win) {
            })()`,
           true
         );
-        // Give the visible read-only panel time to render the measured values.
-        const deadline = Date.now() + 12000;
+        // Give the visible read-only panel time to render the measured values
+        // (the panel performs its own IPC read; this is intentionally not a
+        // duplicate HTML injection).
+        const deadline = Date.now() + 25000;
         while (Date.now() < deadline) {
-          await sleep(400);
+          await sleep(500);
           const ready = await win.webContents.executeJavaScript(
-            `Boolean(document.querySelector('[data-testid="native-bridge-panel"]'))`,
+            `(() => {
+               const panel = document.querySelector('[data-testid="native-bridge-panel"]');
+               if (!panel) return false;
+               const text = panel.innerText || '';
+               return text.includes('CPU load') && !text.includes('Calling the Windows provider');
+             })()`,
             true
           );
           if (ready) break;
         }
-        await sleep(2500);
+        await sleep(500);
         win.showInactive();
         await sleep(500);
         const image = await win.webContents.capturePage();
@@ -406,13 +419,63 @@ async function runSmoke(win) {
         await fsp.writeFile(smokeShotPath, image.toPNG());
         const stat = await fsp.stat(smokeShotPath);
         receipt.screenshotBytes = stat.size;
+
+        // Prove the new native panel is not a dark-only island. The theme
+        // toggle is the same real control used by the user.
+        const lightShotPath = smokeShotPath.replace(/\.png$/i, '-light.png');
+        await win.webContents.executeJavaScript(
+          `document.querySelector('button[aria-label="Switch to light theme"]')?.click()`,
+          true
+        );
+        await sleep(800);
+        const lightImage = await win.webContents.capturePage();
+        await fsp.writeFile(lightShotPath, lightImage.toPNG());
+        receipt.lightScreenshot = lightShotPath;
+        receipt.lightScreenshotBytes = (await fsp.stat(lightShotPath)).size;
+
+        // Arabic RTL proof for the same overlay.
+        const arShotPath = smokeShotPath.replace(/\.png$/i, '-ar-light.png');
+        await win.webContents.executeJavaScript(
+          `document.querySelector('button[title="Toggle Arabic / English"]')?.click()`,
+          true
+        );
+        const arDeadline = Date.now() + 25000;
+        while (Date.now() < arDeadline) {
+          await sleep(500);
+          const ready = await win.webContents.executeJavaScript(
+            `(() => {
+               const panel = document.querySelector('[data-testid="native-bridge-panel"]');
+               if (!panel) return false;
+               const text = panel.innerText || '';
+               return /حمل المعالج|CPU load/.test(text) && !/جارٍ استدعاء|Calling the Windows provider/.test(text);
+             })()`,
+            true
+          );
+          if (ready) break;
+        }
+        const arImage = await win.webContents.capturePage();
+        await fsp.writeFile(arShotPath, arImage.toPNG());
+        receipt.arabicScreenshot = arShotPath;
+        receipt.arabicScreenshotBytes = (await fsp.stat(arShotPath)).size;
       } catch (error) {
         receipt.screenshotError = redactError(error);
       }
     }
 
+    let windowControlOk = false;
+    try {
+      await win.webContents.executeJavaScript(`window.knouxShell.windowControl('maximize')`, true);
+      await sleep(500);
+      const maximized = win.isMaximized();
+      await win.webContents.executeJavaScript(`window.knouxShell.windowControl('maximize')`, true);
+      await sleep(300);
+      windowControlOk = maximized && !win.isMaximized();
+      trace(`window control maximize toggle=${windowControlOk}`);
+    } catch (error) {
+      trace(`window control test failed: ${error?.message || error}`);
+    }
     const securityOk =
-      receipt.security.preloadBasename === 'preload.cjs' &&
+      receipt.security.preloadExposedBridge === true &&
       receipt.security.contextIsolation === true &&
       receipt.security.sandbox === true &&
       receipt.security.nodeIntegration === false &&
@@ -429,9 +492,13 @@ async function runSmoke(win) {
       renderer.system?.provenance?.mode === 'measured' &&
       ['complete', 'partial'].includes(renderer.services?.status) &&
       Number.isFinite(renderer.services?.data?.total);
-    const screenshotOk = !smokeShotPath || (receipt.screenshotBytes && receipt.screenshotBytes > 20000);
-    receipt.checks = { securityOk, bridgeOk, providerOk, screenshotOk };
-    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && screenshotOk);
+    const screenshotOk = !smokeShotPath || (
+      receipt.screenshotBytes > 20000 &&
+      receipt.lightScreenshotBytes > 20000 &&
+      receipt.arabicScreenshotBytes > 20000
+    );
+    receipt.checks = { securityOk, bridgeOk, providerOk, screenshotOk, windowControlOk };
+    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && screenshotOk && windowControlOk);
     receipt.finishedAt = new Date().toISOString();
     trace(`smoke complete ok=${receipt.ok} checks=${JSON.stringify(receipt.checks)}`);
     await fsp.mkdir(path.dirname(smokeReceiptPath), { recursive: true });

@@ -17,10 +17,12 @@ const { spawn } = require('node:child_process');
 
 const appRoot = path.resolve(__dirname, '..');
 const packaged = process.argv.includes('--packaged');
+const packagedDirArg = process.argv.find((entry) => entry.startsWith('--packaged-dir='));
+const packagedDir = packagedDirArg ? packagedDirArg.slice('--packaged-dir='.length) : process.env.KNOUX_PACKAGED_DIR;
 const evidenceDir = path.join(appRoot, 'visual-evidence', 'platform-00');
 const receiptPath = path.join(evidenceDir, packaged ? 'native-smoke-packaged.json' : 'native-smoke-dev.json');
 const shotPath = path.join(evidenceDir, packaged ? 'native-bridge-packaged.png' : 'native-bridge-dev.png');
-const summaryPath = path.join(evidenceDir, 'native-smoke-summary.json');
+const summaryPath = path.join(evidenceDir, packaged ? 'native-smoke-summary-packaged.json' : 'native-smoke-summary-dev.json');
 const profilePath = path.join(os.tmpdir(), `knoux-gemini-smoke-${process.pid}-${Date.now()}`);
 
 function fail(message) {
@@ -29,10 +31,15 @@ function fail(message) {
 }
 
 function resolvePackagedExe() {
-  const dir = path.join(appRoot, 'release', 'win-unpacked');
-  if (!fs.existsSync(dir)) fail('release/win-unpacked is missing; run npm run desktop:pack first.');
+  const candidates = [
+    ...(packagedDir ? [path.resolve(packagedDir)] : []),
+    path.join(appRoot, 'release-gemini', 'win-unpacked'),
+    path.join(appRoot, 'release', 'win-unpacked'),
+  ];
+  const dir = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!dir) fail('release-gemini/win-unpacked is missing; run npm run desktop:pack first.');
   const exe = fs.readdirSync(dir).find((entry) => entry.toLowerCase().endsWith('.exe') && !/uninstall/i.test(entry));
-  if (!exe) fail('No packaged executable found in release/win-unpacked.');
+  if (!exe) fail('No packaged executable found in the packaged output directory.');
   return path.join(dir, exe);
 }
 
@@ -104,6 +111,10 @@ async function main() {
     receiptPath,
     shotPath,
     shotBytes,
+    lightShotPath: shotPath.replace(/\.png$/i, '-light.png'),
+    arabicShotPath: shotPath.replace(/\.png$/i, '-ar-light.png'),
+    lightShotBytes: receipt?.lightScreenshotBytes || 0,
+    arabicShotBytes: receipt?.arabicScreenshotBytes || 0,
     receiptOk: receipt?.ok === true,
     checks: receipt?.checks || null,
     stdoutTail: stdout.slice(-2000),
@@ -113,8 +124,8 @@ async function main() {
 
   await fsp.rm(profilePath, { recursive: true, force: true }).catch(() => {});
 
-  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000, ...summary }, null, 2));
-  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000) {
+  console.log(JSON.stringify({ ok: summary.receiptOk && exitCode === 0 && shotBytes > 20000 && summary.lightShotBytes > 20000 && summary.arabicShotBytes > 20000, ...summary }, null, 2));
+  if (!summary.receiptOk || exitCode !== 0 || shotBytes <= 20000 || summary.lightShotBytes <= 20000 || summary.arabicShotBytes <= 20000) {
     console.error('[native-smoke] FAILED — inspect native-smoke-dev.json and native-bridge-dev.png');
     process.exit(1);
   }

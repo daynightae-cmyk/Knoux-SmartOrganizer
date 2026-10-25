@@ -274,7 +274,7 @@ export const NativeBridgePanel: React.FC<NativeBridgePanelProps> = ({ open, onCl
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-slate-500 w-24 shrink-0">{isArabic ? 'المعالج' : 'CPU'}</span>
-                  <span className="text-slate-200 truncate">{systemData.cpuModel || '—'}</span>
+                  <span dir="ltr" title={systemData.cpuModel || undefined} className="text-slate-200 truncate">{systemData.cpuModel || '—'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-slate-500 w-24 shrink-0">{isArabic ? 'حمل المعالج' : 'CPU load'}</span>

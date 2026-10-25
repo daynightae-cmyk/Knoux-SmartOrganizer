@@ -1,0 +1,50 @@
+name: Gemini Platform
+
+on:
+  push:
+    branches: [feat/gemini-ui-foundation-20261025]
+    paths:
+      - 'apps/gemini-ui/**'
+      - '.github/workflows/gemini-platform.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/gemini-ui/**'
+
+permissions:
+  contents: read
+
+jobs:
+  renderer-and-contract:
+    name: Gemini renderer + native contract
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/gemini-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/gemini-ui/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: TypeScript
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+      - name: Native contract and provenance gate
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:native | tee native-contract-result.txt
+      - name: Upload contract evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-native-contract
+          path: apps/gemini-ui/native-contract-result.txt
+          if-no-files-found: error
+
+      # The interactive Electron/provider smoke requires a real Windows desktop
+      # injection and is run locally as documented in docs/NATIVE_PLATFORM_AUDIT.md.

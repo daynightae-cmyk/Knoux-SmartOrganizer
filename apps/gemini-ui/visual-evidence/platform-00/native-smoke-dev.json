@@ -1,0 +1,196 @@
+{
+  "schema": "knoux.gemini.native-smoke.v1",
+  "startedAt": "2026-10-25T15:01:27.041Z",
+  "packaged": false,
+  "appVersion": "0.4.0-gemini.0",
+  "electronVersion": "43.4.1",
+  "platform": "win32",
+  "security": {
+    "preloadExposedBridge": true,
+    "contextIsolation": true,
+    "sandbox": true,
+    "nodeIntegration": false,
+    "webSecurity": true,
+    "webviewTag": false
+  },
+  "renderer": {
+    "href": "file:///D:/KNOUX-Workspace/KNOuX-Gemini-UI/apps/gemini-ui/dist/index.html",
+    "readyState": "complete",
+    "rootChildren": 1,
+    "bridgePresent": true,
+    "contractVersion": 1,
+    "nodeRequireType": "undefined",
+    "nodeProcessType": "undefined",
+    "status": {
+      "contractVersion": 1,
+      "requestId": "32edee97-afd1-4642-9bc2-ccbb03b88972",
+      "capability": "bridge.status",
+      "status": "available",
+      "source": "KNOuX Gemini Electron main",
+      "observedAt": "2026-10-25T15:01:28.257Z",
+      "permission": "read-only",
+      "warnings": [],
+      "provenance": {
+        "provider": "Electron main process",
+        "mode": "measured",
+        "observedAt": "2026-10-25T15:01:28.257Z",
+        "coverage": "full",
+        "permissions": [
+          "read-only"
+        ],
+        "warnings": []
+      },
+      "data": {
+        "bridge": "ready",
+        "platform": "win32",
+        "appVersion": "0.4.0-gemini.0",
+        "packaged": false,
+        "providerMode": "measured",
+        "fixtureEnabled": false,
+        "capabilities": [
+          {
+            "id": "bridge.status",
+            "title": "Bridge handshake",
+            "mode": "read-only",
+            "channel": "knoux:native:v1:status",
+            "status": "available"
+          },
+          {
+            "id": "system.summary",
+            "title": "Machine summary",
+            "mode": "read-only",
+            "channel": "knoux:native:v1:system-summary",
+            "status": "available"
+          },
+          {
+            "id": "services.summary",
+            "title": "Windows service summary",
+            "mode": "read-only",
+            "channel": "knoux:native:v1:services-summary",
+            "status": "available"
+          },
+          {
+            "id": "folder.choose",
+            "title": "Choose a folder",
+            "mode": "user-initiated",
+            "channel": "knoux:native:v1:choose-folder",
+            "status": "available"
+          }
+        ],
+        "contractVersion": 1,
+        "electronVersion": "43.4.1"
+      }
+    },
+    "system": {
+      "contractVersion": 1,
+      "capability": "system.summary",
+      "requestId": "1569bc81-da2a-4de2-b339-f0e21267cde4",
+      "status": "complete",
+      "source": "Win32_OperatingSystem + Win32_Processor + Win32_Battery + Win32_PerfFormattedData_PerfOS_Processor + Win32_LogicalDisk",
+      "observedAt": "2026-10-25T15:01:37.333Z",
+      "permission": "read-only",
+      "warnings": [],
+      "provenance": {
+        "provider": "Win32_OperatingSystem + Win32_Processor + Win32_Battery + Win32_PerfFormattedData_PerfOS_Processor + Win32_LogicalDisk",
+        "mode": "measured",
+        "observedAt": "2026-10-25T15:01:37.333Z",
+        "coverage": "full",
+        "permissions": [
+          "read-only"
+        ],
+        "warnings": []
+      },
+      "data": {
+        "platform": "win32",
+        "osCaption": "Microsoft Windows 10 Pro",
+        "osVersion": "10.0.19045",
+        "osBuild": "19045",
+        "osArchitecture": "64-bit",
+        "uptimeSeconds": 197698,
+        "uptimeSource": "Win32_OperatingSystem.LastBootUpTime",
+        "cpuModel": "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz",
+        "cpuCores": 4,
+        "cpuLogicalProcessors": 4,
+        "cpuLoadPercent": 65,
+        "cpuLoadSource": "Win32_PerfFormattedData_PerfOS_Processor (_Total)",
+        "memoryTotalBytes": 12769726464,
+        "memoryFreeBytes": 2830434304,
+        "memoryUsedPercent": 78,
+        "systemDrive": "C:",
+        "systemDriveFreeBytes": 4891398144,
+        "systemDriveTotalBytes": 140302163968,
+        "volumes": [
+          {
+            "deviceId": "C:",
+            "label": null,
+            "fileSystem": "NTFS",
+            "sizeBytes": 140302163968,
+            "freeBytes": 4891398144
+          },
+          {
+            "deviceId": "D:",
+            "label": "Day Night",
+            "fileSystem": "NTFS",
+            "sizeBytes": 62913507328,
+            "freeBytes": 28026658816
+          },
+          {
+            "deviceId": "K:",
+            "label": "KNOuX PROJECTS",
+            "fileSystem": "NTFS",
+            "sizeBytes": 51522826240,
+            "freeBytes": 8335499264
+          }
+        ],
+        "degraded": false
+      }
+    },
+    "services": {
+      "contractVersion": 1,
+      "capability": "services.summary",
+      "requestId": "865f421d-ca34-4fff-b7bf-880762cebcb6",
+      "status": "complete",
+      "source": "Win32_Service",
+      "observedAt": "2026-10-25T15:01:38.215Z",
+      "permission": "read-only",
+      "warnings": [
+        "Service control is not exposed by the platform bridge; later section providers own mutations."
+      ],
+      "provenance": {
+        "provider": "Win32_Service",
+        "mode": "measured",
+        "observedAt": "2026-10-25T15:01:38.215Z",
+        "coverage": "full",
+        "permissions": [
+          "read-only"
+        ]
+      },
+      "data": {
+        "total": 271,
+        "running": 119,
+        "stopped": 152,
+        "automatic": 63,
+        "manual": 195,
+        "disabled": 11,
+        "protectedCount": null,
+        "provider": "Win32_Service"
+      }
+    },
+    "cspMeta": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; worker-src 'self' blob:"
+  },
+  "screenshot": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-dev.png",
+  "ok": true,
+  "screenshotBytes": 272786,
+  "lightScreenshot": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-dev-light.png",
+  "lightScreenshotBytes": 229697,
+  "arabicScreenshot": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-dev-ar-light.png",
+  "arabicScreenshotBytes": 218428,
+  "checks": {
+    "securityOk": true,
+    "bridgeOk": true,
+    "providerOk": true,
+    "screenshotOk": true,
+    "windowControlOk": true
+  },
+  "finishedAt": "2026-10-25T15:01:51.107Z"
+}

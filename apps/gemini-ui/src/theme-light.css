@@ -751,14 +751,17 @@ html[data-theme='light'] [class~='bg-black/60'] {
 }
 
 /* Size/status chips that sit directly over photographs stay dark with light
-   text so they remain readable regardless of the underlying pixels. */
+   text so they remain readable regardless of the underlying pixels. Scope the
+   white ink to photo-tile groups: a modal backdrop also uses bg-black/70, but
+   its panel must keep the daylight ink token. */
 html[data-theme='light'] [class~='bg-black/70'],
 html[data-theme='light'] [class~='bg-black/80'] {
   background-color: rgba(11, 18, 32, 0.78) !important;
-  color: #f8fafc !important;
 }
-html[data-theme='light'] [class~='bg-black/70'] *,
-html[data-theme='light'] [class~='bg-black/80'] * {
+html[data-theme='light'] .group [class~='bg-black/70'],
+html[data-theme='light'] .group [class~='bg-black/80'],
+html[data-theme='light'] .group [class~='bg-black/70'] *,
+html[data-theme='light'] .group [class~='bg-black/80'] * {
   color: #f8fafc !important;
 }
 

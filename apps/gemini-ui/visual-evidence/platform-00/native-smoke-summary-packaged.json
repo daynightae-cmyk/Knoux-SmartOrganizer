@@ -1,0 +1,29 @@
+{
+  "startedAt": "2026-10-25T15:03:35.167Z",
+  "finishedAt": "2026-10-25T15:03:57.361Z",
+  "mode": "packaged",
+  "command": "C:\\Users\\day night\\AppData\\Local\\Temp\\knoux-gemini-release\\win-unpacked\\KNOuX Gemini Preview.exe",
+  "args": [
+    "--knoux-native-smoke=D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-smoke-packaged.json",
+    "--knoux-native-smoke-shot=D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-packaged.png",
+    "--knoux-user-data=C:\\Users\\DAYNIG~1\\AppData\\Local\\Temp\\knoux-gemini-smoke-11488-1792940615165"
+  ],
+  "exitCode": 0,
+  "receiptPath": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-smoke-packaged.json",
+  "shotPath": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-packaged.png",
+  "shotBytes": 272806,
+  "lightShotPath": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-packaged-light.png",
+  "arabicShotPath": "D:\\KNOUX-Workspace\\KNOuX-Gemini-UI\\apps\\gemini-ui\\visual-evidence\\platform-00\\native-bridge-packaged-ar-light.png",
+  "lightShotBytes": 229593,
+  "arabicShotBytes": 218284,
+  "receiptOk": true,
+  "checks": {
+    "securityOk": true,
+    "bridgeOk": true,
+    "providerOk": true,
+    "screenshotOk": true,
+    "windowControlOk": true
+  },
+  "stdoutTail": "\r\n",
+  "stderrTail": ""
+}

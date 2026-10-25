@@ -13,7 +13,7 @@ module.exports = {
   electronVersion: '43.4.1',
   npmRebuild: false,
   directories: {
-    output: 'release',
+    output: 'release-gemini',
   },
   files: [
     'dist/**/*',
