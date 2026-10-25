@@ -1262,7 +1262,7 @@ async function captureVisualEvidence(outputDirectory) {
     { name: 'en-applications-1920x1080', locale: 'en', page: 'applications', width: 1920, height: 1080, waits: INVENTORY_WAITS },
     { name: 'ar-applications-1920x1080', locale: 'ar', page: 'applications', width: 1920, height: 1080, waits: INVENTORY_WAITS },
     { name: 'en-applications-dossier-1366x768', locale: 'en', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' },
-    { name: 'ar-applications-deck-1366x768', locale: 'ar', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDeck: true, prepare: 'Array.from(document.querySelectorAll(".appx__row input[type=checkbox]")).slice(0,4).forEach(function(c){ c.click(); });' },
+    { name: 'ar-applications-deck-1366x768', locale: 'ar', page: 'applications', width: 1366, height: 768, waits: INVENTORY_WAITS, requiresDeck: true, prepare: 'Array.from(document.querySelectorAll(".appx__row input[type=checkbox]")).slice(0,4).forEach(function(c){ c.click(); });', scrollTo: '.appx__deck' },
     { name: 'en-applications-light-1366x768', locale: 'en', page: 'applications', theme: 'light', width: 1366, height: 768, waits: INVENTORY_WAITS },
     { name: 'ar-applications-860x600', locale: 'ar', page: 'applications', width: 860, height: 600, waits: INVENTORY_WAITS, requiresDossier: true, prepare: 'var o=document.querySelector(".appx__opener"); if(o) o.click();' },
     // The Files bench reads the Downloads tree, so the same rule applies: wait for
@@ -1819,6 +1819,26 @@ async function captureVisualEvidence(outputDirectory) {
               const seen = lastSeen || await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, page: document.documentElement.dataset.page })`).catch(() => null);
               await progress(`settings-not-applied ${scenario.name} round=${round}: asked for ${scenario.locale}/${scenario.page}, the document reports ${JSON.stringify(seen)}`);
             }
+          }
+          // The stored-page restore is a user preference; under a minimized or
+          // restored window it can lose the world even though language/theme
+          // applied. Use the renderer's own hash route as the deterministic
+          // navigation the user has, then keep the exact page gate. This changes
+          // only the precondition: a wrong page is still reported and not graded.
+          if (!scenarioState && scenario.page && lastSeen
+              && lastSeen.lang === scenario.locale
+              && lastSeen.dir === expectedDirection
+              && (!scenario.theme || lastSeen.theme === scenario.theme)) {
+            await mainWindow.webContents.executeJavaScript(`(() => { const target = '#${scenario.page}'; if (location.hash !== target) location.hash = target; return location.hash; })()`).catch(() => null);
+            await progress(`hash-navigation ${scenario.name} -> #${scenario.page}`);
+            for (let attempt = 0; attempt < 40 && !scenarioState; attempt += 1) {
+              const state = await mainWindow.webContents.executeJavaScript(`({ lang: document.documentElement.lang, dir: document.documentElement.dir, theme: document.documentElement.dataset.theme, page: document.documentElement.dataset.page })`).catch(() => null);
+              if (state && state.lang === scenario.locale && state.dir === expectedDirection
+                  && (!scenario.theme || state.theme === scenario.theme)
+                  && (!scenario.page || state.page === scenario.page)) scenarioState = state;
+              else await settle(200);
+            }
+            if (!scenarioState) await progress(`hash-navigation-failed ${scenario.name} -> #${scenario.page}`);
           }
           await settle(700);
           // The compositor has to have painted the window before it can produce a
