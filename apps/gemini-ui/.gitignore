@@ -11,3 +11,6 @@ coverage/
 visual-evidence/closure-20261025/audit/
 screenshot_*.png
 test_screenshot.png
+visual-evidence/closure-20261025/baseline-*
+visual-evidence/closure-20261025/before-*/
+visual-evidence/closure-20261025/after-*/
