@@ -258,6 +258,14 @@ html[data-theme="light"] .appref__dquick button {background:var(--surface-raised
 .appref .appref__tool:disabled span:not(.appref__lock) {color:var(--tool-color)}
 html[data-theme="light"] .appref .appref__tool:disabled span:not(.appref__lock) {color:var(--text)}
 .appref .appref__tool:disabled .appref__lock {color:var(--muted)}
+/* Details uses the neutral/silver token. Unlike colored commands, its
+   computed foreground was 1.67:1 in both Windows themes. Give the neutral
+   command an explicit opaque dark surface and high-contrast label, including
+   its disabled state, without changing what the button is allowed to do. */
+.appref .appref__tool.appref__tool--silver {background:#10233e;border-color:#5881ad;color:#f7fbff}
+.appref .appref__tool.appref__tool--silver span:not(.appref__lock) {color:#f7fbff}
+html[data-theme="light"] .appref .appref__tool.appref__tool--silver {background:#10233e;border-color:#486b96;color:#f7fbff}
+html[data-theme="light"] .appref .appref__tool.appref__tool--silver span:not(.appref__lock) {color:#f7fbff}
 
 /* CI visual acceptance: unavailable service actions remain clearly unavailable
    without reducing label contrast below the documented 2:1 floor. This is a
