@@ -1,0 +1,83 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:3000/#/storage",
+  "viewport": [
+    1672,
+    941
+  ],
+  "mode": "fixture preview (measured Storage proven by the adapter test and Electron smoke)",
+  "results": [
+    {
+      "name": "volume bays render from the approved fixture",
+      "pass": true,
+      "detail": {
+        "volumes": 3
+      }
+    },
+    {
+      "name": "search filters volume bays",
+      "pass": true,
+      "detail": {
+        "filteredVolumes": 1
+      }
+    },
+    {
+      "name": "selecting a volume syncs the inspector",
+      "pass": true,
+      "detail": {
+        "inspectorLetter": "D:"
+      }
+    },
+    {
+      "name": "Walk This Volume explains fixture limits instead of claiming a scan",
+      "pass": true,
+      "detail": {
+        "toast": true
+      }
+    },
+    {
+      "name": "non-treemap fixture tab shows an honest measured-scope notice",
+      "pass": true,
+      "detail": {
+        "visible": true
+      }
+    },
+    {
+      "name": "file-type tab activates its own state",
+      "pass": true,
+      "detail": {
+        "tabActive": true
+      }
+    },
+    {
+      "name": "fixture treemap tile updates the active node",
+      "pass": true,
+      "detail": {
+        "windowsTile": true
+      }
+    },
+    {
+      "name": "Inspector action opens a domain service panel",
+      "pass": true,
+      "detail": {
+        "focus": true
+      }
+    },
+    {
+      "name": "duplicate action opens the duplicate service panel",
+      "pass": true,
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "name": "Storage language toggle produces Arabic RTL",
+      "pass": true,
+      "detail": {
+        "dir": "rtl",
+        "arabicHeading": true,
+        "arabicTab": true
+      }
+    }
+  ]
+}

@@ -455,3 +455,138 @@ export interface FilesShellApi {
   open: (sourceId: string, fileId: number) => Promise<NativeEnvelope<{ opened: boolean; fileId: number; requestedPath: string }>>;
   reveal: (sourceId: string, fileId: number) => Promise<NativeEnvelope<{ requested: boolean; fileId: number; requestedPath: string }>>;
 }
+
+export interface StorageVolume {
+  id: string;
+  deviceId: string | null;
+  letter: string;
+  label: string;
+  fileSystem: string;
+  totalBytes: number;
+  freeBytes: number;
+  usedBytes: number;
+  usedPercent: number;
+  freePercent: number;
+  isLowSpace: boolean;
+  physicalDevice: string | null;
+  physicalDeviceAvailable: false;
+  smartAvailable: false;
+  readOnly: true;
+}
+
+export interface StorageCapacityPoint {
+  capturedAt: string;
+  source: string;
+  volumes: Array<{ deviceId: string | null; totalBytes: number; freeBytes: number }>;
+}
+
+export interface StorageVolumesResult {
+  volumes: StorageVolume[];
+  history: StorageCapacityPoint[];
+  observedAt: string;
+  provider: string;
+  status: string;
+  coverage: string;
+  warnings: string[];
+  hardwareIdentityAvailable: false;
+  smartAvailable: false;
+}
+
+export interface StorageHistoryResult {
+  points: StorageCapacityPoint[];
+  retention: number;
+  note: string;
+}
+
+export interface StorageTreeNode {
+  id: string;
+  relative: string;
+  name: string;
+  sizeBytes: number;
+  files: number;
+  children: StorageTreeNode[];
+}
+
+export interface StorageFolderRecord {
+  id: string;
+  name: string;
+  relative: string;
+  sizeBytes: number;
+  files: number;
+  children: Array<{ id: string; name: string; relative: string; sizeBytes: number; files: number }>;
+}
+
+export interface StorageDuplicateCandidate {
+  sizeBytes: number;
+  count: number;
+  wastedBytes: number;
+  files: Array<{ id: number; name: string; relative: string; size: number; modifiedAt: string }>;
+  truncatedFiles: number;
+}
+
+export interface StorageDuplicateGroup {
+  size: number;
+  digest: string;
+  files: Array<{ id: number; name: string; relative: string; size: number; modifiedAt: string }>;
+  count: number;
+  wastedBytes: number;
+}
+
+export interface StorageDuplicateResult {
+  groups: StorageDuplicateGroup[];
+  summary: {
+    candidates: number;
+    filesHashed: number;
+    bytesHashed: number;
+    verifiedGroups: number;
+    reclaimableVerifiedBytes: number;
+    budgetReached: boolean;
+    maxFiles: number;
+    maxBytes: number;
+  };
+  errors: Array<{ fileId: number; name: string; code: string; message: string }>;
+  warnings: string[];
+  permission: 'read-only';
+  mutation: 'none';
+}
+
+export interface StorageAnalysis {
+  sourceId: string;
+  source: StudioSource;
+  totals: { files: number; bytes: number; folders: number; categories: number; partial: boolean; analyzedBytes: number };
+  coverage: {
+    files: number;
+    folders: number;
+    partial: boolean;
+    warnings: string[];
+    lastScanned: string | null;
+    scope: string;
+    scopeKind: 'authorized-folder';
+    coversWholeVolume: false;
+  };
+  tree: StorageTreeNode;
+  folders: StorageFolderRecord[];
+  largest: FilesItem[];
+  recent: FilesItem[];
+  categories: Array<{ key: string; count: number; bytes: number }>;
+  extensions: Array<{ ext: string; count: number; bytes: number }>;
+  ages: Array<{ key: string; label: string; count: number; bytes: number }>;
+  duplicateCandidates: StorageDuplicateCandidate[];
+  duplicatePolicy: {
+    candidatesAreSizeMatches: boolean;
+    contentVerified: boolean;
+    minimumBytes: number;
+    maxGroups: number;
+    maxVerifiedFiles: number;
+    maxVerifiedBytes: number;
+  };
+  permission: 'read-only';
+}
+
+export interface StorageShellApi {
+  contractVersion: number;
+  volumes: () => Promise<NativeEnvelope<StorageVolumesResult>>;
+  history: () => Promise<NativeEnvelope<StorageHistoryResult>>;
+  analysis: (sourceId: string) => Promise<NativeEnvelope<StorageAnalysis>>;
+  verifyDuplicates: (sourceId: string) => Promise<NativeEnvelope<StorageDuplicateResult>>;
+}

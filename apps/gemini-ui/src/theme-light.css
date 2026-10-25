@@ -789,6 +789,15 @@ html[data-theme='light'] .storage-treemap .text-amber-300 {
   color: #ffffff !important;
 }
 
+/* The breadcrumb/active-node footer sits on the light panel, not on a
+   saturated treemap fill. Keep it readable instead of inheriting the
+   white tile-ink override above. */
+html[data-theme='light'] .storage-treemap .storage-treemap-footer,
+html[data-theme='light'] .storage-treemap .storage-treemap-footer * {
+  color: #475569 !important;
+  text-shadow: none !important;
+}
+
 /* Home hero: retain the cinematic Earth artwork as a soft daylight horizon
    instead of a black plate behind dark ink. */
 html[data-theme='light'] .knx-home-hero {

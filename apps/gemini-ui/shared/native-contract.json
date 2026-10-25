@@ -29,7 +29,11 @@
     "filesHash": "knoux:files:v1:hash",
     "filesEmptyFolders": "knoux:files:v1:empty-folders",
     "filesOpen": "knoux:files:v1:open",
-    "filesReveal": "knoux:files:v1:reveal"
+    "filesReveal": "knoux:files:v1:reveal",
+    "storageVolumes": "knoux:storage:v1:volumes",
+    "storageHistory": "knoux:storage:v1:history",
+    "storageAnalysis": "knoux:storage:v1:analysis",
+    "storageDuplicates": "knoux:storage:v1:duplicates"
   },
   "capabilities": {
     "bridge.status": {
@@ -187,6 +191,30 @@
       "title": "Reveal an indexed file in Explorer",
       "mode": "user-initiated",
       "channel": "knoux:files:v1:reveal"
+    },
+    "storage.volumes": {
+      "id": "storage.volumes",
+      "title": "Measured mounted volumes and capacity snapshots",
+      "mode": "read-only",
+      "channel": "knoux:storage:v1:volumes"
+    },
+    "storage.history": {
+      "id": "storage.history",
+      "title": "Measured capacity history",
+      "mode": "read-only",
+      "channel": "knoux:storage:v1:history"
+    },
+    "storage.analysis": {
+      "id": "storage.analysis",
+      "title": "Measured folder tree and storage intelligence",
+      "mode": "read-only",
+      "channel": "knoux:storage:v1:analysis"
+    },
+    "storage.duplicates.verify": {
+      "id": "storage.duplicates.verify",
+      "title": "Bounded byte-exact duplicate verification",
+      "mode": "read-only",
+      "channel": "knoux:storage:v1:duplicates"
     }
   },
   "windowActions": [

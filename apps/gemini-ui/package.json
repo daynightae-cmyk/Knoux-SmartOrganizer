@@ -21,7 +21,8 @@
     "desktop:pack:temp": "npm run build && node scripts/pack-to-temp.cjs",
     "test:native": "node scripts/native-contract-test.cjs",
     "test:studio": "node scripts/studio-native-test.cjs",
-    "test:files": "node scripts/files-native-test.cjs"
+    "test:files": "node scripts/files-native-test.cjs",
+    "test:storage": "node scripts/storage-native-test.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

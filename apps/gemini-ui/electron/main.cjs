@@ -24,6 +24,7 @@ const {
 } = require('./native/provider-bridge.cjs');
 const { StudioBridge } = require('./native/studio-bridge.cjs');
 const { FilesBridge } = require('./native/files-bridge.cjs');
+const { StorageBridge } = require('./native/storage-bridge.cjs');
 const {
   ok,
   fail,
@@ -80,6 +81,7 @@ let mainWindow = null;
 let ipcRegistered = false;
 let studioBridge = null;
 let filesBridge = null;
+let storageBridge = null;
 
 if (!isSmoke && !app.requestSingleInstanceLock()) {
   app.quit();
@@ -399,6 +401,62 @@ function registerIpc() {
     })
   );
 
+
+  const storageGuard = async (event, capability, permission, work) => {
+    try {
+      assertTrustedSender(event, { mainWindow, isDev, distRoot, devOrigin });
+      if (!storageBridge) {
+        throw Object.assign(new Error('The read-only Storage adapter is not initialized.'), { code: 'STORAGE_UNAVAILABLE' });
+      }
+      const data = await work();
+      return ok({
+        capability,
+        status: 'complete',
+        source: 'KNOuX Storage read-only adapter',
+        permission,
+        data,
+      });
+    } catch (error) {
+      const untrusted = error?.code === 'UNTRUSTED_SENDER';
+      return fail({
+        capability,
+        status: untrusted ? 'permission_denied' : 'failed',
+        source: 'KNOuX Storage read-only adapter',
+        permission: untrusted ? 'not-granted' : permission,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'STORAGE_FAILURE',
+          message: String(error?.message || 'Storage request failed.').replace(/\s+/g, ' ').slice(0, 300),
+          retryable: false,
+        },
+      });
+    }
+  };
+  const storageArg = (args) => {
+    if (args.length !== 1 || !args[0] || typeof args[0] !== 'object' || Array.isArray(args[0])) {
+      throw Object.assign(new Error('A single structured Storage request is required.'), { code: 'STORAGE_INPUT_INVALID' });
+    }
+    return args[0];
+  };
+
+  ipcMain.handle(contract.channels.storageVolumes, (event, ...args) =>
+    storageGuard(event, 'storage.volumes', 'read-only', () => {
+      assertNoArguments(args, contract.channels.storageVolumes);
+      return storageBridge.volumes();
+    })
+  );
+  ipcMain.handle(contract.channels.storageHistory, (event, ...args) =>
+    storageGuard(event, 'storage.history', 'read-only', () => {
+      assertNoArguments(args, contract.channels.storageHistory);
+      return storageBridge.history();
+    })
+  );
+  ipcMain.handle(contract.channels.storageAnalysis, (event, ...args) =>
+    storageGuard(event, 'storage.analysis', 'read-only', () => storageBridge.analysis(storageArg(args).sourceId))
+  );
+  ipcMain.handle(contract.channels.storageDuplicates, (event, ...args) =>
+    storageGuard(event, 'storage.duplicates.verify', 'read-only', () => storageBridge.verifyDuplicates(storageArg(args).sourceId))
+  );
+
   ipcMain.handle(contract.channels.windowControl, (event, ...args) =>
     guard(event, 'window.control', args, async (callArgs) => {
       if (callArgs.length !== 1) {
@@ -560,6 +618,17 @@ async function runSmoke(win) {
           const thumbs = sourceId && thumbIds.length ? await filesApi.thumbnails(sourceId, thumbIds) : null;
           files = { bridgePresent: true, sources, query, overview, metadata, hash, emptyFolders, thumbs };
         }
+        const storageApi = window.knouxStorageV1;
+        let storage = null;
+        if (storageApi) {
+          const storageSource = await window.knouxStudioV1?.listSources?.();
+          const sourceId = storageSource?.data?.[0]?.id || null;
+          const volumes = await storageApi.volumes();
+          const history = await storageApi.history();
+          const analysis = sourceId ? await storageApi.analysis(sourceId) : null;
+          const duplicates = sourceId ? await storageApi.verifyDuplicates(sourceId) : null;
+          storage = { bridgePresent: true, volumes, history, analysis, duplicates };
+        }
         return {
           href: location.href,
           readyState: document.readyState,
@@ -567,6 +636,7 @@ async function runSmoke(win) {
           bridgePresent: Boolean(api),
           studioBridgePresent: Boolean(studioApi),
           filesBridgePresent: Boolean(filesApi),
+          storageBridgePresent: Boolean(storageApi),
           contractVersion: api?.contractVersion ?? null,
           nodeRequireType: typeof window.require,
           nodeProcessType: typeof window.process,
@@ -575,6 +645,7 @@ async function runSmoke(win) {
           services,
           studio,
           files,
+          storage,
           cspMeta: document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') || null
         };
       })()`,
@@ -783,6 +854,37 @@ async function runSmoke(win) {
         receipt.filesScreenshot = filesShotPath;
         receipt.filesScreenshotBytes = (await fsp.stat(filesShotPath)).size;
         receipt.filesUiReady = filesUiReady;
+
+        // Measured Storage route: volumes come from the measured provider,
+        // while treemap/folders use the same authorized inventory.
+        await win.webContents.executeJavaScript(
+          `(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); location.hash = 'storage'; return true; })()`,
+          true
+        );
+        const storageDeadline = Date.now() + 20000;
+        let storageUiReady = false;
+        while (Date.now() < storageDeadline) {
+          await sleep(500);
+          storageUiReady = await win.webContents.executeJavaScript(
+            `(() => {
+               const banner = document.querySelector('[data-testid="storage-native-banner"]');
+               const text = document.body.innerText || '';
+               const volumeCount = document.querySelector('[data-testid="storage-volume-count"]')?.textContent?.trim() || '';
+               return Boolean(banner) && volumeCount !== '' && volumeCount !== '—' &&
+                 (text.includes('Measured atlas') || text.includes('أطلس مقيس')) &&
+                 (text.includes('MEASURED SCOPE') || text.includes('نطاق مقيس'));
+             })()`,
+            true
+          );
+          if (storageUiReady) break;
+        }
+        await sleep(1500);
+        const storageShotPath = smokeShotPath.replace(/native-bridge/i, 'storage-measured');
+        const storageImage = await win.webContents.capturePage();
+        await fsp.writeFile(storageShotPath, storageImage.toPNG());
+        receipt.storageScreenshot = storageShotPath;
+        receipt.storageScreenshotBytes = (await fsp.stat(storageShotPath)).size;
+        receipt.storageUiReady = storageUiReady;
       } catch (error) {
         receipt.screenshotError = redactError(error);
       }
@@ -848,6 +950,21 @@ async function runSmoke(win) {
       filesData?.emptyFolders?.status === 'complete' &&
       filesData.emptyFolders.data?.mutation === 'none'
     );
+    const storageData = renderer.storage;
+    const storageOk = Boolean(
+      storageData?.bridgePresent &&
+      storageData?.volumes?.status === 'complete' &&
+      storageData.volumes.data?.volumes?.length >= 1 &&
+      storageData?.history?.status === 'complete' &&
+      Array.isArray(storageData.history.data?.points) &&
+      storageData?.analysis?.status === 'complete' &&
+      storageData.analysis.data?.totals?.files >= 4 &&
+      storageData.analysis.data?.tree?.sizeBytes >= 1 &&
+      storageData.analysis.data?.coverage?.coversWholeVolume === false &&
+      storageData?.duplicates?.status === 'complete' &&
+      storageData.duplicates.data?.mutation === 'none' &&
+      storageData.duplicates.data?.permission === 'read-only'
+    );
     const screenshotOk = !smokeShotPath || (
       receipt.screenshotBytes > 20000 &&
       receipt.lightScreenshotBytes > 20000 &&
@@ -859,10 +976,12 @@ async function runSmoke(win) {
       receipt.studioHistoryScreenshotBytes > 20000 &&
       receipt.studioHistoryUiReady === true &&
       receipt.filesScreenshotBytes > 20000 &&
-      receipt.filesUiReady === true
+      receipt.filesUiReady === true &&
+      receipt.storageScreenshotBytes > 20000 &&
+      receipt.storageUiReady === true
     );
-    receipt.checks = { securityOk, bridgeOk, providerOk, studioOk, filesOk, screenshotOk, windowControlOk };
-    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && studioOk && filesOk && screenshotOk && windowControlOk);
+    receipt.checks = { securityOk, bridgeOk, providerOk, studioOk, filesOk, storageOk, screenshotOk, windowControlOk };
+    receipt.ok = Boolean(securityOk && bridgeOk && providerOk && studioOk && filesOk && storageOk && screenshotOk && windowControlOk);
     receipt.finishedAt = new Date().toISOString();
     trace(`smoke complete ok=${receipt.ok} checks=${JSON.stringify(receipt.checks)}`);
     await fsp.mkdir(path.dirname(smokeReceiptPath), { recursive: true });
@@ -915,6 +1034,13 @@ app.whenReady().then(async () => {
   try {
     await studioBridge.init();
     filesBridge = new FilesBridge({ studio: studioBridge, shell });
+    storageBridge = new StorageBridge({
+      studio: studioBridge,
+      files: filesBridge,
+      readSystemSummary: () => readSystemSummary({ isPackaged: app.isPackaged, env: process.env }),
+      userDataPath: app.getPath('userData'),
+    });
+    await storageBridge.init();
     trace('studio bridge initialized');
     const smokeStudioRoot = argValue('--knoux-studio-smoke-root');
     if (smokeStudioRoot && isSmoke && smokeUserData) {

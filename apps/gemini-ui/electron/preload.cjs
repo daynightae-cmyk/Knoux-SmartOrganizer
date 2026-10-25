@@ -41,6 +41,10 @@ const CHANNELS = Object.freeze({
   filesEmptyFolders: 'knoux:files:v1:empty-folders',
   filesOpen: 'knoux:files:v1:open',
   filesReveal: 'knoux:files:v1:reveal',
+  storageVolumes: 'knoux:storage:v1:volumes',
+  storageHistory: 'knoux:storage:v1:history',
+  storageAnalysis: 'knoux:storage:v1:analysis',
+  storageDuplicates: 'knoux:storage:v1:duplicates',
 });
 const WINDOW_ACTIONS = Object.freeze(['minimize', 'maximize', 'close']);
 
@@ -110,5 +114,18 @@ contextBridge.exposeInMainWorld(
     emptyFolders: (sourceId, limit) => ipcRenderer.invoke(CHANNELS.filesEmptyFolders, { sourceId, limit }),
     open: (sourceId, fileId) => ipcRenderer.invoke(CHANNELS.filesOpen, { sourceId, fileId }),
     reveal: (sourceId, fileId) => ipcRenderer.invoke(CHANNELS.filesReveal, { sourceId, fileId }),
+  })
+);
+
+/* Storage v1 is a read-only namespace over measured volumes and the same
+   authorized inventory used by Files. No cleanup, defrag, TRIM or mutation. */
+contextBridge.exposeInMainWorld(
+  'knouxStorageV1',
+  Object.freeze({
+    contractVersion: CONTRACT_VERSION,
+    volumes: () => ipcRenderer.invoke(CHANNELS.storageVolumes),
+    history: () => ipcRenderer.invoke(CHANNELS.storageHistory),
+    analysis: (sourceId) => ipcRenderer.invoke(CHANNELS.storageAnalysis, { sourceId }),
+    verifyDuplicates: (sourceId) => ipcRenderer.invoke(CHANNELS.storageDuplicates, { sourceId }),
   })
 );
