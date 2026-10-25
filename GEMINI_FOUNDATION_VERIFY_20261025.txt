@@ -1,0 +1,29 @@
+KNOuX GEMINI FOUNDATION — 2026-10-25
+Repository: daynightae-cmyk/Knoux-SmartOrganizer
+Worktree: D:\KNOUX-Workspace\KNOuX-Gemini-UI
+Branch: feat/gemini-ui-foundation-20261025
+App: D:\KNOUX-Workspace\KNOuX-Gemini-UI\apps\gemini-ui
+Original ZIP: C:\Users\day night\Downloads\remknoux-smart organizer.zip
+ZIP SHA-256: 48372cbdf42e3472d19788e468fed023454aedc57b4d60a0e38f2bda9b46588f
+Imported canonical source: 151 files; all SHA-256 verified against ZIP
+Initial import commit: a398c2023773315c97720f5a1d8bf28c0589e6c2
+Excluded from runtime tree: bundled DELIVERY/OUTPUT histories, .aistudio duplicate media, nested ZIP archives
+Original user ZIP not moved, modified, or duplicated
+Node: v24.21.0
+npm: 11.19.0
+npm install: PASS (180 packages), committed lockfile
+Issue fixed: esbuild ^0.25 peer conflict with Vite 8, upgraded to ^0.28
+Security: dev host changed from 0.0.0.0 to 127.0.0.1
+Vite config: replaced __dirname with import.meta.dirname
+npm run lint (TypeScript): PASS, exit 0
+npm run build (Vite): PASS, exit 0
+HTTP GET http://127.0.0.1:4399/: 200, root and title verified
+Vite warning: production JS chunk larger than 500 kB; not a build failure
+Visual screenshot parity: NOT VERIFIED
+Test suite: no npm test script provided in imported package
+Electron Windows package: NOT IMPLEMENTED in Gemini branch
+Native Windows engine and Google OAuth: NOT CONNECTED / NOT VERIFIED
+Potential UX/security issue: API-key modal's Test button simulates success; key stored in browser localStorage
+Potential misleading state: Google Workspace initializes isConnected true with fixture data
+Next step: audit 14-section shell, navigation, viewport/RTL, demo labels and service-inspector UI before backend service customization
+Legacy branches, main, Qoder and Traycer worktrees: NOT MODIFIED
