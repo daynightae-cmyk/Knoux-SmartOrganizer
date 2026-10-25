@@ -154,7 +154,7 @@ tokens. No new dependency was added.
 | CI at `e84ca29` | Source verification SUCCESS. Visual acceptance: the EBUSY is gone, and the step then hit its own ceiling — `smoke timed out after 1800 seconds`. 56 real captures each boot the packaged app and wait for a genuine Windows read, which does not fit one 30-minute step. |
 | `33b51f1` | Matrix split into two bounded slices. Slice 1 (applications, files, storage, automation — 31 of the 56 scenarios) still exceeded its 1500-second ceiling on the runner, so the reload-per-scenario cost, not the photograph, is the real driver. |
 | `60c5dd3` | The matrix is cut further: applications alone, files+storage, automation alone, then the ten lighter worlds. Same 56 scenarios, same assertions, each step bounded so a slow world names itself instead of eating the job. |
-| Open | The acceptance gate has not gone green on any mission SHA yet. If the four-way cut still overruns, the next honest step is to stop reloading the application between scenarios of the same world, which is the measured cost, rather than to raise a ceiling again. |
+| `a192db2` | Measured step by step: checkout, install, TypeScript, ESLint, unit tests, NSIS build, packaged operations, installer lifecycle, offline smoke and the **applications** capture slice all SUCCESS. The single red step is files+storage together overrunning 1200 s, so the two directory-walking worlds are now cut apart as well. | If the four-way cut still overruns, the next honest step is to stop reloading the application between scenarios of the same world, which is the measured cost, rather than to raise a ceiling again. |
 
 Harness repairs in `scripts/visual-acceptance-smoke.cjs`, all aimed at the
 recorded CI failures and none of them a weakened assertion:
