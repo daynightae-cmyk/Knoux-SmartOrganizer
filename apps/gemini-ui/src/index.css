@@ -18,3 +18,16 @@
 [dir='rtl'] .text-left {
   text-align: right;
 }
+
+/* Frameless Electron window: the shared titlebar is the drag region, while
+   every interactive control inside it opts out so clicks still work. */
+.knoux-titlebar {
+  -webkit-app-region: drag;
+}
+
+.knoux-titlebar button,
+.knoux-titlebar input,
+.knoux-titlebar a,
+.knoux-titlebar [role='button'] {
+  -webkit-app-region: no-drag;
+}

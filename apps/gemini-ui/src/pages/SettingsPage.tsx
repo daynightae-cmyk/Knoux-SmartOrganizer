@@ -6,7 +6,8 @@
  * Ultra-visually stunning, high-specialization control panel matching KNOuX identity
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { getAiSession, setAiSession } from '../lib/ai-session';
 import {
   Settings,
   Sliders,
@@ -52,10 +53,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
     'engine' | 'ai_keys' | 'workspace' | 'guard' | 'appearance' | 'language' | 'backup'
   >('engine');
 
-  // API Key & Model State
-  const [apiKey, setApiKey] = useState('');
+  // API Key & Model State — session memory only, never localStorage.
+  const [apiKey, setApiKey] = useState(() => getAiSession().apiKey);
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState<'openrouter' | 'openai' | 'anthropic'>('openrouter');
+  const [provider, setProvider] = useState<'openrouter' | 'openai' | 'anthropic'>(() => getAiSession().provider);
   const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
 
@@ -79,22 +80,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
   // Notifications Toast
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    const savedKey = localStorage.getItem('knoux_ai_api_key') || '';
-    const savedProv = (localStorage.getItem('knoux_ai_provider') as any) || 'openrouter';
-    setApiKey(savedKey);
-    setProvider(savedProv);
-  }, []);
-
   const showToastMsg = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
   const handleSaveApiKey = () => {
-    localStorage.setItem('knoux_ai_api_key', apiKey);
-    localStorage.setItem('knoux_ai_provider', provider);
-    showToastMsg(isArabic ? 'تم حفظ مفتاح API بنجاح' : 'AI API Key saved successfully!');
+    setAiSession(apiKey, provider);
+    showToastMsg(
+      isArabic
+        ? 'تم الاحتفاظ بالمفتاح في ذاكرة الجلسة فقط. التخزين الآمن الأصلي غير موصول بعد.'
+        : 'Key held in session memory only. Native secure storage is not connected yet.'
+    );
   };
 
   const handleTestConnection = async () => {
@@ -129,8 +126,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigateSection })
       setTestStatus('failed');
       showToastMsg(
         isArabic
-          ? 'تعذر التحقق عبر الإنترنت حالياً. تم حفظ المفتاح محلياً لجلسات العمل.'
-          : 'Online probe inconclusive. Key saved locally for Copilot sessions.'
+          ? 'تعذر التحقق عبر الإنترنت حالياً. المفتاح في ذاكرة الجلسة فقط، ولا يوجد تخزين دائم.'
+          : 'Online probe inconclusive. The key remains in session memory only; nothing is persisted.'
       );
     }
   };

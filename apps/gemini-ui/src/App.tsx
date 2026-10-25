@@ -24,6 +24,7 @@ import { GoogleWorkspaceHub } from './components/workspace/GoogleWorkspaceHub';
 import { KNOuXTitleBar, KNOuXSidebar } from './components/shell/KNOuXShellComponents';
 import { KNOuXAssistantChat } from './components/chat/KNOuXAssistantChat';
 import { ApiKeySetupModal } from './components/chat/ApiKeySetupModal';
+import { setAiSession } from './lib/ai-session';
 
 import './studio/styles/studio.css';
 import './studio/styles/command-center.css';
@@ -60,8 +61,10 @@ function AppContent() {
   }, []);
 
   const handleSaveApiKey = (key: string, provider: 'openrouter' | 'openai' | 'anthropic') => {
-    localStorage.setItem('knoux_ai_api_key', key);
-    localStorage.setItem('knoux_ai_provider', provider);
+    // Session memory only. Persistent credentials require the native
+    // safeStorage capability scheduled for Mission 14; localStorage is not a
+    // credential store.
+    setAiSession(key, provider);
     setIsApiKeyModalOpen(false);
   };
 

@@ -8,6 +8,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { normalizeSection, useNavigation } from '../../context/NavigationContext';
+import { NativeBridgePanel } from '../../native/NativeBridgePanel';
+import { controlNativeWindow, getNativeShell, readBridgeStatus } from '../../native/client';
+import type { BridgeStatusData } from '../../../shared/native-contracts';
 import {
   Home,
   Target,
@@ -91,8 +94,8 @@ export interface KNOuXNotificationEntry {
 export const SHELL_NOTIFICATIONS: KNOuXNotificationEntry[] = [
   {
     id: 'native-pending',
-    title: 'Visual phase active — engine not connected',
-    body: 'Windows registry, service, disk and cleanup engines are not wired yet. Actions stage a preview proposal only.',
+    title: 'Section engines remain preview-only',
+    body: 'The read-only platform bridge can read machine/service summaries. Cleanup, repair, startup, file writes and AI actions remain staged previews.',
     tone: 'warn',
   },
   {
@@ -103,8 +106,8 @@ export const SHELL_NOTIFICATIONS: KNOuXNotificationEntry[] = [
   },
   {
     id: 'window-controls',
-    title: 'Window controls are preview-only here',
-    body: 'Minimize, maximize and close activate once the native Electron bridge mission lands (Phase B).',
+    title: 'Window controls follow the native bridge',
+    body: 'Minimize, maximize and close are enabled only inside the Electron client; the browser preview keeps them disabled.',
     tone: 'info',
   },
 ];
@@ -226,8 +229,27 @@ export const KNOuXSidebar: React.FC<KNOuXSidebarProps> = ({
   className = '',
 }) => {
   const normalizedActive = normalizeSection(activeSection);
+  const [nativeStatus, setNativeStatus] = useState<BridgeStatusData | null>(null);
+  const [nativePanelOpen, setNativePanelOpen] = useState(false);
+
+  useEffect(() => {
+    const api = getNativeShell();
+    if (!api) return;
+    let active = true;
+    void readBridgeStatus()
+      .then((envelope) => {
+        if (active && envelope?.data?.bridge === 'ready') setNativeStatus(envelope.data);
+      })
+      .catch(() => {
+        // Keep the honest browser-preview state if the handshake fails.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
+    <>
     <aside
       className={`w-56 shrink-0 bg-[#050e1f] border-r rtl:border-r-0 rtl:border-l border-[#0e223d] flex flex-col justify-between select-none h-full overflow-hidden z-20 ${className}`}
     >
@@ -292,19 +314,66 @@ export const KNOuXSidebar: React.FC<KNOuXSidebarProps> = ({
 
         {/* Bottom Engine Health / Status Card */}
         <div className="p-2.5 border-t border-[#0e223d]/70 bg-[#040b18]">
-          <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-            <span className="flex items-center gap-1.5 text-cyan-300 font-medium" title="Native Windows engines are not connected in the visual phase.">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#22d3ee]" />
-              {isArabic ? 'معاينة مرئية — المحرك غير متصل' : 'Visual preview — engine not connected'}
-            </span>
-            <span className="font-mono text-slate-500">v2.4.0</span>
-          </div>
-          <div className="text-[10px] text-slate-400 truncate">
-            {isArabic ? 'هيكل سطح مكتب ويندوز (معاينة)' : 'Windows Desktop Shell (preview)'}
-          </div>
+          {nativeStatus ? (
+            <button
+              type="button"
+              data-testid="native-bridge-status"
+              onClick={() => setNativePanelOpen(true)}
+              className="w-full text-start rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-[#0a182d] transition-colors cursor-pointer"
+              title={isArabic ? 'فتح تفاصيل جسر النظام للقراءة فقط' : 'Open read-only native bridge details'}
+            >
+              <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                <span className={`flex items-center gap-1.5 font-medium ${nativeStatus.providerMode === 'fixture' ? 'text-amber-300' : 'text-emerald-300'}`}>
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                      nativeStatus.providerMode === 'fixture'
+                        ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]'
+                        : 'bg-emerald-400 shadow-[0_0_6px_#10b981]'
+                    }`}
+                  />
+                  {nativeStatus.providerMode === 'fixture'
+                    ? isArabic
+                      ? 'جسر تجريبي (تطوير)'
+                      : 'Fixture bridge (dev)'
+                    : isArabic
+                    ? 'جسر أصلي v1 · قراءة فقط'
+                    : 'Native bridge v1 · read-only'}
+                </span>
+                <span className="font-mono text-slate-500">v2.4.0</span>
+              </div>
+              <div className="text-[10px] text-slate-400 truncate">
+                {nativeStatus.providerMode === 'fixture'
+                  ? isArabic
+                    ? 'بيانات تطوير غير مقاسة'
+                    : 'Development data — not measured'
+                  : isArabic
+                  ? 'ملخص الجهاز والخدمات متاح'
+                  : 'Measured machine + service summaries'}
+              </div>
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                <span className="flex items-center gap-1.5 text-cyan-300 font-medium" title="Native Windows engines are not connected in the browser preview.">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#22d3ee]" />
+                  {isArabic ? 'معاينة مرئية — المحرك غير متصل' : 'Visual preview — engine not connected'}
+                </span>
+                <span className="font-mono text-slate-500">v2.4.0</span>
+              </div>
+              <div className="text-[10px] text-slate-400 truncate">
+                {isArabic ? 'هيكل سطح مكتب ويندوز (معاينة)' : 'Windows Desktop Shell (preview)'}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </aside>
+    <NativeBridgePanel
+      open={nativePanelOpen}
+      onClose={() => setNativePanelOpen(false)}
+      isArabic={isArabic}
+    />
+    </>
   );
 };
 
@@ -451,7 +520,7 @@ export const KNOuXTitleBar: React.FC<KNOuXTitleBarProps> = ({
   };
 
   return (
-    <header className="h-10 bg-[#040915] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-40 shrink-0">
+    <header className="knoux-titlebar h-10 bg-[#040915] border-b border-[#0d213d] flex items-center justify-between px-3 text-xs select-none z-40 shrink-0">
       {/* Left: Brand Identity + Breadcrumb */}
       <div className="flex items-center gap-3 shrink-0">
         <KNOuXLogo size="sm" onClick={goHome} />
@@ -657,18 +726,21 @@ export const KNOuXTitleBar: React.FC<KNOuXTitleBarProps> = ({
         <div className="flex items-center ml-1 rtl:ml-0 rtl:mr-1 border-l rtl:border-l-0 rtl:border-r border-[#0e223d] pl-2 rtl:pl-0 rtl:pr-2 gap-1 text-slate-400">
           <button
             {...windowControlProps('minimize')}
+            onClick={() => void controlNativeWindow('minimize')}
             className="w-6 h-6 flex items-center justify-center hover:text-white hover:bg-[#122b4e] rounded transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <Minus className="w-3 h-3" />
           </button>
           <button
             {...windowControlProps('maximize')}
+            onClick={() => void controlNativeWindow('maximize')}
             className="w-6 h-6 flex items-center justify-center hover:text-white hover:bg-[#122b4e] rounded transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <Square className="w-2.5 h-2.5" />
           </button>
           <button
             {...windowControlProps('close')}
+            onClick={() => void controlNativeWindow('close')}
             className="w-6 h-6 flex items-center justify-center hover:text-white hover:bg-rose-600 rounded transition-colors disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
           >
             <X className="w-3 h-3" />

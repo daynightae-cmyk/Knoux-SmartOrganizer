@@ -1,0 +1,38 @@
+{
+  "contractVersion": 1,
+  "namespace": "knouxShell",
+  "channels": {
+    "status": "knoux:native:v1:status",
+    "systemSummary": "knoux:native:v1:system-summary",
+    "servicesSummary": "knoux:native:v1:services-summary",
+    "chooseFolder": "knoux:native:v1:choose-folder",
+    "windowControl": "knoux:window:v1:control"
+  },
+  "capabilities": {
+    "bridge.status": {
+      "id": "bridge.status",
+      "title": "Bridge handshake",
+      "mode": "read-only",
+      "channel": "knoux:native:v1:status"
+    },
+    "system.summary": {
+      "id": "system.summary",
+      "title": "Machine summary",
+      "mode": "read-only",
+      "channel": "knoux:native:v1:system-summary"
+    },
+    "services.summary": {
+      "id": "services.summary",
+      "title": "Windows service summary",
+      "mode": "read-only",
+      "channel": "knoux:native:v1:services-summary"
+    },
+    "folder.choose": {
+      "id": "folder.choose",
+      "title": "Choose a folder",
+      "mode": "user-initiated",
+      "channel": "knoux:native:v1:choose-folder"
+    }
+  },
+  "windowActions": ["minimize", "maximize", "close"]
+}

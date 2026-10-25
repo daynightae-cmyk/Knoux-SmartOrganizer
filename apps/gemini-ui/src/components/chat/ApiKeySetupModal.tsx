@@ -2,8 +2,8 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * 
- * KNOuX API Key Configuration Startup Modal
- * Appears on startup if no API key is detected in localStorage or environment.
+ * KNOuX API Key Configuration Modal
+ * Credentials are session-only until native secure storage is implemented.
  */
 
 import React, { useState } from 'react';
@@ -32,9 +32,6 @@ export const ApiKeySetupModal: React.FC<ApiKeySetupModalProps> = ({
   if (!isOpen) return null;
 
   const handleSkip = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('knoux_ai_modal_skipped', 'true');
-    }
     onSkip();
   };
 
@@ -95,15 +92,12 @@ export const ApiKeySetupModal: React.FC<ApiKeySetupModalProps> = ({
       setTestStatus('warning');
       setStatusMessage(
         isAr
-          ? 'تم حفظ المفتاح محلياً في المتصفح. سيتم التحقق الفعلي أثناء تنفيذ أول استعلام.'
-          : 'Key saved locally. Live endpoint verification will take place during first query.'
+          ? 'سيُحتفظ بالمفتاح في ذاكرة الجلسة فقط. لا يوجد تخزين دائم آمن بعد، والتحقق الفعلي يعتمد على مزود غير موصول حالياً.'
+          : 'The key will be held in session memory only. No secure persistence exists yet, and live verification depends on a provider that is not connected in this phase.'
       );
     }
 
     setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('knoux_ai_modal_skipped', 'true');
-      }
       onSave(cleanKey, provider);
     }, 1000);
   };

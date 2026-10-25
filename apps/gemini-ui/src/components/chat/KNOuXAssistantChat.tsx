@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * 
  * KNOuX AI Assistant Chatbot Copilot
- * Supports OpenRouter and OpenAI API Key configuration with instant activation.
+ * Session-only credential entry. Persistent secure storage and AI provider
+ * execution are owned by the later Settings/Assistant mission; this component
+ * must not claim activation when no provider is connected.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { clearAiSession, getAiSession, setAiSession } from '../../lib/ai-session';
 import {
   Sparkles,
   MessageSquare,
@@ -46,10 +49,13 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // API Key & Provider State
-  const [provider, setProvider] = useState<'openrouter' | 'openai'>('openrouter');
-  const [apiKey, setApiKey] = useState<string>('');
-  const [isKeySaved, setIsKeySaved] = useState<boolean>(false);
+  // API Key & Provider State — session memory only (no localStorage).
+  const [provider, setProvider] = useState<'openrouter' | 'openai'>(() => {
+    const saved = getAiSession().provider;
+    return saved === 'openai' ? 'openai' : 'openrouter';
+  });
+  const [apiKey, setApiKey] = useState<string>(() => getAiSession().apiKey);
+  const [isKeySaved, setIsKeySaved] = useState<boolean>(() => Boolean(getAiSession().apiKey));
 
   // Chat State
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -58,26 +64,13 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
       id: '1',
       sender: 'ai',
       text: isAr
-        ? 'مرحباً بك! أنا مساعد الذكاء الاصطناعي الخاص بـ KNOuX SmartOrganizer. أدخل مفتاح OpenRouter أو OpenAI في الإعدادات لتفعيل المساعد الذكي فوراً.'
-        : 'Hello! I am your KNOuX AI Copilot. Enter your OpenRouter or OpenAI API key in settings to activate full AI assistance instantly.',
+        ? 'مرحباً بك! مزوّد الذكاء الاصطناعي غير موصول في مرحلة المنصة للقراءة فقط. يمكنك مراجعة حالة الجسر الأصلي من الشريط الجانبي، وتكامل AI يُستكمل في مهمة الإعدادات والمساعد.'
+        : 'Hello! The AI provider is not connected in this read-only platform phase. You can inspect the native bridge status from the sidebar; AI integration lands in the Settings/Assistant mission.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
   const [isGenerating, setIsGenerating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Load saved API key on mount
-  useEffect(() => {
-    const savedKey = localStorage.getItem('knoux_ai_api_key');
-    const savedProvider = localStorage.getItem('knoux_ai_provider') as 'openrouter' | 'openai';
-    if (savedKey) {
-      setApiKey(savedKey);
-      setIsKeySaved(true);
-    }
-    if (savedProvider) {
-      setProvider(savedProvider);
-    }
-  }, []);
 
   // Shared-chrome launcher: the titlebar trigger dispatches this event so the
   // assistant stays reachable from every route without a floating overlay.
@@ -103,8 +96,7 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
   const handleSaveKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKey.trim()) {
-      localStorage.setItem('knoux_ai_api_key', apiKey.trim());
-      localStorage.setItem('knoux_ai_provider', provider);
+      setAiSession(apiKey, provider);
       setIsKeySaved(true);
       setIsSettingsOpen(false);
       setMessages((prev) => [
@@ -113,8 +105,8 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
           id: Date.now().toString(),
           sender: 'ai',
           text: isAr
-            ? 'تم حفظ المفتاح بنجاح! تم تفعيل النموذج الذكي فوراً. كيف يمكنني مساعدتك اليوم؟'
-            : 'API key saved successfully! Model activated instantly. How can I assist your system today?',
+            ? 'تم الاحتفاظ بالمفتاح في ذاكرة هذه الجلسة فقط. لا يوجد تخزين آمن دائم بعد، وتكامل مزود AI يُستكمل في مهمة الإعدادات والمساعد.'
+            : 'Key held in memory for this session only. Persistent secure storage is not connected yet; AI provider integration lands in the Settings/Assistant mission.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -122,7 +114,7 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
   };
 
   const handleClearKey = () => {
-    localStorage.removeItem('knoux_ai_api_key');
+    clearAiSession();
     setApiKey('');
     setIsKeySaved(false);
   };
@@ -255,11 +247,11 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
                         : 'bg-amber-950/80 text-amber-300 border-amber-500/50'
                     }`}
                   >
-                    {isKeySaved ? (isAr ? 'نشط' : 'Active') : (isAr ? 'يحتاج مفتاح' : 'Needs Key')}
+                    {isKeySaved ? (isAr ? 'مفتاح جلسة' : 'Session Key') : (isAr ? 'يحتاج مفتاح' : 'Needs Key')}
                   </span>
                 </div>
                 <div className="text-[10px] text-cyan-400 font-mono">
-                  {provider === 'openrouter' ? 'OpenRouter API' : 'OpenAI Code Console v2'}
+                  {provider === 'openrouter' ? 'OpenRouter API' : 'OpenAI Code Console v2'} · not connected
                 </div>
               </div>
             </div>
@@ -351,18 +343,18 @@ export const KNOuXAssistantChat: React.FC<KNOuXAssistantChatProps> = ({
                       onClick={handleClearKey}
                       className="text-rose-400 hover:underline text-[11px]"
                     >
-                      {isAr ? 'حذف المفتاح المحفوظ' : 'Remove Saved Key'}
+                      {isAr ? 'حذف مفتاح الجلسة' : 'Remove Session Key'}
                     </button>
                   ) : (
                     <span className="text-[10px] text-slate-400">
-                      {isAr ? 'يتفعل النموذج فوراً عند الحفظ' : 'Activates instantly upon save'}
+                      {isAr ? 'ذاكرة الجلسة فقط؛ لا تخزين دائم ولا مزود موصول' : 'Session memory only; no persistence or provider connection'}
                     </span>
                   )}
                   <button
                     type="submit"
                     className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs cursor-pointer shadow-md"
                   >
-                    {isAr ? 'حفظ وتفعيل' : 'Save & Activate'}
+                    {isAr ? 'حفظ للجلسة' : 'Hold for Session'}
                   </button>
                 </div>
               </form>
